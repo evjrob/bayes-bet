@@ -55,43 +55,43 @@ CREATE TABLE IF NOT EXISTS shootouts (
 );
 
 CREATE TABLE IF NOT EXISTS model_runs (
-    prediction_time DATETIME PRIMARY KEY,
+    prediction_date DATE PRIMARY KEY,
     bfmi REAL NOT NULL,
     gelman_rubin REAL NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS team_posteriors (
     team_id INTEGER NOT NULL,
-    prediction_time DATETIME NOT NULL,
+    prediction_date DATE NOT NULL,
     offence_median REAL NOT NULL,
     offence_hpd_low REAL NOT NULL,
     offense_hpd_high REAL NOT NULL,
     defence_median REAL NOT NULL,
     defence_hpd_low REAL NOT NULL,
     defence_hpd_high REAL NOT NULL,
-    PRIMARY KEY (team_id, prediction_time),
+    PRIMARY KEY (team_id, prediction_date),
     FOREIGN KEY (team_id) REFERENCES teams(team_id),
-    FOREIGN KEY (prediction_time) REFERENCES model_runs(prediction_time)
+    FOREIGN KEY (prediction_date) REFERENCES model_runs(prediction_date)
 );
 
 CREATE TABLE IF NOT EXISTS general_posteriors (
-    prediction_time DATETIME PRIMARY KEY,
+    prediction_date DATE PRIMARY KEY,
     home_ice_advantage_median REAL NOT NULL,
     home_ice_advantage_hpd_low REAL NOT NULL,
     home_ice_advantage_hpd_high REAL NOT NULL,
     intercept_median REAL NOT NULL,
     intercept_hpd_low REAL NOT NULL,
     intercept_hpd_high REAL NOT NULL,
-    FOREIGN KEY (prediction_time) REFERENCES model_runs(prediction_time)
+    FOREIGN KEY (prediction_date) REFERENCES model_runs(prediction_date)
 );
 
 CREATE TABLE IF NOT EXISTS game_predictions (
     game_pk INTEGER NOT NULL,
-    prediction_time DATETIME NOT NULL,
+    prediction_date DATE NOT NULL,
     home_team_regulation_goals INTEGER NOT NULL,
     away_team_regulation_goals INTEGER NOT NULL,
     home_wins_after_regulation BOOLEAN NOT NULL,
-    PRIMARY KEY (game_pk, prediction_time),
+    PRIMARY KEY (game_pk, prediction_date),
     FOREIGN KEY (game_pk) REFERENCES games(game_pk),
-    FOREIGN KEY (prediction_time) REFERENCES model_runs(prediction_time)
+    FOREIGN KEY (prediction_date) REFERENCES model_runs(prediction_date)
 )
