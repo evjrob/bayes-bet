@@ -8,17 +8,17 @@ CREATE TABLE IF NOT EXISTS divisions (
     division_id INTEGER PRIMARY KEY,
     division_name TEXT NOT NULL,
     division_abbreviation TEXT NOT NULL,
-    active BOOLEAN NOT NULL
+    conference_id INTEGER NOT NULL,
+    active BOOLEAN NOT NULL,
+    FOREIGN KEY (conference_id) REFERENCES conferences(conference_id)
 );
 
 CREATE TABLE IF NOT EXISTS teams (
     team_id INTEGER PRIMARY KEY,
     team_name TEXT NOT NULL,
     team_abbreviation TEXT NOT NULL,
-    conference_id INTEGER NOT NULL,
     division_id INTEGER NOT NULL,
     active BOOLEAN NOT NULL,
-    FOREIGN KEY (conference_id) REFERENCES conferences(conference_id),
     FOREIGN KEY (division_id) REFERENCES divisions(division_id)
 );
 
