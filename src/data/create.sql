@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS teams (
 CREATE TABLE IF NOT EXISTS games (
     game_pk INTEGER PRIMARY KEY,
     game_date DATE,
+    season TEXT,
     game_type TEXT NOT NULL,
     game_state TEXT NOT NULL,
     home_team_id INTEGER NOT NULL,
