@@ -36,13 +36,13 @@ CREATE TABLE IF NOT EXISTS games (
 
 CREATE TABLE IF NOT EXISTS periods (
     game_pk INTEGER NOT NULL,
-    period_num INTEGER NOT NULL,
+    period_number INTEGER NOT NULL,
     period_type TEXT NOT NULL,
     home_goals INTEGER NOT NULL,
     home_shots_on_goal INTEGER NOT NULL,
     away_goals INTEGER NOT NULL,
     away_shots_on_goal INTEGER NOT NULL,
-    PRIMARY KEY (game_pk, period_num),
+    PRIMARY KEY (game_pk, period_number),
     FOREIGN KEY (game_pk) REFERENCES games(game_pk)
 );
 
