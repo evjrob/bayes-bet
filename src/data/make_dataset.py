@@ -2,9 +2,12 @@
 import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
+import os
 import requests
 import json
 import pandas as pd
+from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy.dialects import postgresql
 
 
 # The NHL Statistics API URL
@@ -23,8 +26,10 @@ def request_divisions_json():
     return response.json()
 
 # Retrieves the JSON current team data from the NHL stats API
-def request_teams_json():
+def request_teams_json(team_id=None):
     path = '/api/v1/teams/'
+    if team_id is not None:
+        path = path + str(team_id)
     response = requests.get(base_url + path)
     return response.json()
 
@@ -98,7 +103,10 @@ def extract_team_data(teams_json):
         team_id = team['id']
         team_name = team['name']
         team_abbreviation = team['abbreviation']
-        division_id = team['division']['id']
+        if 'id' in team['division']:
+            division_id = team['division']['id']
+        else:
+            division_id = None
         active = team['active']
 
         teams = teams.append(
@@ -142,7 +150,7 @@ def extract_game_data(games_json):
     for date in games_json['dates']:
         game_date = date['date']
         for game in date['games']:
-            game_pk = game
+            game_pk = game['gamePk']
             season = game['season']
             game_type = game['gameType']
             game_state = game['status']['detailedState']
@@ -175,7 +183,7 @@ def extract_game_data(games_json):
                      'away_shots_on_goal': away_shots_on_goal},
                     ignore_index=True)
 
-            if detailed_score_data['hasShootout'] == 'false':
+            if detailed_score_data['hasShootout'] == True:
                 shootout = detailed_score_data['shootoutInfo']
                 home_scores = shootout['home']['scores']
                 home_attempts = shootout['home']['attempts']
@@ -202,6 +210,32 @@ def extract_game_data(games_json):
 
     return games, periods, shootouts
 
+# Retrieves and extracts the JSON data for teams in the games table that did not
+# show up in the current team API call. Usually All-Star or exhibition teams.
+def get_missing_team_data(team_id_list):
+    missing_team_data = []
+    for team_id in team_id_list:
+        teams_json = request_teams_json(team_id)
+        with open('data/raw/team_'+str(team_id)+'.json', 'w') as outfile:
+            json.dump(teams_json, outfile)
+        team_data = extract_team_data(teams_json)
+        missing_team_data.append(team_data)
+    
+    return pd.concat(missing_team_data, ignore_index=True)
+
+# Wrap a repeated sqlalchemy upsert statement 
+def upsert(table_name, primary_keys, metadata, data):
+    # Don't accidentally split a single string primary key
+    if type(primary_keys) == str:
+        primary_keys = [primary_keys]
+    primary_keys = list(primary_keys)
+    table = Table(table_name, metadata, autoload=True)
+    insert_statement = postgresql.insert(table).values(data.to_dict(orient='records'))
+    upsert_statement = insert_statement.on_conflict_do_update(
+        index_elements=primary_keys,
+        set_={c.key: c for c in insert_statement.excluded if c.key not in primary_keys})
+    return upsert_statement
+
 # Handles the retrival, extraction, and database updates for the 
 # NHL Stats API data
 def update_nhl_data(start_date, end_date):
@@ -219,10 +253,49 @@ def update_nhl_data(start_date, end_date):
     with open('data/raw/games.json', 'w') as outfile:
         json.dump(games_json, outfile)
 
-    conferences = extract_conference_data(conferences_json)
-    divisions = extract_division_data(divisions_json)
-    teams = extract_team_data(teams_json)
-    games, periods, shootouts = extract_game_data(games_json)
+    # Convert JSON to pandas for database upload.
+    conference_data = extract_conference_data(conferences_json)
+    division_data = extract_division_data(divisions_json)
+    team_data = extract_team_data(teams_json)
+    game_data, period_data, shootout_data = extract_game_data(games_json)
+
+    # Retrieve data for any teams in the games table that did not appear in 
+    # the teams API call.
+    missing_team_ids = game_data['home_team_id'].tolist() + game_data['away_team_id'].tolist()
+    missing_team_ids = set(missing_team_ids)
+    existing_team_ids = set(team_data['team_id'].tolist())
+    missing_team_ids = list(missing_team_ids.difference(existing_team_ids))
+    missing_team_data = get_missing_team_data(missing_team_ids)
+    team_data = pd.concat([team_data, missing_team_data], ignore_index=True)
+
+    # Load .env to get database credentials
+    project_dir = Path(__file__).resolve().parents[2]
+    load_dotenv(find_dotenv())
+    DATABASE_USER = os.getenv('DATABASE_USER')
+    DATABASE_PASSWD = os.getenv('DATABASE_PASSWD')
+
+    # Create connection and transaction to sqlite database
+    engine = create_engine('postgresql+psycopg2://'+DATABASE_USER+':'+DATABASE_PASSWD+'@localhost/bayes_bet')
+    with engine.begin() as connection:
+        metadata = MetaData(engine)
+
+        conferences_upsert = upsert('conferences', 'conference_id', metadata, conference_data)
+        connection.execute(conferences_upsert)
+
+        divisions_upsert = upsert('divisions', 'division_id', metadata, division_data)
+        connection.execute(divisions_upsert)
+
+        teams_upsert = upsert('teams', 'team_id', metadata, team_data)
+        connection.execute(teams_upsert)
+
+        games_upsert = upsert('games', 'game_pk', metadata, game_data)
+        connection.execute(games_upsert)
+
+        periods_upsert = upsert('periods', ('game_pk', 'period_number'), metadata, period_data)
+        connection.execute(periods_upsert)
+
+        shootouts_upsert = upsert('shootouts', 'game_pk', metadata, shootout_data)
+        connection.execute(shootouts_upsert)
 
 def main():
     """ Runs data processing scripts to turn raw data from (../raw) into
@@ -236,12 +309,5 @@ def main():
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # not used in this stub but often useful for finding various files
-    project_dir = Path(__file__).resolve().parents[2]
-
-    # find .env automagically by walking up directories until it's found, then
-    # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
 
     main()
