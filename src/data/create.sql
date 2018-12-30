@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS teams (
     team_id INTEGER PRIMARY KEY,
     team_name TEXT NOT NULL,
     team_abbreviation TEXT NOT NULL,
-    division_id INTEGER NOT NULL,
+    division_id INTEGER,
     active BOOLEAN NOT NULL,
     FOREIGN KEY (division_id) REFERENCES divisions(division_id)
 );
