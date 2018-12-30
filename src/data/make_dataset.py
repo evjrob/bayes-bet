@@ -304,7 +304,7 @@ def main():
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
 
-    update_nhl_data('2017-09-18', '2018-12-24')
+    update_nhl_data('2017-09-01', '2018-12-29')
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
