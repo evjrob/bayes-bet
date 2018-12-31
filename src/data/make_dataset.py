@@ -8,6 +8,7 @@ import json
 import pandas as pd
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.dialects import postgresql
+import datetime as dt
 
 
 # The NHL Statistics API URL
@@ -220,8 +221,9 @@ def get_missing_team_data(team_id_list):
             json.dump(teams_json, outfile)
         team_data = extract_team_data(teams_json)
         missing_team_data.append(team_data)
-    
-    return pd.concat(missing_team_data, ignore_index=True)
+    if len(missing_team_data) > 0:
+        return pd.concat(missing_team_data, ignore_index=True)
+    return None
 
 # Wrap a repeated sqlalchemy upsert statement 
 def upsert(table_name, primary_keys, metadata, data):
@@ -266,7 +268,8 @@ def update_nhl_data(start_date, end_date):
     existing_team_ids = set(team_data['team_id'].tolist())
     missing_team_ids = list(missing_team_ids.difference(existing_team_ids))
     missing_team_data = get_missing_team_data(missing_team_ids)
-    team_data = pd.concat([team_data, missing_team_data], ignore_index=True)
+    if missing_team_data is not None:
+        team_data = pd.concat([team_data, missing_team_data], ignore_index=True)
 
     # Load .env to get database credentials
     project_dir = Path(__file__).resolve().parents[2]
@@ -304,7 +307,11 @@ def main():
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
 
-    update_nhl_data('2017-09-01', '2018-12-29')
+    today = dt.date.today()
+    start_date = (today - dt.timedelta(days=30)).strftime('%Y-%m-%d')
+    end_date = (today + dt.timedelta(days=365)).strftime('%Y-%m-%d')
+
+    update_nhl_data(start_date, end_date)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

@@ -60,3 +60,13 @@ CREATE OR REPLACE VIEW model_input_data AS
     ON games.game_pk = scores.game_pk 
     WHERE (game_type = 'R' OR game_type = 'P') AND 
           (game_state = 'Final');
+
+CREATE OR REPLACE VIEW model_prediction_data AS
+    SELECT  game_pk,
+            game_date,
+            season,
+            game_type,
+            home_team_id,
+            away_team_id
+    FROM games
+    WHERE (game_type = 'R' OR game_type = 'P');
