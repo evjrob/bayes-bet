@@ -69,4 +69,5 @@ CREATE OR REPLACE VIEW model_prediction_data AS
             home_team_id,
             away_team_id
     FROM games
-    WHERE (game_type = 'R' OR game_type = 'P');
+    WHERE ((game_type = 'R' OR game_type = 'P') AND 
+           NOT (game_state = 'Final'));
