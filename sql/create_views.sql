@@ -58,8 +58,8 @@ CREATE OR REPLACE VIEW model_input_data AS
             away_team_final_score
     FROM games LEFT JOIN  scores
     ON games.game_pk = scores.game_pk 
-    WHERE (game_type = 'R' OR game_type = 'P') AND 
-          (game_state = 'Final');
+    WHERE ((game_type = 'R' OR game_type = 'P') AND 
+           (game_state = 'Final'));
 
 CREATE OR REPLACE VIEW model_prediction_data AS
     SELECT  game_pk,
