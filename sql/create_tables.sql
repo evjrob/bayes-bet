@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS team_posteriors (
     prediction_date DATE NOT NULL,
     offence_median REAL NOT NULL,
     offence_hpd_low REAL NOT NULL,
-    offense_hpd_high REAL NOT NULL,
+    offence_hpd_high REAL NOT NULL,
     defence_median REAL NOT NULL,
     defence_hpd_low REAL NOT NULL,
     defence_hpd_high REAL NOT NULL,
@@ -89,10 +89,11 @@ CREATE TABLE IF NOT EXISTS general_posteriors (
 CREATE TABLE IF NOT EXISTS game_predictions (
     game_pk INTEGER NOT NULL,
     prediction_date DATE NOT NULL,
+    prediction_number INTEGER NOT NULL,
     home_team_regulation_goals INTEGER NOT NULL,
     away_team_regulation_goals INTEGER NOT NULL,
     home_wins_after_regulation BOOLEAN NOT NULL,
-    PRIMARY KEY (game_pk, prediction_date),
+    PRIMARY KEY (game_pk, prediction_date, prediction_number),
     FOREIGN KEY (game_pk) REFERENCES games(game_pk),
     FOREIGN KEY (prediction_date) REFERENCES model_runs(prediction_date)
 )
