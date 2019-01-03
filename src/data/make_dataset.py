@@ -299,8 +299,8 @@ def update_nhl_data(start_date, end_date):
         connection.execute(shootouts_upsert)
 
 def main():
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
+    """ Retrieves data from the NHL stats API and loads it into the 
+        appropriate postgresql tables.
     """
     today = dt.date.today()
     start_date = (today - dt.timedelta(days=30)).strftime('%Y-%m-%d')
