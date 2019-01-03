@@ -159,9 +159,7 @@ def extract_game_data(games_json):
             home_team = game['teams']['home']['team']
             away_team = game['teams']['away']['team']
             home_team_id = home_team['id']
-            home_team_name = home_team['name']
             away_team_id = away_team['id']
-            away_team_name = away_team['name']
 
             detailed_score_data = game['linescore']
             periods_list = detailed_score_data['periods']
