@@ -302,12 +302,12 @@ def main():
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
-    logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
-
     today = dt.date.today()
     start_date = (today - dt.timedelta(days=30)).strftime('%Y-%m-%d')
     end_date = (today + dt.timedelta(days=365)).strftime('%Y-%m-%d')
+
+    logger = logging.getLogger(__name__)
+    logger.info('Retrieving NHL data for '+start_date+' to '+end_date)
 
     update_nhl_data(start_date, end_date)
 
