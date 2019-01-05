@@ -316,8 +316,8 @@ def write_results_to_db(db_creds, model_runs_data, team_posteriors_data,
         connection.execute(game_predictions_upsert)
 
 def main():
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
+    """ Runs the modelling functions to generate results and write them back to
+        the appropriate tables in postgresql.
     """
     # Get database credentials from boto3 + Secrets Manager
     db_creds = get_secret()
