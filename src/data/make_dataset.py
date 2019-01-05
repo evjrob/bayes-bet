@@ -274,9 +274,13 @@ def update_nhl_data(start_date, end_date):
     load_dotenv(find_dotenv())
     DATABASE_USER = os.getenv('DATABASE_USER')
     DATABASE_PASSWD = os.getenv('DATABASE_PASSWD')
+    DATABASE_HOST = os.getenv('DATABASE_HOST')
+    DATABASE_PORT = os.getenv('DATABASE_PORT')
+    DATABASE_NAME = os.getenv('DATABASE_NAME')
 
     # Create connection and transaction to sqlite database
-    engine = create_engine('postgresql+psycopg2://'+DATABASE_USER+':'+DATABASE_PASSWD+'@localhost/bayes_bet')
+    engine = create_engine('postgresql+psycopg2://'+DATABASE_USER+':'+DATABASE_PASSWD+\
+        '@'+DATABASE_HOST+':'+DATABASE_PORT+'/'+DATABASE_NAME)
     with engine.begin() as connection:
         metadata = MetaData(engine)
 
