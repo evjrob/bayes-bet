@@ -6,13 +6,69 @@ import pymc3 as pm
 import theano.tensor as tt
 import theano
 import os
-from dotenv import find_dotenv, load_dotenv
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.dialects import postgresql
 import datetime as dt
 
 from src.data.make_dataset import upsert
 
+import boto3
+import base64
+from botocore.exceptions import ClientError
+import json
+
+
+# AWS code snippet to load secrets from Secret Manager
+def get_secret():
+
+    secret_name = "prod/bayes-bet/postgresql-internet"
+    region_name = "us-east-1"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    # In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
+    # See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+    # We rethrow the exception by default.
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'DecryptionFailureException':
+            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+            # An error occurred on the server side.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidParameterException':
+            # You provided an invalid value for a parameter.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidRequestException':
+            # You provided a parameter value that is not valid for the current state of the resource.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+            # We can't find the resource that you asked for.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+    else:
+        # Decrypts secret using the associated KMS CMK.
+        # Depending on whether the secret is a string or binary, one of these fields will be populated.
+        if 'SecretString' in get_secret_value_response:
+            secret = get_secret_value_response['SecretString']
+            return json.loads(secret)
+        else:
+            decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
+            return json.loads(decoded_binary_secret)
 
 # Modify the data to include team and pair integer labels
 def add_team_data_labels(game_data, teams):
@@ -221,14 +277,13 @@ def model(model_input_data, model_output_data, prediction_game_pks):
     return model_runs, team_posteriors, general_posteriors, game_predictions
 
 # Save the model predictions in postgresql
-def write_results_to_db(model_runs_data, team_posteriors_data, 
+def write_results_to_db(db_creds, model_runs_data, team_posteriors_data, 
     general_posteriors_data, game_predictions_data):
-    load_dotenv(find_dotenv())
-    DATABASE_USER = os.getenv('DATABASE_USER')
-    DATABASE_PASSWD = os.getenv('DATABASE_PASSWD')
-    DATABASE_HOST = os.getenv('DATABASE_HOST')
-    DATABASE_PORT = os.getenv('DATABASE_PORT')
-    DATABASE_NAME = os.getenv('DATABASE_NAME')
+    DATABASE_USER = db_creds['DATABASE_USER']
+    DATABASE_PASSWD = db_creds['DATABASE_PASSWD']
+    DATABASE_HOST = db_creds['DATABASE_HOST']
+    DATABASE_PORT = db_creds['DATABASE_PORT']
+    DATABASE_NAME = db_creds['DATABASE_NAME']
 
     # Create connection and transaction to sqlite database
     engine = create_engine('postgresql+psycopg2://'+DATABASE_USER+':'+DATABASE_PASSWD+\
@@ -264,13 +319,13 @@ def main():
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
-    # Load .env to get database credentials
-    load_dotenv(find_dotenv())
-    DATABASE_USER = os.getenv('DATABASE_USER')
-    DATABASE_PASSWD = os.getenv('DATABASE_PASSWD')
-    DATABASE_HOST = os.getenv('DATABASE_HOST')
-    DATABASE_PORT = os.getenv('DATABASE_PORT')
-    DATABASE_NAME = os.getenv('DATABASE_NAME')
+    # Get database credentials from boto3 + Secrets Manager
+    db_creds = get_secret()
+    DATABASE_USER = db_creds['DATABASE_USER']
+    DATABASE_PASSWD = db_creds['DATABASE_PASSWD']
+    DATABASE_HOST = db_creds['DATABASE_HOST']
+    DATABASE_PORT = db_creds['DATABASE_PORT']
+    DATABASE_NAME = db_creds['DATABASE_NAME']
 
     logger = logging.getLogger(__name__)
     logger.info('Retrieving model input and prediction data')
@@ -314,7 +369,7 @@ def main():
 
     logger.info('Writing model results to postgresql')
     
-    write_results_to_db(model_runs, team_posteriors, general_posteriors, game_predictions)
+    write_results_to_db(db_creds, model_runs, team_posteriors, general_posteriors, game_predictions)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

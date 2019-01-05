@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
 import os
 import requests
 import json
@@ -10,6 +8,63 @@ from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.dialects import postgresql
 import datetime as dt
 
+
+import boto3
+import base64
+from botocore.exceptions import ClientError
+
+
+# AWS code snippet to load secrets from Secret Manager
+def get_secret():
+
+    secret_name = "prod/bayes-bet/postgresql-internet"
+    region_name = "us-east-1"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    # In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
+    # See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+    # We rethrow the exception by default.
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'DecryptionFailureException':
+            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+            # An error occurred on the server side.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidParameterException':
+            # You provided an invalid value for a parameter.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidRequestException':
+            # You provided a parameter value that is not valid for the current state of the resource.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+            # We can't find the resource that you asked for.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+    else:
+        # Decrypts secret using the associated KMS CMK.
+        # Depending on whether the secret is a string or binary, one of these fields will be populated.
+        if 'SecretString' in get_secret_value_response:
+            secret = get_secret_value_response['SecretString']
+            return json.loads(secret)
+        else:
+            decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
+            return json.loads(decoded_binary_secret)
 
 # The NHL Statistics API URL
 base_url = 'https://statsapi.web.nhl.com'
@@ -269,14 +324,13 @@ def update_nhl_data(start_date, end_date):
     if missing_team_data is not None:
         team_data = pd.concat([team_data, missing_team_data], ignore_index=True)
 
-    # Load .env to get database credentials
-    project_dir = Path(__file__).resolve().parents[2]
-    load_dotenv(find_dotenv())
-    DATABASE_USER = os.getenv('DATABASE_USER')
-    DATABASE_PASSWD = os.getenv('DATABASE_PASSWD')
-    DATABASE_HOST = os.getenv('DATABASE_HOST')
-    DATABASE_PORT = os.getenv('DATABASE_PORT')
-    DATABASE_NAME = os.getenv('DATABASE_NAME')
+    # Get database credentials from boto3 + Secrets Manager
+    db_creds = get_secret()
+    DATABASE_USER = db_creds['DATABASE_USER']
+    DATABASE_PASSWD = db_creds['DATABASE_PASSWD']
+    DATABASE_HOST = db_creds['DATABASE_HOST']
+    DATABASE_PORT = db_creds['DATABASE_PORT']
+    DATABASE_NAME = db_creds['DATABASE_NAME']
 
     # Create connection and transaction to sqlite database
     engine = create_engine('postgresql+psycopg2://'+DATABASE_USER+':'+DATABASE_PASSWD+\
