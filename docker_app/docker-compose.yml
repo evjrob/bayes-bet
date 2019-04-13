@@ -1,0 +1,38 @@
+# File structure version
+version: '3'
+
+services:
+  # Database based on official postgres image
+  db:
+    image: postgres
+    hostname: db
+
+  # Our django application
+  # Build from remote dockerfile
+  # Connect local app folder with image folder, so changes will be pushed to image instantly
+  # Open port 8000
+  app:
+    build:
+      context: .
+      dockerfile: config/app/Dockerfile
+    hostname: app
+    volumes:
+      - ./app:/app
+    expose:
+      - "8000"
+    depends_on:
+      - db
+
+  # Web server based on official nginx image
+  # Connect external 8000 (which you can access from browser)
+  # with internal port 8000(which will be linked to app port 8000 in configs)
+  # Connect local nginx configuration with image configuration
+  nginx:
+    image: nginx
+    hostname: nginx
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
