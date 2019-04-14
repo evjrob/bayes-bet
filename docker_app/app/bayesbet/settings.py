@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['app']
 # Application definition
 
 INSTALLED_APPS = [
+    'plots.apps.PlotsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -78,7 +79,15 @@ db_creds = get_secret()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': db_creds['DATABASE_NAME'],
+        'NAME': db_creds['APP_DATABASE_NAME'],
+        'USER': db_creds['DATABASE_USER'],
+        'PASSWORD': db_creds['DATABASE_PASSWD'],
+        'HOST': db_creds['DATABASE_HOST'],
+        'PORT': int(db_creds['DATABASE_PORT']),
+    },
+    'bayes_bet': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': db_creds['MODEL_DATABASE_NAME'],
         'USER': db_creds['DATABASE_USER'],
         'PASSWORD': db_creds['DATABASE_PASSWD'],
         'HOST': db_creds['DATABASE_HOST'],

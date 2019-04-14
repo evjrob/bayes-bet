@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 # AWS code snippet to load secrets from Secret Manager
 def get_secret():
 
-    secret_name = "prod/bayes-bet/postgresql-internet"
+    secret_name = "prod/bayes-bet/postgresql-web-app"
     region_name = "us-east-1"
 
     # Create a Secrets Manager client
