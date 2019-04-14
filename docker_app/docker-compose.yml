@@ -22,6 +22,7 @@ services:
       - "8000"
     depends_on:
       - db
+    env_file: .env
 
   # Web server based on official nginx image
   # Connect external 8000 (which you can access from browser)
