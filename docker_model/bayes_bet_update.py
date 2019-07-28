@@ -651,6 +651,11 @@ def modelling_main(db_creds):
 
     connection.close()
 
+    # Do not continue with modeling if the number of scheduled games is zero
+    if scheduled_games.shape[0] == 0:
+        logger.info('No new games to model, quitting pre-emptively')
+        return
+
     logger.info('Training model on '+start_date+' to '+today_str+' predicting to '+end_date)
 
     # Select the columns needed specifically for the model
