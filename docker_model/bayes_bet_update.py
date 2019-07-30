@@ -264,6 +264,10 @@ def extract_game_data(games_json):
                  'away_team_id': away_team_id},
                 ignore_index=True)
 
+    # No null game pk rows
+    assert periods['game_pk'].notnull().all(), "Null game_pk in periods table!"
+    assert shootouts['game_pk'].notnull().all(), "Null game_pk in shootouts table!"
+
     return games, periods, shootouts
 
 # Retrieves and extracts the JSON data for teams in the games table that did not
@@ -350,12 +354,15 @@ def update_nhl_data(db_creds, start_date, end_date):
 
         games_upsert = upsert('games', 'game_pk', metadata, game_data)
         connection.execute(games_upsert)
+        
+        # Only attempt to add period and shoot out data if there is some
+        if period_data.shape[0] > 0:
+            periods_upsert = upsert('periods', ('game_pk', 'period_number'), metadata, period_data)
+            connection.execute(periods_upsert)
 
-        periods_upsert = upsert('periods', ('game_pk', 'period_number'), metadata, period_data)
-        connection.execute(periods_upsert)
-
-        shootouts_upsert = upsert('shootouts', 'game_pk', metadata, shootout_data)
-        connection.execute(shootouts_upsert)
+        if shootout_data.shape[0] > 0:
+            shootouts_upsert = upsert('shootouts', 'game_pk', metadata, shootout_data)
+            connection.execute(shootouts_upsert)
 
 def nhl_data_main(db_creds):
     """ Retrieves data from the NHL stats API and loads it into the 
@@ -643,10 +650,12 @@ def modelling_main(db_creds):
     start_date = (today - dt.timedelta(days=365)).strftime('%Y-%m-%d')
     end_date = (today + dt.timedelta(days=7)).strftime('%Y-%m-%d')
 
-    statement = "SELECT * FROM model_input_data WHERE game_date >= '" + start_date + "';"
+    statement = "SELECT * FROM model_input_data WHERE game_date >= '" +\
+         start_date + "' AND game_date < '" + today_str + "';"
     completed_games =  pd.read_sql(statement, connection)
 
-    statement = "SELECT * FROM model_prediction_data WHERE game_date <= '" + end_date + "';"
+    statement = "SELECT * FROM model_prediction_data WHERE game_date >= '" +\
+        today_str + "' AND game_date <= '" + end_date + "';"
     scheduled_games =  pd.read_sql(statement, connection)
 
     connection.close()
