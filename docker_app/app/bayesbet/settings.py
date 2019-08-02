@@ -26,19 +26,21 @@ SECRET_KEY = 'd2u--wh6qtkqo4wbzktaczz&sn)8s0@n_3t=ep2i4!(h7wtkw4'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['app']
+ALLOWED_HOSTS = ['app', '127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'plots.apps.PlotsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'data.apps.DataConfig',
+    'plots.apps.PlotsConfig',
 ]
 
 MIDDLEWARE = [
