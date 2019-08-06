@@ -2,14 +2,21 @@ import datetime as dt
 from rest_framework import generics
 from django.http import HttpResponse, JsonResponse
 from django.db import connections
+from django.shortcuts import render
+
+from data.models import Games
 
 
 def index(request, version='v1'):
-    return HttpResponse("Hello, world. You're at the data index.")
+    games = Games.objects.filter(game_date='2019-04-15')
+
+    context= {'games': games}
+        
+    return render(request, 'data/index.html', context)
 
 
 def games(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    with connections['bayes_bet'].cursor() as cursor:
+    with connections['data'].cursor() as cursor:
         query =  """SELECT DISTINCT game_pk, home_team_name, away_team_name 
                     FROM games 
                     LEFT JOIN 
@@ -27,7 +34,7 @@ def games(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
 
 
 def prediction(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    with connections['bayes_bet'].cursor() as cursor:
+    with connections['data'].cursor() as cursor:
         # Home and away team goal distribution
         goals_query =    """SELECT COALESCE(home.goals, away.goals) as goals, 
                             COALESCE(home_probability, 0) AS home_probability, 

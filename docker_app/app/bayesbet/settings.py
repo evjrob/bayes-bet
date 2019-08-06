@@ -15,6 +15,7 @@ from retrieve_db_creds import get_secret
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 
 
 # Quick-start development settings - unsuitable for production
@@ -60,7 +61,7 @@ ROOT_URLCONF = 'bayesbet.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(SETTINGS_PATH, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -89,7 +90,7 @@ DATABASES = {
         'HOST': db_creds['DATABASE_HOST'],
         'PORT': int(db_creds['DATABASE_PORT']),
     },
-    'bayes_bet': {
+    'data': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': db_creds['MODEL_DATABASE_NAME'],
         'USER': db_creds['DATABASE_USER'],
@@ -99,6 +100,7 @@ DATABASES = {
     }
 }
 
+DATABASE_ROUTERS = ['bayesbet.dbrouters.DbRouter', ]
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
