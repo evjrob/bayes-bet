@@ -25,7 +25,7 @@ class DbRouter(object):
         """
         if obj1._meta.app_label == 'data' or \
            obj2._meta.app_label == 'data':
-           return False
+           return True
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
