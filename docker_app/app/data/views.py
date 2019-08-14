@@ -57,3 +57,18 @@ def prediction(request, game_pk, version='v1', date=dt.date.today().strftime("%Y
             'away_probability':float(item[2])} for item in cursor.fetchall()]
 
         return JsonResponse(home_goals, safe=False)
+
+
+def goal_distribution(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
+    with connections['data'].cursor() as cursor:
+        # Home and away team goal distribution
+        goals_query =    """SELECT home_team_regulation_goals, away_team_regulation_goals, count(*)/5000.0 AS probability 
+                            FROM game_predictions 
+                            WHERE game_pk = %s AND prediction_date = %s 
+                            GROUP BY home_team_regulation_goals, away_team_regulation_goals 
+                            ORDER BY home_team_regulation_goals, away_team_regulation_goals;"""
+        cursor.execute(goals_query, [game_pk, date])
+        goals_dist = [{'home_goals':int(item[0]), 'away_goals':int(item[1]), \
+            'probability':float(item[2])} for item in cursor.fetchall()]
+
+        return JsonResponse(goals_dist, safe=False)
