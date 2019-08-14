@@ -26,7 +26,7 @@ class Divisions(models.Model):
 
 
 class GamePredictions(models.Model):
-    game_pk = models.ForeignKey('Games', models.DO_NOTHING, db_column='game_pk', primary_key=True)
+    game_pk = models.OneToOneField('Games', models.DO_NOTHING, db_column='game_pk', primary_key=True)
     prediction_date = models.ForeignKey('ModelRuns', models.DO_NOTHING, db_column='prediction_date')
     prediction_number = models.IntegerField()
     home_team_regulation_goals = models.IntegerField()
@@ -56,7 +56,7 @@ class Games(models.Model):
 
 
 class GeneralPosteriors(models.Model):
-    prediction_date = models.ForeignKey('ModelRuns', models.DO_NOTHING, db_column='prediction_date', primary_key=True)
+    prediction_date = models.OneToOneField('ModelRuns', models.DO_NOTHING, db_column='prediction_date', primary_key=True)
     home_ice_advantage_median = models.FloatField()
     home_ice_advantage_hpd_low = models.FloatField()
     home_ice_advantage_hpd_high = models.FloatField()
@@ -82,7 +82,7 @@ class ModelRuns(models.Model):
 
 
 class Periods(models.Model):
-    game_pk = models.ForeignKey(Games, models.DO_NOTHING, db_column='game_pk', primary_key=True)
+    game_pk = models.OneToOneField(Games, models.DO_NOTHING, db_column='game_pk', primary_key=True)
     period_number = models.IntegerField()
     period_type = models.TextField()
     home_goals = models.IntegerField()
@@ -98,7 +98,7 @@ class Periods(models.Model):
 
 
 class Shootouts(models.Model):
-    game_pk = models.ForeignKey(Games, models.DO_NOTHING, db_column='game_pk', primary_key=True)
+    game_pk = models.OneToOneField(Games, models.DO_NOTHING, db_column='game_pk', primary_key=True)
     home_scores = models.IntegerField()
     home_attempts = models.IntegerField()
     away_scores = models.IntegerField()
@@ -111,7 +111,7 @@ class Shootouts(models.Model):
 
 
 class TeamPosteriors(models.Model):
-    team = models.ForeignKey('Teams', models.DO_NOTHING, primary_key=True)
+    team = models.OneToOneField('Teams', models.DO_NOTHING, primary_key=True)
     prediction_date = models.ForeignKey(ModelRuns, models.DO_NOTHING, db_column='prediction_date')
     offence_median = models.FloatField()
     offence_hpd_low = models.FloatField()
