@@ -648,7 +648,7 @@ def modelling_main(db_creds):
     today = dt.date.today()
     today_str = today.strftime('%Y-%m-%d')
     start_date = (today - dt.timedelta(days=365)).strftime('%Y-%m-%d')
-    end_date = (today + dt.timedelta(days=7)).strftime('%Y-%m-%d')
+    end_date = (today + dt.timedelta(days=2)).strftime('%Y-%m-%d')
 
     statement = "SELECT * FROM model_input_data WHERE game_date >= '" +\
          start_date + "' AND game_date < '" + today_str + "';"
