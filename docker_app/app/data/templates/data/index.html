@@ -1,0 +1,5 @@
+{%for g in games%}
+    <div class="game_link" >
+        {{g.game_pk}} {{g.away_team.team_name}} @ {{g.home_team.team_name}}
+    </div>
+{% endfor %}
