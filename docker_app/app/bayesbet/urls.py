@@ -22,7 +22,7 @@ from . import views
 urlpatterns = [
     re_path('^(?P<date>(\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])))?/?$', views.index),
     re_path('^game/(?P<game_pk>\d{10})/(?P<date>(\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])))?/?$', views.game_detail),
-    path('teams/', views.teams),
+    re_path('^teams/(?P<date>(\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])))?/?$', views.teams),
     path('data/', include('data.urls')),
     path('plots/', include('plots.urls')),
     path('admin/', admin.site.urls),

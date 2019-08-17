@@ -39,5 +39,8 @@ def game_detail(request, game_pk, date=dt.date.today().strftime("%Y-%m-%d")):
     }
     return render(request, 'game-detail.html', context)
 
-def teams(request):
-    return render(request, 'teams.html')
+def teams(request, date=dt.date.today().strftime("%Y-%m-%d")):
+    context= {
+        'prediction_date': date
+    }
+    return render(request, 'teams.html', context)
