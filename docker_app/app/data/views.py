@@ -7,14 +7,6 @@ from django.shortcuts import render
 from data.models import Games
 
 
-def index(request, version='v1'):
-    games = Games.objects.filter(game_date='2019-04-15')
-
-    context= {'games': games}
-        
-    return render(request, 'data/index.html', context)
-
-
 def games(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
     #with connections['data'].cursor() as cursor:
     #    query =  """SELECT DISTINCT game_pk, home_team_name, away_team_name 
