@@ -15,7 +15,7 @@
           </div>
             {%for g in predicted_games%}
               <div class="game_link" >
-                <a href="/game/{{g.game_pk}}/{{prediction_date}}/">{{g.game_pk}} - {{g.game_date}} : {{g.away_team}} @ {{g.home_team}}</a>
+                <a href="/game/{{g.game_pk}}/{{prediction_date}}/">{{g.game_date}} - {{g.away_team}} @ {{g.home_team}}</a>
               </div>
             {% endfor %}
         </main>
