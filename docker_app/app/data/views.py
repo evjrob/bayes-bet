@@ -72,3 +72,23 @@ def goal_distribution(request, game_pk, version='v1', date=dt.date.today().strft
             'probability':float(item[2])} for item in cursor.fetchall()]
 
         return JsonResponse(goals_dist, safe=False)
+
+
+def game_outcome(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
+    with connections['data'].cursor() as cursor:
+        # Home and away team goal distribution
+        goals_query =    """SELECT AVG((home_team_regulation_goals > away_team_regulation_goals)::Int) AS home_regulation_win,
+                            AVG((home_team_regulation_goals = away_team_regulation_goals AND home_wins_after_regulation)::Int) AS home_ot_win,
+                            AVG((home_team_regulation_goals = away_team_regulation_goals AND NOT home_wins_after_regulation)::Int) AS away_ot_win,
+                            AVG((home_team_regulation_goals < away_team_regulation_goals)::Int) AS away_regulation_win
+                            FROM game_predictions WHERE game_pk = %s AND prediction_date = %s;"""
+        cursor.execute(goals_query, [game_pk, date])
+        row = cursor.fetchone()
+        game_outcome = [
+            {'label': 'home regulation', 'value': float(row[0])},
+            {'label': 'home OT', 'value': float(row[1])},
+            {'label': 'away OT', 'value': float(row[2])},
+            {'label': 'away regulation', 'value': float(row[3])}
+        ]
+
+        return JsonResponse(game_outcome, safe=False)
