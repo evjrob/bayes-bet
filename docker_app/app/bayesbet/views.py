@@ -23,7 +23,8 @@ def index(request, date=dt.date.today().strftime("%Y-%m-%d")):
                         (SELECT team_id as away_team_id, team_name as away_team_name
                         FROM teams) AS away_teams
                     ON games.away_team_id = away_teams.away_team_id
-                    WHERE game_date >= %s AND game_date <= %s;"""
+                    WHERE game_date >= %s AND game_date <= %s
+                    ORDER BY game_date;"""
         cursor.execute(query, [date, date_plus])
         predicted_games = [{'game_pk':g[0], 'game_date': g[1], 
             'home_team':g[2], 'away_team':g[3]} for g in cursor.fetchall()]
