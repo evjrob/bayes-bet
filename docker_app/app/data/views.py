@@ -35,30 +35,6 @@ def games(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
     return JsonResponse({"data" : rows})
 
 
-def prediction(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    with connections['data'].cursor() as cursor:
-        # Home and away team goal distribution
-        goals_query =    """SELECT COALESCE(home.goals, away.goals) as goals, 
-                            COALESCE(home_probability, 0) AS home_probability, 
-                            COALESCE(away_probability, 0) as away_probability  FROM
-                            (SELECT home_team_regulation_goals as goals, count(home_team_regulation_goals)/5000.0 AS home_probability 
-                            FROM game_predictions 
-                            WHERE game_pk = %s AND prediction_date = %s 
-                            GROUP BY game_pk, prediction_date, home_team_regulation_goals) AS home
-                            FULL OUTER JOIN
-                            (SELECT away_team_regulation_goals as goals, count(away_team_regulation_goals)/5000.0 AS away_probability 
-                            FROM game_predictions 
-                            WHERE game_pk = %s AND prediction_date = %s
-                            GROUP BY game_pk, prediction_date, away_team_regulation_goals) AS away
-                            ON home.goals = away.goals
-                            ORDER BY home.goals;"""
-        cursor.execute(goals_query, [game_pk, date, game_pk, date])
-        home_goals = [{'goals':item[0], 'home_probability':float(item[1]), \
-            'away_probability':float(item[2])} for item in cursor.fetchall()]
-
-        return JsonResponse(home_goals, safe=False)
-
-
 def goal_distribution(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
     with connections['data'].cursor() as cursor:
         # Home and away team goal distribution
