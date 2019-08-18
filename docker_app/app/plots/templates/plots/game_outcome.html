@@ -25,18 +25,32 @@ function groupData(data, total) {
   return _data
 }
 
-// Define the stackedBar function
-function stackedBar (bind, data, config) {
-  config = {
-    f: d3.format('.1f'),
+var game_outcome_config = {
+  f: d3.format('.2f'),
+  margin: {top: 10, right: 10, bottom: 20, left: 10},
+  width: 900,
+  height: 100,
+  barHeight: 50,
+  colors: ['#D65F5F', '#d6a1a1', '#97abd1', '#4878D0'],
+  home_abb: '{{home_abb}}',
+  away_abb: '{{away_abb}}'
+}
+
+//Read the data
+d3.json("http://127.0.0.1:8000/data/v1/gameoutcome/{{game_pk}}/{{prediction_date}}", function(data) {
+  
+  var config = {
+    f: d3.format('.2f'),
     margin: {top: 10, right: 10, bottom: 20, left: 10},
-    width: 800,
-    height: 200,
-    barHeight: 100,
-    colors: ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33'],
-    ...config
+    width: 900,
+    height: 100,
+    barHeight: 50,
+    colors: ['#D65F5F', '#d6a1a1', '#97abd1', '#4878D0'],
+    home_abb: '{{home_abb}}',
+    away_abb: '{{away_abb}}'
   }
-  const { f, margin, width, height, barHeight, colors } = config
+
+  const { f, margin, width, height, barHeight, colors, home_abb, away_abb } = config
   const w = width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
   const halfBarHeight = barHeight / 2
@@ -50,7 +64,7 @@ function stackedBar (bind, data, config) {
     .range([0, w])
 
   // create svg in passed in div
-  const selection = d3.select(bind)
+  const selection = d3.select('#game-outcome-{{game_pk}}')
     .append('svg')
     .attr('width', width)
     .attr('height', height)
@@ -80,28 +94,15 @@ function stackedBar (bind, data, config) {
     .style("font", "14px sans-serif");
 
   // add the labels
-  selection.selectAll('.text-label')
+  selection.selectAll('#game-outcome-{{game_pk}}')
+    .filter('.text-label')
     .data(_data)
     .enter().append('text')
     .attr('class', 'text-label')
     .attr('text-anchor', 'middle')
     .attr('x', d => xScale(d.cumulative) + (xScale(d.value) / 2))
     .attr('y', (h / 2) + (halfBarHeight * 1.1) + 20)
-    .text(d => d.label)
+    .text(d => d.label.replace('away', away_abb).replace('home', home_abb))
     .style("font", "12px sans-serif");
-}
-
-var game_outcome_config = {
-  f: d3.format('.2f'),
-  margin: {top: 10, right: 10, bottom: 20, left: 10},
-  width: 900,
-  height: 100,
-  barHeight: 50,
-  colors: ['#D65F5F', '#d6a1a1', '#97abd1', '#4878D0'],
-}
-
-//Read the data
-d3.json("http://127.0.0.1:8000/data/v1/gameoutcome/{{game_pk}}/{{prediction_date}}", function(data) {
-  stackedBar('#game-outcome-{{game_pk}}', data, game_outcome_config) 
 })
 </script>

@@ -86,19 +86,19 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
   }
   var mousemove_dist = function(d) {
     tooltip
-      .html("Home goals: " + d.home_goals + "<br>Away goals: " + d.away_goals + "<br>Probability: " + d.probability)
+      .html("{{home_abb}} goals: " + d.home_goals + "<br>{{away_abb}} goals: " + d.away_goals + "<br>Probability: " + d.probability)
       .style("left", (d3.mouse(this)[0]+70) + "px")
       .style("top", (d3.mouse(this)[1]) + "px")
   }
   var mousemove_home = function(d) {
     tooltip
-    .html("Home goals: " + d.goals + "<br>Probability: " + d.home_probability)
+    .html("{{home_abb}} goals: " + d.goals + "<br>Probability: " + d.home_probability)
       .style("left", (d3.mouse(this)[0]+70) + "px")
       .style("top", (d3.mouse(this)[1]) + "px")
   }
   var mousemove_away = function(d) {
     tooltip
-    .html("Away goals: " + d.goals + "<br>Probability: " + d.home_probability)
+    .html("{{away_abb}} goals: " + d.goals + "<br>Probability: " + d.home_probability)
       .style("left", (d3.mouse(this)[0]+70) + "px")
       .style("top", (d3.mouse(this)[1]) + "px")
   }
@@ -222,7 +222,7 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
           "translate(" + ((width - hist_dim - margin.between)/2) + " ," + 
                           (height + margin.top + margin.between + margin.bottom/2) + ")")
     .style("text-anchor", "middle")
-    .text("Home Goals")
+    .text("{{home_abb}} Goals")
     .style("font", "14px sans-serif");
 
   // Y axis
@@ -235,7 +235,7 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
     .attr("y", - margin.left/2)
     .attr("x", 0 - height/2 - hist_dim/2)
     .style("text-anchor", "middle")
-    .text("Away Goals")
+    .text("{{away_abb}} Goals")
     .style("font", "14px sans-serif");;
       
 })
