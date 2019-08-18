@@ -4,6 +4,7 @@
 <script>
 
 // set the dimensions and margins of the graph
+var plot_color = '#7d59a8'
 var full_width = 600
 var full_height = 600
 var margin = {top: 10, right: 10, bottom: 50, left: 50, between: 10},
@@ -55,7 +56,7 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
   
   // Build color scale
   var myColor = d3.scaleLinear()
-    .range(["white", "steelblue"])
+    .range(["white", plot_color])
     .domain([0, max_probability]);
 
   data.forEach(function(d) {
@@ -151,7 +152,7 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
     .attr("height", function(d) {
       return hist_dim - xy(d.home_probability / max_home_prob);
     })
-    .style("fill", "steelblue")
+    .style("fill", plot_color)
     .on("mouseover", mouseover)
     .on("mousemove", mousemove_home)
     .on("mouseleave", mouseleave);
@@ -195,7 +196,7 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
       return yx(d.away_probability / max_away_prob);
     })
     .attr("height", y.bandwidth())
-    .style("fill", "steelblue")
+    .style("fill", plot_color)
     .on("mouseover", mouseover)
     .on("mousemove", mousemove_away)
     .on("mouseleave", mouseleave);
