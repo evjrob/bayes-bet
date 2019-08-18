@@ -15,13 +15,14 @@
           </div>
             {%for g in predicted_games%}
               <div class="game_link" >
-                <a href="/game/{{g.game_pk}}/{{prediction_date}}/">{{g.game_date}} - {{g.away_team}} @ {{g.home_team}}</a>
+                <a href="/game/{{g.game_pk}}/{{prediction_date}}/"><h5>{{g.game_date}} - {{g.away_team}} @ {{g.home_team}}</h5></a>
               </div>
               <div class="outcome-plot">
                 <a href="/game/{{g.game_pk}}/{{prediction_date}}/">
                   {% include "plots/game_outcome.html" with game_pk=g.game_pk date=prediction_date %}
                   </a>
               </div>
+              <br>
             {% endfor %}
         </main>
       </div>
