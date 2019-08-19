@@ -79,8 +79,8 @@ d3.json("http://127.0.0.1:8000/data/v1/gameoutcome/{{game_pk}}/{{prediction_date
     .attr('text-anchor', 'middle')
     .attr('x', d => xScale(d.cumulative) + (xScale(d.value) / 2))
     .attr('y', (h / 2) + 5)
-    .text(d => f(d.value * 100.0) + ' %')
-    .style("font", "14px sans-serif");
+    .text(d => f(d.value * 100.0) + '%')
+    .style("font", "12px sans-serif");
 
   // add the labels
   selection.selectAll('#game-outcome-{{game_pk}}')
