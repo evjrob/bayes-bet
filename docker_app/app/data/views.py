@@ -4,7 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db import connections
 from django.shortcuts import render
 
-from data.models import Games
+from data.models import Games, TeamPosteriors
 
 
 def games(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
@@ -60,3 +60,14 @@ def game_outcome(request, game_pk, version='v1', date=dt.date.today().strftime("
         ]
 
         return JsonResponse(game_outcome, safe=False)
+
+
+def teams(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
+    teams = TeamPosteriors.objects.filter(prediction_date=date)
+    rows = [{'team_name':t.team.team_name, 'team_abb':t.team.team_abbreviation, 
+    'offence_median':t.offence_median, 'offence_hpd_low':t.offence_hpd_low,
+    'offence_hpd_high':t.offence_hpd_high, 'defence_median':t.defence_median,
+    'defence_hpd_low':t.defence_hpd_low, 'defence_hpd_high':t.defence_hpd_high}
+    for t in teams]
+
+    return JsonResponse(rows, safe=False)
