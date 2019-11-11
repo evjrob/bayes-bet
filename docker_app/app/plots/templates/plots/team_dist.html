@@ -1,24 +1,5 @@
 
 <div id="team-dist"></div>
-<style>
-        path.link {
-          fill: none;
-          stroke: #666;
-          stroke-width: 1.5px;
-        }
-        
-        circle {
-          fill: #ccc;
-          stroke: #4b3666;
-          stroke-width: 1.5px;
-        }
-        
-        text {
-          fill: #000;
-          font: 10px sans-serif;
-          pointer-events: none;
-        }
-        </style>
 <script>
 d3.json("http://127.0.0.1:8000/data/v1/teams/{{date}}", function(data) {
   var links = [];
@@ -152,12 +133,13 @@ d3.json("http://127.0.0.1:8000/data/v1/teams/{{date}}", function(data) {
 
   // add the nodes
   node.append("circle")
-    .attr("r", radius)         
-    .style("fill", "#7d59a8");
+    .attr("r", radius)
+    .attr("stroke-width", "1.5px")         
+    .attr("class", "color-primary")
 
   // add node labels
   node.append("text")
-    .style("font-size", "8px")
+    .style("font-size", "9px")
     .style("fill", "white")
     .style("font-weight", "bold")
     .style("text-anchor", "middle")
