@@ -4,7 +4,7 @@
 <script>
 
 // set the dimensions and margins of the graph
-var plot_color = '#7d59a8'
+//var plot_color = document.querySelector('.color-primary').style.fill;
 var full_width = 750
 var full_height = 750
 var margin = {top: 10, right: 10, bottom: 50, left: 50, between: 10},
@@ -56,7 +56,7 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
   
   // Build color scale
   var myColor = d3.scaleLinear()
-    .range(["white", plot_color])
+    .range([0, 1])
     .domain([0, max_probability]);
 
   data.forEach(function(d) {
@@ -124,7 +124,9 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
       .attr("y", function(d) { return y(d.away_goals) })
       .attr("width", x.bandwidth() )
       .attr("height", y.bandwidth() )
-      .style("fill", function(d) { return myColor(d.probability)} )
+      .attr("class", "color-primary")
+      .style("stroke-width", 0)
+      .style("opacity", function(d) { return myColor(d.probability)} )
     .on("mouseover", mouseover)
     .on("mousemove", mousemove_dist)
     .on("mouseleave", mouseleave)
@@ -160,7 +162,8 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
     .attr("height", function(d) {
       return hist_dim - xy(d.home_probability / max_home_prob);
     })
-    .style("fill", plot_color)
+    .attr("class", "color-primary")
+    .style("stroke-width", 0)
     .on("mouseover", mouseover)
     .on("mousemove", mousemove_home)
     .on("mouseleave", mouseleave);
@@ -204,7 +207,8 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
       return yx(d.away_probability / max_away_prob);
     })
     .attr("height", y.bandwidth())
-    .style("fill", plot_color)
+    .attr("class", "color-primary")
+    .style("stroke-width", 0)
     .on("mouseover", mouseover)
     .on("mousemove", mousemove_away)
     .on("mouseleave", mouseleave);

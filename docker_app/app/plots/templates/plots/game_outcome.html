@@ -34,12 +34,12 @@ d3.json("http://127.0.0.1:8000/data/v1/gameoutcome/{{game_pk}}/{{prediction_date
     width: 700,
     height: 100,
     barHeight: 50,
-    colors: ['#D65F5F', '#d6a1a1', '#97abd1', '#4878D0'],
+    color_classes: ["color-away", "color-away-light", "color-home-light", "color-home"],
     home_abb: '{{home_abb}}',
     away_abb: '{{away_abb}}'
   }
 
-  const { f, margin, width, height, barHeight, colors, home_abb, away_abb } = config
+  const { f, margin, width, height, barHeight, color_classes, home_abb, away_abb } = config
   const w = width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
   const halfBarHeight = barHeight / 2
@@ -69,7 +69,7 @@ d3.json("http://127.0.0.1:8000/data/v1/gameoutcome/{{game_pk}}/{{prediction_date
     .attr('y', h / 2 - halfBarHeight)
     .attr('height', barHeight)
     .attr('width', d => xScale(d.value))
-    .style('fill', (d, i) => colors[i])
+    .attr('class', (d, i) => color_classes[i])
 
   // add values on bar
   selection.selectAll('.text-value')
