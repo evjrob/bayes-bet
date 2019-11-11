@@ -116,21 +116,6 @@ d3.json("http://127.0.0.1:8000/data/v1/teams/{{date}}", function(data) {
     .enter().append("g")
       .attr("class", "node");
 
-  // create and area based scale for the radius of each node
-  aScale = d3.scaleSqrt()
-    .domain([0, d3.max(d3.values(nodes), function(d) {
-      return d.weight;
-    })])
-    .range([1, 10]);
-
-  // create color scale based on degree of node
-  colorScale = d3.scaleLinear()
-    .domain([0, d3.max(d3.values(nodes), function(d) {
-      return d.weight;
-    })])
-    .interpolate(d3.interpolateHcl)
-    .range([d3.rgb("#FFFFFF"), d3.rgb('#000099')]);
-
   // add the nodes
   node.append("circle")
     .attr("r", radius)
