@@ -27,7 +27,7 @@ d3.json("http://127.0.0.1:8000/data/v1/goaldist/{{game_pk}}/{{date}}", function(
   // Labels of row and columns
   var home_goal_max = Math.max.apply(Math, data.map(function(d){return d.home_goals;}));
   var away_goal_max = Math.max.apply(Math, data.map(function(d){return d.away_goals;}));
-  var goals_range = Array.from(Array(Math.max(home_goal_max, away_goal_max)).keys());
+  var goals_range = Array.from(Array(Math.max(home_goal_max, away_goal_max)+1).keys());
   goals_range = goals_range.map(String);
 
   // Create histogram data
