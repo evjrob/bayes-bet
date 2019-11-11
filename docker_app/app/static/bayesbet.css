@@ -91,3 +91,59 @@ body {
 
 .border-top { border-top: 1px solid #e5e5e5; }
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
+
+/*
+ * Theme colours
+ * Analagous, https://color.adobe.com/create
+ */
+
+.color-primary {
+  color: #7F3E8F;
+  fill: #7F3E8F;
+  stroke: #422047;
+}
+
+.color-primary-light {
+  color: #7F628F;
+  fill: #7F628F;
+}
+
+.color-away {
+  color: #CF5A57;
+  fill: #CF5A57;
+}
+
+.color-away-light {
+  color: #CF8C98;
+  fill: #CF8C98;
+}
+
+.color-away-secondary {
+  color: #E89A58;
+  fill: #E89A58;
+}
+
+.color-away-secondary-light {
+  color: #E8B495;
+  fill: #E8B495;
+}
+
+.color-home {
+  color: #5656CC;
+  fill: #5656CC;
+}
+
+.color-home-light {
+  color: #8B94CC;
+  fill: #8B94CC;
+}
+
+.color-home-secondary {
+  color: #67C8E6;
+  fill: #67C8E6;
+}
+
+.color-home-secondary-light {
+  color: #A3E0E6;
+  fill: #A3E0E6;
+}
