@@ -97,7 +97,11 @@ d3.json("http://127.0.0.1:8000/data/v1/teams/{{date}}", function(data) {
     .style("font", "10px sans-serif");
 
   data.forEach(function(d) {
-    var point_node = {x:x(d.defence_median), y:y(d.offence_median),
+    var point_node = {x:x(d.defence_median), 
+                      y:y(d.offence_median),
+                      offence: d.offence_median,
+                      defence: d.defence_median,
+                      team_name: d.team_name,
                       team:d.team_abb};
     nodes.push(point_node);
   });
@@ -110,11 +114,44 @@ d3.json("http://127.0.0.1:8000/data/v1/teams/{{date}}", function(data) {
       .radius(radius + 1))
     .on("tick", tick);
 
+  // create a tooltip
+  var tooltip = d3.select("#team-dist")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+    .style("background-color", "white")
+    .style("border", "solid")
+    .style("border-width", "2px")
+    .style("border-radius", "5px")
+    .style("padding", "5px")
+
+  var get_chart_top = function() {
+    var chart_pos = svg.node().getBoundingClientRect();
+    return chart_pos.top;
+  }
+
+  // Functions that change the tooltip when the user hovers / moves / leaves a team circle
+  var mouseover = function(d) {
+    tooltip.style("opacity", 1)
+  }
+  var mousemove = function(d) {
+    tooltip
+      .html(d.team_name + "<br>Offence: " + d.offence + "<br>Defence: " + d.defence)
+      .style("left", (d.x + d3.mouse(this)[0] + margin.left + 50) + "px")
+      .style("top", (d.y + d3.mouse(this)[1] + margin.top + 40) + "px")
+  }
+  var mouseleave = function(d) {
+    tooltip.style("opacity", 0)
+  }
+
   // define the nodes
   var node = svg.selectAll(".node")
       .data(force.nodes())
     .enter().append("g")
-      .attr("class", "node");
+      .attr("class", "node")
+    .on("mouseover", mouseover)
+    .on("mousemove", mousemove)
+    .on("mouseleave", mouseleave);
 
   // add the nodes
   node.append("circle")
