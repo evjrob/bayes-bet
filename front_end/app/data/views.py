@@ -1,5 +1,4 @@
 import datetime as dt
-from rest_framework import generics
 from django.http import HttpResponse, JsonResponse
 from django.db import connections
 from django.shortcuts import render
