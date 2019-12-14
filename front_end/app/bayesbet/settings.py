@@ -22,12 +22,14 @@ SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'd2u--wh6qtkqo4wbzktaczz&sn)8s0@n_3t=ep2i4!(h7wtkw4'
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
-ALLOWED_HOSTS = ['app', '127.0.0.1']
+ALLOWED_HOSTS = ['app']
+if DEBUG is True:
+    ALLOWED_HOSTS = ALLOWED_HOSTS + ['127.0.0.1']
 
 
 # Application definition
@@ -146,9 +148,7 @@ STATICFILES_DIRS = [
 
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = [
-    "https://everettsprojects.com",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "file://*"
-]
+CORS_ORIGIN_WHITELIST = ["http://everettsprojects.com"]
+if DEBUG is True:
+    CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + \
+    ["http://localhost:8000", "http://127.0.0.1:8000", "file://*"]
