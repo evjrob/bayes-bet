@@ -1,8 +1,8 @@
 <!-- Bootstrap core JavaScript
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
         crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
         integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
@@ -11,8 +11,48 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
         crossorigin="anonymous"></script>
 
+<!-- Moment.js -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script>
+
+<!-- Datepicker -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/js/tempusdominus-bootstrap-4.min.js"></script>
 <!-- Icons -->
 <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
 <script>
+    $(function () {
+        function getSelectedDateAndPath() {
+            var path = window.location.pathname;
+            var pathSlice = path.split('/');
+            var selectedDate = '';
+            var rootPath = [];
+            var dateRegEx = /^\d{4}-\d{2}-\d{2}$/;
+            var foundDate = false;
+            for (p in pathSlice) {
+                if (!foundDate & pathSlice[p] != '') {
+                    if (!pathSlice[p].match(dateRegEx)) {
+                        rootPath.push(pathSlice[p]);
+                    } else {
+                        rootPath.push('');
+                        selectedDate = pathSlice[p];
+                        foundDate = true;
+                    }
+                }
+            }
+            if (selectedDate == '') {
+                selectedDate = moment().format('YYYY-MM-DD');
+            }
+            rootPath = rootPath.join('/');
+            return {date: selectedDate, path: rootPath};
+        }
+        var dateAndPath = getSelectedDateAndPath();
+        $('#datetimepicker').datetimepicker({
+            format: 'YYYY-MM-DD',
+            defaultDate: dateAndPath.date
+        });
+        $('#datetimepicker').on("change.datetimepicker", function (e) {
+            var newLocation = dateAndPath.path + e.date.format('YYYY-MM-DD') + '/';
+            window.location.replace('http://' + window.location.host + '/' + newLocation);
+        });
+    });
     feather.replace()
 </script>

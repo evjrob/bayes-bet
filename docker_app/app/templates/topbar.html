@@ -1,9 +1,15 @@
 <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">BayesBet</a>
-  <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
-      <span data-feather="calendar"></span>
-      Prediction Date
-  </button>
+  <span class="navbar-brand col-sm-3 col-md-2 " href="">BayesBet</span>
+  <div class="container mr-0">
+    <div class="form-group">
+      <div class="input-group date" id="datetimepicker" data-target-input="nearest">
+        <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker"/>
+        <div class="input-group-append" data-target="#datetimepicker" data-toggle="datetimepicker">
+          <div class="input-group-text"><i data-feather="calendar"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
   <ul class="navbar-nav px-3">
   </ul>
 </nav>
