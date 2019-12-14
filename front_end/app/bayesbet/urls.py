@@ -13,7 +13,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import include, path, re_path
 
 from . import views
@@ -25,5 +24,4 @@ urlpatterns = [
     re_path('^teams/(?P<date>(\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])))?/?$', views.teams),
     path('data/', include('data.urls')),
     path('plots/', include('plots.urls')),
-    path('admin/', admin.site.urls),
 ]
