@@ -9,7 +9,7 @@ def index(request, date=dt.date.today().strftime("%Y-%m-%d")):
     if date is None:
         date=dt.date.today().strftime("%Y-%m-%d")
     date_plus = dt.datetime.strptime(date, '%Y-%m-%d') + dt.timedelta(days=2)
-    predicted_games = Games.objects.filter(game_date__range=(date, date_plus))
+    predicted_games = Games.objects.filter(game_date__range=(date, date_plus)).order_by('game_date')
     predicted_games = [{'game_pk':g.game_pk, 'game_date': g.game_date, 
         'home_team':g.home_team.team_name, 'home_abb':g.home_team.team_abbreviation,
         'away_team':g.away_team.team_name, 'away_abb':g.away_team.team_abbreviation} 
