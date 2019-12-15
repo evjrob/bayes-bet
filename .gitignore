@@ -91,3 +91,6 @@ target/
 
 # playground folder for experimentation
 playground/*
+
+# eb database creds
+front_end/app/env_params.sh

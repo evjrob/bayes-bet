@@ -143,15 +143,14 @@ STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-    os.path.join(SETTINGS_PATH, "static"),
+    os.path.join(BASE_DIR, "static")
 ]
 
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = [
     "http://everettsprojects.com", 
-    "bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com"
+    "http://bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com"
     ]
 if DEBUG is True:
     CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + \
