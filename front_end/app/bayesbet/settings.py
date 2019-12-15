@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-from retrieve_db_creds import get_secret
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +26,10 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
-ALLOWED_HOSTS = ['app']
+ALLOWED_HOSTS = [
+    'app',
+    'bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com'
+    ]
 if DEBUG is True:
     ALLOWED_HOSTS = ALLOWED_HOSTS + ['127.0.0.1']
 
@@ -79,24 +81,23 @@ WSGI_APPLICATION = 'bayesbet.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-db_creds = get_secret()
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': db_creds['APP_DATABASE_NAME'],
-        'USER': db_creds['DATABASE_USER'],
-        'PASSWORD': db_creds['DATABASE_PASSWD'],
-        'HOST': db_creds['DATABASE_HOST'],
-        'PORT': int(db_creds['DATABASE_PORT']),
+        'NAME': os.environ['APP_DATABASE_NAME'],
+        'USER': os.environ['DATABASE_USER'],
+        'PASSWORD': os.environ['DATABASE_PASSWD'],
+        'HOST': os.environ['DATABASE_HOST'],
+        'PORT': int(os.environ['DATABASE_PORT']),
     },
     'data': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': db_creds['MODEL_DATABASE_NAME'],
-        'USER': db_creds['DATABASE_USER'],
-        'PASSWORD': db_creds['DATABASE_PASSWD'],
-        'HOST': db_creds['DATABASE_HOST'],
-        'PORT': int(db_creds['DATABASE_PORT']),
+        'NAME': os.environ['MODEL_DATABASE_NAME'],
+        'USER': os.environ['DATABASE_USER'],
+        'PASSWORD': os.environ['DATABASE_PASSWD'],
+        'HOST': os.environ['DATABASE_HOST'],
+        'PORT': int(os.environ['DATABASE_PORT']),
     }
 }
 
@@ -139,6 +140,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = 'static'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
@@ -147,7 +149,10 @@ STATICFILES_DIRS = [
 
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = ["http://everettsprojects.com"]
+CORS_ORIGIN_WHITELIST = [
+    "http://everettsprojects.com", 
+    "bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com"
+    ]
 if DEBUG is True:
     CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + \
     ["http://localhost:8000", "http://127.0.0.1:8000", "file://*"]
