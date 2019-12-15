@@ -1,7 +1,7 @@
 
 <div id="team-dist"></div>
 <script>
-  d3.json("http://127.0.0.1:8000/data/v1/teams/{{date}}", function(data) {
+  d3.json("/data/v1/teams/{{date}}", function(data) {
     plot_team_dist(data, "#team-dist")
   });
 </script>

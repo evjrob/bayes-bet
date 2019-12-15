@@ -3,7 +3,7 @@
 
 <script>
 //Read the data
-d3.json("http://127.0.0.1:8000/data/v1/gameoutcome/{{game_pk}}/{{prediction_date}}", function(data) {
+d3.json("/data/v1/gameoutcome/{{game_pk}}/{{prediction_date}}", function(data) {
   plot_game_outcome(data, "#game-outcome-{{game_pk}}", "{{home_abb}}", "{{away_abb}}");
 })
 </script>
