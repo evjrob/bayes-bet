@@ -28,7 +28,8 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
 ALLOWED_HOSTS = [
     'app',
-    'bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com'
+    'bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com',
+    'hockey.everettsprojects.com'
     ]
 if DEBUG is True:
     ALLOWED_HOSTS = ALLOWED_HOSTS + ['127.0.0.1']
@@ -149,7 +150,8 @@ STATICFILES_DIRS = [
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = [
-    "http://everettsprojects.com", 
+    "http://everettsprojects.com",
+    "http://hockey.everettsprojects.com",  
     "http://bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com"
     ]
 if DEBUG is True:
