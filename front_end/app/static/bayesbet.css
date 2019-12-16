@@ -24,10 +24,10 @@ body {
 
 .sidebar-sticky {
   position: -webkit-sticky;
-  position: sticky;
+  position: relative;
   top: 48px; /* Height of navbar */
   height: calc(100vh - 48px);
-  padding-top: 3.2rem;
+  padding-top: 0.5rem;
   overflow-x: hidden;
   overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
 }
@@ -86,6 +86,7 @@ body {
 }
 
 .prediction-date-container {
+  margin-left: 0;
   box-sizing: border-box;
   position: relative;
   display: inline-block;
