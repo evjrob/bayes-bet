@@ -12,6 +12,17 @@ def get_default_date():
 def index(request, date=None):
     if date is None:
         date = get_default_date()
+    predicted_games = Games.objects.filter(game_date=date).order_by('game_date')
+    predicted_games = [{'game_pk':g.game_pk, 'game_date': g.game_date, 
+        'home_team':g.home_team.team_name, 'home_abb':g.home_team.team_abbreviation,
+        'away_team':g.away_team.team_name, 'away_abb':g.away_team.team_abbreviation} 
+        for g in predicted_games]
+    context= {'prediction_date': date, 'predicted_games': predicted_games}
+    return render(request, 'index.html', context)
+
+def games(request, date=None):
+    if date is None:
+        date = get_default_date()
     date_plus = dt.datetime.strptime(date, '%Y-%m-%d') + dt.timedelta(days=2)
     predicted_games = Games.objects.filter(game_date__range=(date, date_plus)).order_by('game_date')
     predicted_games = [{'game_pk':g.game_pk, 'game_date': g.game_date, 
@@ -35,7 +46,7 @@ def index(request, date=None):
     #    predicted_games = [{'game_pk':g[0], 'game_date': g[1], 
     #        'home_team':g[2], 'away_team':g[3]} for g in cursor.fetchall()]
     context= {'prediction_date': date, 'predicted_games': predicted_games}
-    return render(request, 'index.html', context)
+    return render(request, 'games.html', context)
 
 def game_detail(request, game_pk, date=None):
     if date is None:
