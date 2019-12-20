@@ -43,20 +43,38 @@ def goal_distribution(request, game_pk, version='v1', date=dt.date.today().strft
 
 def game_outcome(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
     with connections['data'].cursor() as cursor:
-        # Home and away team goal distribution
-        goals_query =    """SELECT AVG((home_team_regulation_goals < away_team_regulation_goals)::Int) AS away_regulation_win,
+        # Home and away team probability of winning
+        pred_query =     """SELECT AVG((home_team_regulation_goals < away_team_regulation_goals)::Int) AS away_regulation_win,
                             AVG((home_team_regulation_goals = away_team_regulation_goals AND NOT home_wins_after_regulation)::Int) AS away_ot_win,
                             AVG((home_team_regulation_goals = away_team_regulation_goals AND home_wins_after_regulation)::Int) AS home_ot_win,
                             AVG((home_team_regulation_goals > away_team_regulation_goals)::Int) AS home_regulation_win
                             FROM game_predictions WHERE game_pk = %s AND prediction_date = %s;"""
-        cursor.execute(goals_query, [game_pk, date])
+        cursor.execute(pred_query, [game_pk, date])
         row = cursor.fetchone()
-        game_outcome = [
-            {'label': 'away regulation', 'value': float(row[0])},
-            {'label': 'away OT', 'value': float(row[1])},
-            {'label': 'home OT', 'value': float(row[2])},
-            {'label': 'home regulation', 'value': float(row[3])}
-        ]
+        game_outcome = {
+            'predictions': {
+                'away': [{'type': 'REG', 'value': float(row[0])},
+                         {'type': 'OT', 'value': float(row[1])}],
+                'home': [{'type': 'REG', 'value': float(row[3])},
+                         {'type': 'OT', 'value': float(row[2])}]
+            }
+        }
+        # Home and away scores
+        score_query =    """SELECT home_team_final_score, away_team_final_score 
+                            FROM model_input_data
+                            WHERE game_pk = %s;"""
+        cursor.execute(score_query, [game_pk])
+        row = cursor.fetchone()
+        if row is not None:
+            home_score = int(row[0])
+            away_score = int(row[1])
+        else:
+            home_score = "-"
+            away_score = "-"
+        game_outcome['score'] = {
+            'home': home_score,
+            'away': away_score
+        }
 
         return JsonResponse(game_outcome, safe=False)
 
