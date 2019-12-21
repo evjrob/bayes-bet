@@ -73,36 +73,32 @@ function plot_goal_dist(data, target_div, home_abb, away_abb) {
         .style("border-width", "2px")
         .style("border-radius", "5px")
         .style("padding", "5px")
+        .style("position", "absolute")
 
-    var get_chart_top = function() {
-        var chart_pos = svg.node().getBoundingClientRect();
-        return chart_pos.top;
-
-    }
     // Functions that change the tooltip when the user hovers / moves / leaves a cell
     var mouseover = function(d) {
         tooltip.style("opacity", 1)
     }
     var mousemove_dist = function(d) {
-        
+        var chart_pos = svg.node().getBoundingClientRect();
         tooltip
         .html(home_abb + " goals: " + d.home_goals + "<br>" + away_abb + " goals: " + d.away_goals + "<br>Probability: " + d.probability)
-        .style("left", (d3.mouse(this)[0] + margin.left + 70) + "px")
-        .style("top", (d3.mouse(this)[1] + get_chart_top() - hist_dim) + "px")
+        .style("left", (d3.event.pageX - chart_pos.left  + 60) + "px")
+        .style("top", (d3.event.pageY - 90) + "px")
     }
     var mousemove_home = function(d) {
         var chart_pos = svg.node().getBoundingClientRect();
         tooltip
         .html(home_abb + " goals: " + d.goals + "<br>Probability: " + Math.round(d.home_probability * 10000)/10000)
-        .style("left", (d3.mouse(this)[0] + xTop(d.goals) + margin.left + 70) + "px")
-        .style("top", (d3.mouse(this)[1] + xy(d.home_probability / max_home_prob) + get_chart_top() - hist_dim) + "px")
+        .style("left", (d3.event.pageX - chart_pos.left  + 60) + "px")
+        .style("top", (d3.event.pageY - 90) + "px")
     }
     var mousemove_away = function(d) {
         var chart_pos = svg.node().getBoundingClientRect();
         tooltip
         .html(away_abb + " goals: " + d.goals + "<br>Probability: " + Math.round(d.away_probability * 10000)/10000)
-        .style("left", (d3.mouse(this)[0] + width + margin.left) + "px")
-        .style("top", (d3.mouse(this)[1] + yRight(d.goals) + get_chart_top() - hist_dim) + "px")
+        .style("left", (d3.event.pageX - chart_pos.left  + 60) + "px")
+        .style("top", (d3.event.pageY - 90) + "px")
     }
     var mouseleave = function(d) {
         tooltip.style("opacity", 0)
