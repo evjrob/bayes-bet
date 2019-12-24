@@ -1,4 +1,10 @@
 function plot_team_dist(data, target_div) {
+
+  var parent_div = d3.select(target_div);
+  var min_width = 350;
+  var max_width = 700;
+  var div_width = Math.max(min_width, Math.min(max_width, parseInt(parent_div.style("width"))));
+
   var nodes = [];
 
   data.forEach(function(d) {
@@ -10,8 +16,8 @@ function plot_team_dist(data, target_div) {
     d.defence_hpd_high = +d.defence_hpd_high;
   });
   var margin = {top: 10, right: 10, bottom: 60, left: 60};
-  var full_width = 600;
-  var full_height = 600;
+  var full_width = div_width;
+  var full_height = div_width;
   var width = full_width - margin.left - margin.right;
   var height = full_height - margin.top - margin.bottom;
   var radius = 13;

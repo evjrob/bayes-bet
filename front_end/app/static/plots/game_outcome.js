@@ -22,10 +22,16 @@ function groupData(data) {
   
   //Read the data
 function plot_game_outcome(data, target_div, home_abb, away_abb) {
+
+    var parent_div = d3.select(target_div);
+    var min_width = 350;
+    var max_width = 700;
+    var div_width = Math.max(min_width, Math.min(max_width, parseInt(parent_div.style("width"))));
+
     var config = {
         f: d3.format('.2f'),
         margin: {top: 25, right: 70, bottom: 20, left: 50},
-        width: 700,
+        width: div_width,
         height: 100,
         barHeight: 30,
         color_classes: {
@@ -181,8 +187,17 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('class', 'prediction-label')
         .attr('text-anchor', 'left')
         .attr('x', 5)
-        .attr('y', -5)
-        .text("Predited Win Probability (Regulation / Overtime)")
+        .attr('y', -15)
+        .text("Predited Win Probability")
+        .style("font", "12px sans-serif")
+        .style("font-weight", "bold");
+
+    selection.append("text")
+        .attr('class', 'prediction-label')
+        .attr('text-anchor', 'left')
+        .attr('x', 5)
+        .attr('y', -3)
+        .text("(Regulation / Overtime)")
         .style("font", "12px sans-serif")
         .style("font-weight", "bold");
 
@@ -200,7 +215,7 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('class', 'home-score')
         .attr('text-anchor', 'middle')
         .attr('x', w + 30)
-        .attr('y', -5)
+        .attr('y', -3)
         .text("Score")
         .style("font", "12px sans-serif")
         .style("font-weight", "bold");

@@ -1,10 +1,16 @@
 function plot_goal_dist(data, target_div, home_abb, away_abb) {
     // set the dimensions and margins of the graph
     //var plot_color = document.querySelector('.color-primary').style.fill;
-    var full_width = 750
-    var full_height = 750
+
+    var parent_div = d3.select(target_div);
+    var min_width = 350;
+    var max_width = 700;
+    var div_width = Math.max(min_width, Math.min(max_width, parseInt(parent_div.style("width"))));
+
+    var full_width = div_width;
+    var full_height = div_width;
     var margin = {top: 10, right: 10, bottom: 50, left: 50, between: 10},
-    hist_dim = 75,
+    hist_dim = div_width * 0.1,
     width = full_width - margin.left - margin.right - hist_dim - margin.between,
     height = full_height - margin.top - margin.bottom - hist_dim - margin.between;
 
