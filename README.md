@@ -1,57 +1,39 @@
 bayes-bet
 ==============================
 
-Bayesian analysis of the NHL.
+A bayesian model for predicting the outcomes of NHL games, complete with a Django based web app for visualization.
+
+http://hockey.everettsprojects.com
+
+Associated Blog Posts
+-------------
+
+* [Modeling the NHL - March 24, 2018](http://everettsprojects.com/2018/03/24/modeling-the-nhl.html)
+
+
 
 Project Organization
 ------------
 
     ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
-    ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
-    │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
-    │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
-    │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.testrun.org
+    ├── README.md
+    ├── front_end/                  <- Django web app code.
+    |   ├── .elasticbeanstalk/      <- Elastic Beanstalk config.
+    |   ├── app/
+    |   |   ├── .ebextensions/      <- Elastic Beanstalk config.
+    |   |   ├── .elasticbeanstalk/  <- Elastic Beanstalk config.
+    |   |   ├── bayesbet/           <- Main app code.
+    |   |   ├── data/               <- REST API for data and model results.
+    |   |   ├── plots/              <- D3 code for plots
+    |   |   ├── static/             <- Django main static files folder.
+    |   |   ├── templates/          <- Django html templates.
+    |   |   ├── manage.py           <- Django management script.
+    |   |   └── requirements.txt    <- Python virtualenv for Django.
+    ├── model/                      <- PyMC3 model run with docker in AWS batch.
+    |   ├── bayes_bet_aws.yml       <- Conda environment used by model.
+    |   ├── bayes_bet_update.py     <- Python code for NHL data pull and model update.
+    |   └── Dockerfile              <- Dockerfile for AWS batch job container image.
+    └── sql/                    <- Queries used to construct PostgreSQL database underlying the project.
 
 
 --------
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
