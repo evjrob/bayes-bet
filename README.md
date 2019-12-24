@@ -33,7 +33,7 @@ Project Organization
     |   ├── bayes_bet_aws.yml       <- Conda environment used by model.
     |   ├── bayes_bet_update.py     <- Python code for NHL data pull and model update.
     |   └── Dockerfile              <- Dockerfile for AWS batch job container image.
-    └── sql/                    <- Queries used to construct PostgreSQL database underlying the project.
+    └── sql/                        <- Queries used to construct PostgreSQL database underlying the project.
 
 
 --------
