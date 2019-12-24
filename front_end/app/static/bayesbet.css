@@ -13,7 +13,7 @@ body {
  */
 
 .sidebar {
-  position: fixed;
+  position: relative;
   top: 0;
   bottom: 0;
   left: 0;
@@ -24,7 +24,7 @@ body {
 
 .sidebar-sticky {
   position: -webkit-sticky;
-  position: relative;
+  position: fixed;
   top: 48px; /* Height of navbar */
   height: calc(100vh - 48px);
   padding-top: 0.5rem;
@@ -54,6 +54,37 @@ body {
 .sidebar-heading {
   font-size: .75rem;
   text-transform: uppercase;
+}
+
+.sidebar-button {
+  margin-top: 0rem;
+  margin-bottom: 0rem;
+  float:right; 
+  padding-top: 0rem;
+  padding-bottom: 0.25rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+#sidebar {
+  /* for the animation */
+  transition: margin 0.3s ease;
+}
+
+#main {
+  /* for the animation */
+  transition: margin 0.6s ease;
+}
+
+.collapsed {
+  /* hide it for small displays*/
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .collapsed {
+    display: none;
+  }
 }
 
 /*
@@ -103,6 +134,8 @@ body {
   text-align: center;
   align-items: center;
   vertical-align: middle;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 .prediction-date-form-group {
