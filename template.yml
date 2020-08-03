@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: BayesBet Project Cloudformation Template
+
+Resources:
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Description: BayesBet Model Results Table
+    Properties:
+      TableName: bayes-bet-table
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: League
+          AttributeType: S
+        - AttributeName: PredictionDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: League
+          KeyType: HASH
+        - AttributeName: PredictionDate
+          KeyType: RANGE
+  S3Bucket:
+    

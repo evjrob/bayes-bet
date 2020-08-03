@@ -1,12 +1,9 @@
-FROM continuumio/miniconda3
+FROM python:slim-buster
 
-COPY bayes_bet_update.py .
-COPY bayes_bet_aws.yml .
+COPY nhl /
 
 RUN apt-get update
-RUN apt-get -y install build-essential
-RUN conda env create -f bayes_bet_aws.yml
-RUN echo "source activate bayes_bet_aws" > ~/.bashrc
-ENV PATH /opt/conda/envs/bayes_bet_aws/bin:$PATH
+RUN pip install pipenv
+RUN pipenv sync
 
-CMD [ "python", "bayes_bet_update.py" ]
+CMD ["pipenv", "run", "python", "nhl/main.py" ]
