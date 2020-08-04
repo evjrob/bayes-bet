@@ -81,6 +81,14 @@ Resources:
       GroupDescription: "Security group with no ingress rule"
       VpcId: !Ref VPC
 
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: ${EnvironmentName}-repo
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} ECR Repository
+
   DynamoDBTable:
     Type: AWS::DynamoDB::Table
     Description: BayesBet Model Results Table
