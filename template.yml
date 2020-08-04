@@ -107,7 +107,7 @@ Resources:
 
   S3Bucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
       BucketName: !FindInMap [EnvTypeVars, S3BucketName, !Ref EnvironmentType]
