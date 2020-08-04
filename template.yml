@@ -230,6 +230,46 @@ Resources:
           - Name: DYNAMODB_TABLE_NAME
             Value: bayes-bet-table
 
+  ScheduledRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+          Principal:
+            Service: events.amazonaws.com
+          Action: sts:AssumeRole
+
+  ScheduledRuleBatchInvokePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'batch:SubmitJob'
+          Resource: '*'
+      Roles:
+        - !Ref ScheduledRuleRole
+
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Daily BayesBet Model Update"
+      ScheduleExpression: "cron(0 8 * * ? *)"
+      State: ENABLED
+      Targets:
+        - Arn: !Ref JobQueue
+          RoleArn: !GetAtt ScheduledRuleRole.Arn
+          BatchParameters:
+            JobDefinition: !Ref JobDefinition
+            JobName: bayes-bet-scheduled
+            RetryStrategy:
+              Attempts: 1
+          Id: BAYES-BET
+
   S3Bucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
