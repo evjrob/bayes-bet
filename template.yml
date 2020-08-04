@@ -89,6 +89,154 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} ECR Repository
 
+  BatchServiceRole:
+    Type: AWS::IAM:Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-27'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batch.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+
+  EcsInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2008-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.cm
+            Action:
+              sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceForEC2Role
+        Path: /
+
+  EcsInstanceS3BucketPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${EnvironmentName}-EcsInstanceS3BucketPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Action:
+            - 's3:List*'
+          Resource:
+            - !Sub 'arn:aws::s3:::${S3Bucket}'
+      Roles:
+        - !Ref EcsInstanceRole
+
+  EcsInstanceS3ObjectsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${EnvironmentName}-EcsInstanceS3ObjectsPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Action:
+            - 's3:Get*'
+            - 's3:Put*'
+          Resource:
+            - !Sub 'arn:aws::s3:::${S3Bucket}/*'
+      Roles:
+        - !Ref EcsInstanceRole
+
+  EcsInstanceDynamoDbPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${EnvironmentName}-EcsInstanceDynamoDbPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Action:
+            - 'dynamodb:List*'
+            - 'dynamodb:DescribeReservedCapacity*'
+            - 'dynamodb:DescribeLimits'
+            - 'dynamodb:DescribeTimeToLive'
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - 'dynamodb:BatchGet*'
+            - 'dynamodb:DescribeStream'
+            - 'dynamodb:DescribeTable'
+            - 'dynamodb:Get*'
+            - 'dynamodb:Query'
+            - 'dynamodb:Scan'
+            - 'dynamodb:BatchWrite*'
+            - 'dynamodb:CreateTable'
+            - 'dynamodb:Delete*'
+            - 'dynamodb:Update*'
+            - 'dynamodb:PutItem'
+          Resource: !GetAtt DynamoDBTable.Arn
+      Roles:
+        - !Ref EcsInstanceRole
+
+  IamInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref EcsInstanceRole]
+
+  ComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      Type: MANAGED
+      ServiceRole: !GetAtt BatchServiceRole.Arn
+      ComputeEnvironmentName: ${EnvironmentName} Batch Compute Environment
+      ComputeResources:
+        Type: EC2
+        MinvCpus: 0
+        DesiredvCpus: 0
+        MaxvCpus: 8
+        InstanceTypes:
+          - optimal
+        Subnets:
+          - !Ref PublicSubnet1
+        SecurityGroupIds:
+          - !Ref NoIngressSecurityGroup
+        InstanceRole: !Ref IamInstanceProfile
+      State: ENABLED
+
+  JobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: ${EnvironmentName} Batch Job Queue
+      Priority: 1
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment:!Ref ComputeEnvironment
+      State: ENABLED
+
+  JobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      JobDefinitionName: ${EnvironmentName} Model Update Batch Job
+      Type: container
+      ContainerProperties:
+        Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EnvironmentName}-repo:latest'
+        Vcpus: 4
+        Memory: 8000
+        Privileged: false
+        Environment:
+          - Name: S3_BUCKET_NAME
+            Value: bayes-bet
+          - Name: DYNAMODB_TABLE_NAME
+            Value: bayes-bet-table
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      BucketName: bayes-bet-prod
+
   DynamoDBTable:
     Type: AWS::DynamoDB::Table
     Description: BayesBet Model Results Table
@@ -106,8 +254,6 @@ Resources:
         - AttributeName: PredictionDate
           KeyType: RANGE
   
-  #S3Bucket:
-
 Outputs:
   VPC:
     Description: A reference to the created VPC
