@@ -81,6 +81,30 @@ Resources:
       GroupDescription: "Security group with no ingress rule"
       VpcId: !Ref VPC
 
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      BucketName: bayes-bet-prod
+
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Description: BayesBet Model Results Table
+    Properties:
+      TableName: bayes-bet-table
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: League
+          AttributeType: S
+        - AttributeName: PredictionDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: League
+          KeyType: HASH
+        - AttributeName: PredictionDate
+          KeyType: RANGE
+
   EcrRepository:
     Type: AWS::ECR::Repository
     Properties: 
@@ -269,30 +293,6 @@ Resources:
             RetryStrategy:
               Attempts: 1
           Id: BAYES-BET
-
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Delete
-    Properties:
-      BucketName: bayes-bet-prod
-
-  DynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Description: BayesBet Model Results Table
-    Properties:
-      TableName: bayes-bet-table
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: League
-          AttributeType: S
-        - AttributeName: PredictionDate
-          AttributeType: S
-      KeySchema:
-        - AttributeName: League
-          KeyType: HASH
-        - AttributeName: PredictionDate
-          KeyType: RANGE
   
 Outputs:
   VPC:
