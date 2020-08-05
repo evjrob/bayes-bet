@@ -94,3 +94,6 @@ playground/*
 
 # eb database creds
 front_end/app/env_params.sh
+
+# Docker commands reminder file
+model/docker_commands.txt
