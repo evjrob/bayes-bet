@@ -34,6 +34,9 @@ Mappings:
     DynamoDBTableName:
       test: bayes-bet-table-test
       prod: bayes-bet-table
+    EcrRepoName:
+      test: bayes-bet-repo-test
+      prod: bayes-bet-repo
 
 Resources:
   # Create VPC with internet gateway connected to single public subnet for Batch
@@ -103,7 +106,12 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
-        Description: Egress only for REST API requests
+        Description: HTTP egress only for REST API requests
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+        Description: HTTPS egress only for REST API requests
 
   S3Bucket:
     Type: AWS::S3::Bucket
@@ -131,7 +139,7 @@ Resources:
   EcrRepository:
     Type: AWS::ECR::Repository
     Properties: 
-      RepositoryName: bayes-bet-repo
+      RepositoryName: !FindInMap [EnvTypeVars, EcrRepoName, !Ref EnvironmentType]
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} ECR Repository
@@ -263,7 +271,10 @@ Resources:
       JobDefinitionName: !Sub ${EnvironmentName}-model-update-job-def
       Type: container
       ContainerProperties:
-        Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EnvironmentName}-repo:latest'
+        Image: 
+          !Sub 
+            - '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EcrRepoName}:latest'
+            - { EcrRepoName: !FindInMap [EnvTypeVars, EcrRepoName, !Ref EnvironmentType] }
         Vcpus: 4
         Memory: 8000
         Privileged: false
