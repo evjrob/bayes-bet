@@ -11,7 +11,8 @@ from scipy.integrate import quad, dblquad
 
 logger = logging.getLogger(__name__)
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-table = dynamodb.Table('bayes-bet-table')
+table_name = os.getenv('DYNAMODB_TABLE_NAME')
+table = dynamodb.Table(table_name)
 
 t_before_shootout = 5.0/60.0    # 5 minute shootout, divided by regulation time
 
