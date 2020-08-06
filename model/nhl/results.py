@@ -77,33 +77,33 @@ def model_vars_to_string(mv_in, int_to_teams, decimals=5):
 
 def bayesian_poisson_pdf(μ, σ, max_y=15):
     def integrand(x, y, σ, μ):
-        pois = exp(x*y)*exp(-exp(x))/factorial(y)
-        norm = exp(-0.5*((x-μ)/σ)**2)/(σ * sqrt(2*pi))
+        pois = (np.exp(x)**y)*np.exp(-np.exp(x))/factorial(y)
+        norm = np.exp(-0.5*((x-μ)/σ)**2.0)/(σ * sqrt(2.0*pi))
         return  pois * norm
 
-    lwr = -10
-    upr = 10
+    lwr = -2.0
+    upr = 4.0
 
     y = np.arange(0,max_y)
     p = []
     for yi in y:
         I = quad(integrand, lwr, upr, args=(yi,σ,μ))
         p.append(I[0])
-    p.append(1 - sum(p))
+    p.append(1.0 - sum(p))
     
     return p
 
 def bayesian_bernoulli_win_pdf(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ):
     def dblintegrand(y, x, log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ):
-        normₕ = exp(-0.5*((x-log_λₕ_μ)/log_λₕ_σ)**2)/(log_λₕ_σ * sqrt(2*pi))
-        normₐ = exp(-0.5*((y-log_λₐ_μ)/log_λₐ_σ)**2)/(log_λₐ_σ * sqrt(2*pi))
-        λₕ = exp(x)
-        λₐ = exp(y)
+        normₕ = np.exp(-0.5*((x-log_λₕ_μ)/log_λₕ_σ)**2)/(log_λₕ_σ * sqrt(2*pi))
+        normₐ = np.exp(-0.5*((y-log_λₐ_μ)/log_λₐ_σ)**2)/(log_λₐ_σ * sqrt(2*pi))
+        λₕ = np.exp(x)
+        λₐ = np.exp(y)
         p_dydx = normₐ*normₕ*λₕ/(λₕ + λₐ)
         return p_dydx
 
-    lwr = -10
-    upr = 10
+    lwr = -2.0
+    upr = 4.0
 
     I = dblquad(dblintegrand, lwr, upr, lwr, upr, args=(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ))
     p = I[0]
@@ -112,15 +112,15 @@ def bayesian_bernoulli_win_pdf(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λ�
 
 def bayesian_goal_within_time(t, log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ):
     def dblintegrand(y, x, log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ):
-        normₕ = exp(-0.5*((x-log_λₕ_μ)/log_λₕ_σ)**2)/(log_λₕ_σ * sqrt(2*pi))
-        normₐ = exp(-0.5*((y-log_λₐ_μ)/log_λₐ_σ)**2)/(log_λₐ_σ * sqrt(2*pi))
-        λₕ = exp(x)
-        λₐ = exp(y)
-        p = normₐ*normₕ*(1 - exp(-1*(λₕ*t + λₐ*t)))
+        normₕ = np.exp(-0.5*((x-log_λₕ_μ)/log_λₕ_σ)**2)/(log_λₕ_σ * sqrt(2*pi))
+        normₐ = np.exp(-0.5*((y-log_λₐ_μ)/log_λₐ_σ)**2)/(log_λₐ_σ * sqrt(2*pi))
+        λₕ = np.exp(x)
+        λₐ = np.exp(y)
+        p = normₐ*normₕ*(1 - np.exp(-1*(λₕ*t + λₐ*t)))
         return p
 
-    lwr = -10
-    upr = 10
+    lwr = -2.0
+    upr = 4.0
 
     I = dblquad(dblintegrand, lwr, upr, lwr, upr, args=(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ))
     p = I[0]
@@ -159,9 +159,9 @@ def game_predictions(games, posteriors, teams_to_int, decimals=5):
         dₐ_σ = posteriors['d'][1][idₐ]
         # Normal(μ₁,σ₁²) + Normal(μ₂,σ₂²) = Normal(μ₁ + μ₂, σ₁² + σ₂²)
         log_λₕ_μ = i_μ + h_μ + oₕ_μ - dₐ_μ
-        log_λₕ_σ = i_σ**2 + h_σ**2 + oₕ_σ**2 + dₐ_σ**2
+        log_λₕ_σ = np.sqrt(i_σ**2 + h_σ**2 + oₕ_σ**2 + dₐ_σ**2)
         log_λₐ_μ = i_μ + oₐ_μ - dₕ_μ
-        log_λₐ_σ = i_σ**2 + oₐ_σ**2 + dₕ_σ**2
+        log_λₐ_σ = np.sqrt(i_σ**2 + oₐ_σ**2 + dₕ_σ**2)
         home_score_pdf = bayesian_poisson_pdf(log_λₕ_μ, log_λₕ_σ)
         away_score_pdf = bayesian_poisson_pdf(log_λₐ_μ, log_λₐ_σ)
         game_pred['ScoreProbabilities'] = {
@@ -184,12 +184,12 @@ def game_predictions(games, posteriors, teams_to_int, decimals=5):
                 else:
                     if game['game_type'] != 'P':
                         p_ot_win = bayesian_goal_within_time(t_before_shootout, log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ)
-                        p_so_win = 1 - p_ot_win
+                        p_so_win = 1.0 - p_ot_win
                     else:
                         p_ot_win = 1.0
                         p_so_win = 0.0
                     pₕ_ot = bayesian_bernoulli_win_pdf(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ)
-                    pₐ_ot = 1 - pₕ_ot
+                    pₐ_ot = 1.0 - pₕ_ot
                     home_ot_win_p += pₕ_ot * p_ot_win * p
                     home_so_win_p += pₕ_ot * p_so_win * p
                     away_ot_win_p += pₐ_ot * p_ot_win * p
