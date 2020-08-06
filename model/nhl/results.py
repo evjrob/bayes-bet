@@ -190,10 +190,10 @@ def game_predictions(games, posteriors, teams_to_int, decimals=5):
                         p_so_win = 0.0
                     pₕ_ot = bayesian_bernoulli_win_pdf(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ)
                     pₐ_ot = 1 - pₕ_ot
-                    home_ot_win_p += pₕ_ot * p_ot_win
-                    home_so_win_p += pₕ_ot * p_so_win
-                    away_ot_win_p += pₐ_ot * p_ot_win
-                    home_so_win_p += pₕ_ot * p_so_win
+                    home_ot_win_p += pₕ_ot * p_ot_win * p
+                    home_so_win_p += pₕ_ot * p_so_win * p
+                    away_ot_win_p += pₐ_ot * p_ot_win * p
+                    away_so_win_p += pₐ_ot * p_so_win * p
         win_percentages = [home_reg_win_p, home_ot_win_p, home_so_win_p, away_reg_win_p, away_ot_win_p, away_so_win_p]
         game_pred['WinPercentages'] = [f'{wp:{precision}}' for wp in win_percentages]
         game_predictions_list.append(game_pred)
