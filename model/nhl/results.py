@@ -134,6 +134,8 @@ def game_predictions(games, posteriors, teams_to_int, decimals=5):
         logger.info(f'Generating predictions for game_pk {game["game_pk"]}')
         game_pred = {}
         game_pred['game_pk'] = game['game_pk']
+        game_pred['home_team'] = game['home_team']
+        game_pred['away_team'] = game['away_team']
         game_pred['score'] = {}
         if game['game_state'] =='Final':
             game_pred['score']['home'] = str(game['home_fin_score'])
