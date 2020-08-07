@@ -96,8 +96,8 @@ def main():
         for g in updated_last_pred['GamePredictions']:
             gpk = g['game_pk']
             game_row = games[games['game_pk'] == gpk]
-            home_fin_score = str(game_row['home_fin_score'])
-            away_fin_score = str(game_row['away_fin_score'])
+            home_fin_score = str(game_row['home_fin_score'].values[0])
+            away_fin_score = str(game_row['away_fin_score'].values[0])
             g['score']['home'] = home_fin_score
             g['score']['away'] = away_fin_score
         put_dynamodb_item(updated_last_pred)
