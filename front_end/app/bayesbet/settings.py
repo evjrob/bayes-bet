@@ -85,20 +85,12 @@ WSGI_APPLICATION = 'bayesbet.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['APP_DATABASE_NAME'],
-        'USER': os.environ['DATABASE_USER'],
-        'PASSWORD': os.environ['DATABASE_PASSWD'],
-        'HOST': os.environ['DATABASE_HOST'],
-        'PORT': int(os.environ['DATABASE_PORT']),
-    },
-    'data': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['MODEL_DATABASE_NAME'],
-        'USER': os.environ['DATABASE_USER'],
-        'PASSWORD': os.environ['DATABASE_PASSWD'],
-        'HOST': os.environ['DATABASE_HOST'],
-        'PORT': int(os.environ['DATABASE_PORT']),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'default.db',                  
+        'USER': '',      # Not used with sqlite3.
+        'PASSWORD': '',  # Not used with sqlite3.
+        'HOST': '',      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
