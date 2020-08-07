@@ -75,14 +75,14 @@ def model_vars_to_string(mv_in, int_to_teams, decimals=5):
         mv['teams'][t]['d'] = [f'{d_μ:{precision}}',  f'{d_σ:{precision}}']
     return mv
 
-def bayesian_poisson_pdf(μ, σ, max_y=15):
+def bayesian_poisson_pdf(μ, σ, max_y=10):
     def integrand(x, y, σ, μ):
         pois = (np.exp(x)**y)*np.exp(-np.exp(x))/factorial(y)
         norm = np.exp(-0.5*((x-μ)/σ)**2.0)/(σ * sqrt(2.0*pi))
         return  pois * norm
 
-    lwr = -2.0
-    upr = 4.0
+    lwr = -3.0
+    upr = 5.0
 
     y = np.arange(0,max_y)
     p = []
@@ -102,8 +102,8 @@ def bayesian_bernoulli_win_pdf(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λ�
         p_dydx = normₐ*normₕ*λₕ/(λₕ + λₐ)
         return p_dydx
 
-    lwr = -2.0
-    upr = 4.0
+    lwr = -3.0
+    upr = 5.0
 
     I = dblquad(dblintegrand, lwr, upr, lwr, upr, args=(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ))
     p = I[0]
@@ -119,8 +119,8 @@ def bayesian_goal_within_time(t, log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_�
         p = normₐ*normₕ*(1 - np.exp(-1*(λₕ*t + λₐ*t)))
         return p
 
-    lwr = -2.0
-    upr = 4.0
+    lwr = -3.0
+    upr = 5.0
 
     I = dblquad(dblintegrand, lwr, upr, lwr, upr, args=(log_λₕ_μ, log_λₕ_σ, log_λₐ_μ, log_λₐ_σ))
     p = I[0]
