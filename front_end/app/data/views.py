@@ -3,88 +3,94 @@ from django.http import HttpResponse, JsonResponse
 from django.db import connections
 from django.shortcuts import render
 
-from data.models import Games, TeamPosteriors
+from data.metadata import team_abbrevs
+
+import os
+from collections import defaultdict
+import boto3
+from boto3.dynamodb.conditions import Key
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table_name = os.getenv('DYNAMODB_TABLE_NAME')
+table = dynamodb.Table(table_name)
 
 
 def games(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    #with connections['data'].cursor() as cursor:
-    #    query =  """SELECT DISTINCT game_pk, home_team_name, away_team_name 
-    #                FROM games 
-    #                LEFT JOIN 
-    #                    (SELECT team_id as home_team_id, team_name as home_team_name
-    #                    FROM teams) AS home_teams
-    #                ON games.home_team_id = home_teams.home_team_id
-    #                LEFT JOIN
-    #                    (SELECT team_id as away_team_id, team_name as away_team_name
-    #                    FROM teams) AS away_teams
-    #                ON games.away_team_id = away_teams.away_team_id
-    #                WHERE game_date = %s;"""
-    #    cursor.execute(query, [date])
-    
-    games = Games.objects.filter(game_date=date)
-    rows = [{'game_pk':g.game_pk, 'home_team':g.home_team.team_name, 'away_team':g.away_team.team_name} for g in games]
+    response = table.query(
+        Limit = 1,
+        ReturnConsumedCapacity='TOTAL',
+        KeyConditionExpression=
+            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+    )
+    games = response['Items'][0]['GamePredictions']
+    rows = [{'game_pk':g.game_pk, 'home_team':g.home_team, 'away_team':g.away_team} for g in games]
     return JsonResponse({"data" : rows})
 
 
 def goal_distribution(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    with connections['data'].cursor() as cursor:
-        # Home and away team goal distribution
-        goals_query =    """SELECT home_team_regulation_goals, away_team_regulation_goals, count(*)/5000.0 AS probability 
-                            FROM game_predictions 
-                            WHERE game_pk = %s AND prediction_date = %s 
-                            GROUP BY home_team_regulation_goals, away_team_regulation_goals 
-                            ORDER BY home_team_regulation_goals, away_team_regulation_goals;"""
-        cursor.execute(goals_query, [game_pk, date])
-        goals_dist = [{'home_goals':int(item[0]), 'away_goals':int(item[1]), \
-            'probability':float(item[2])} for item in cursor.fetchall()]
-
-        return JsonResponse(goals_dist, safe=False)
+    precision = '.5f'
+    response = table.query(
+        Limit = 1,
+        ReturnConsumedCapacity='TOTAL',
+        KeyConditionExpression=
+            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+    )
+    games = response['Items'][0]['GamePredictions']
+    game = [g for g in games if str(g['game_pk']) == game_pk][0]
+    home_dist = game['ScoreProbabilities']['home']
+    away_dist = game['ScoreProbabilities']['away']
+    goals_dist = []
+    for hg, hp in enumerate(home_dist):
+        for ag, ap in enumerate(away_dist):
+            gp = float(hp)*float(ap)
+            goals_dist.append({
+                'home_goals':hg, 
+                'away_goals':ag,
+                'probability':f'{gp:{precision}}'})
+    return JsonResponse(goals_dist, safe=False)
 
 
 def game_outcome(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    with connections['data'].cursor() as cursor:
-        # Home and away team probability of winning
-        pred_query =     """SELECT AVG((home_team_regulation_goals < away_team_regulation_goals)::Int) AS away_regulation_win,
-                            AVG((home_team_regulation_goals = away_team_regulation_goals AND NOT home_wins_after_regulation)::Int) AS away_ot_win,
-                            AVG((home_team_regulation_goals = away_team_regulation_goals AND home_wins_after_regulation)::Int) AS home_ot_win,
-                            AVG((home_team_regulation_goals > away_team_regulation_goals)::Int) AS home_regulation_win
-                            FROM game_predictions WHERE game_pk = %s AND prediction_date = %s;"""
-        cursor.execute(pred_query, [game_pk, date])
-        row = cursor.fetchone()
-        game_outcome = {
-            'predictions': {
-                'away': [{'type': 'REG', 'value': float(row[0])},
-                         {'type': 'OT', 'value': float(row[1])}],
-                'home': [{'type': 'REG', 'value': float(row[3])},
-                         {'type': 'OT', 'value': float(row[2])}]
-            }
+    response = table.query(
+        Limit = 1,
+        ReturnConsumedCapacity='TOTAL',
+        KeyConditionExpression=
+            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+    )
+    games = response['Items'][0]['GamePredictions']
+    game = [g for g in games if str(g['game_pk']) == game_pk][0]
+    wp = game['WinPercentages']
+    game_outcome = {
+        'predictions': {
+            'home': [{'type': 'REG', 'value': float(wp[0])},
+                        {'type': 'OT', 'value': float(wp[1]) + float(wp[2])}],
+            'away': [{'type': 'REG', 'value': float(wp[3])},
+                        {'type': 'OT', 'value': float(wp[4]) + float(wp[5])}]
         }
-        # Home and away scores
-        score_query =    """SELECT home_team_final_score, away_team_final_score 
-                            FROM model_input_data
-                            WHERE game_pk = %s;"""
-        cursor.execute(score_query, [game_pk])
-        row = cursor.fetchone()
-        if row is not None:
-            home_score = int(row[0])
-            away_score = int(row[1])
-        else:
-            home_score = "-"
-            away_score = "-"
-        game_outcome['score'] = {
-            'home': home_score,
-            'away': away_score
-        }
+    }
+    # Home and away scores
+    home_score = game['score']['home']
+    away_score = game['score']['away']
+    game_outcome['score'] = {
+        'home': home_score,
+        'away': away_score
+    }
 
-        return JsonResponse(game_outcome, safe=False)
+    return JsonResponse(game_outcome, safe=False)
 
 
 def teams(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    teams = TeamPosteriors.objects.filter(prediction_date=date)
-    rows = [{'team_name':t.team.team_name, 'team_abb':t.team.team_abbreviation, 
-    'offence_median':t.offence_median, 'offence_hpd_low':t.offence_hpd_low,
-    'offence_hpd_high':t.offence_hpd_high, 'defence_median':t.defence_median,
-    'defence_hpd_low':t.defence_hpd_low, 'defence_hpd_high':t.defence_hpd_high}
-    for t in teams]
+    response = table.query(
+        Limit = 1,
+        ReturnConsumedCapacity='TOTAL',
+        KeyConditionExpression=
+            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+    )
+    team_data = response['Items'][0]['ModelVariables']['teams']
+    teams = []
+    for team, mvars in team_data.items():
+        row = {'team_name':team, 'team_abb':team_abbrevs[team], 
+               'offence_median':mvars['o'][0], 
+               'defence_median':mvars['d'][0]}
+        teams.append(row)
 
-    return JsonResponse(rows, safe=False)
+    return JsonResponse(teams, safe=False)

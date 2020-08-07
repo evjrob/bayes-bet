@@ -2,7 +2,15 @@ import datetime as dt
 from django.shortcuts import render
 from django.db import connections
 
-from data.models import Games, GamePredictions
+from data.metadata import team_abbrevs
+
+import os
+import boto3
+from boto3.dynamodb.conditions import Key
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table_name = os.getenv('DYNAMODB_TABLE_NAME')
+table = dynamodb.Table(table_name)
+
 
 def get_default_date():
     date = dt.datetime.today() - dt.timedelta(hours=9)
@@ -12,28 +20,23 @@ def get_default_date():
 def index(request, date=None):
     if date is None:
         date = get_default_date()
-    date_plus = dt.datetime.strptime(date, '%Y-%m-%d') + dt.timedelta(days=2)
-    predicted_games = Games.objects.filter(game_date__range=(date, date_plus)).order_by('game_date')
-    predicted_games = [{'game_pk':g.game_pk, 'game_date': g.game_date, 
-        'home_team':g.home_team.team_name, 'home_abb':g.home_team.team_abbreviation,
-        'away_team':g.away_team.team_name, 'away_abb':g.away_team.team_abbreviation} 
-        for g in predicted_games]
-    #with connections['data'].cursor() as cursor:
-    #    query =  """SELECT DISTINCT game_pk, game_date, home_team_name, away_team_name 
-    #                FROM games 
-    #                LEFT JOIN 
-    #                    (SELECT team_id as home_team_id, team_name as home_team_name
-    #                    FROM teams) AS home_teams
-    #                ON games.home_team_id = home_teams.home_team_id
-    #                LEFT JOIN
-    #                    (SELECT team_id as away_team_id, team_name as away_team_name
-    #                    FROM teams) AS away_teams
-    #                ON games.away_team_id = away_teams.away_team_id
-    #                WHERE game_date >= %s AND game_date <= %s
-    #                ORDER BY game_date;"""
-    #    cursor.execute(query, [date, date_plus])
-    #    predicted_games = [{'game_pk':g[0], 'game_date': g[1], 
-    #        'home_team':g[2], 'away_team':g[3]} for g in cursor.fetchall()]
+    response = table.query(
+        Limit = 1,
+        ReturnConsumedCapacity='TOTAL',
+        KeyConditionExpression=
+            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+    )
+    games = response['Items'][0]['GamePredictions']
+    predicted_games = [{'game_pk':g['game_pk'], 'game_date': date, 
+                        'home_team':g['home_team'], 'home_abb':team_abbrevs[g['home_team']],
+                        'away_team':g['away_team'], 'away_abb':team_abbrevs[g['away_team']]
+                        } for g in games]
+
+    #predicted_games = Games.objects.filter(game_date__range=(date, date_plus)).order_by('game_date')
+    #predicted_games = [{'game_pk':g.game_pk, 'game_date': g.game_date, 
+    #    'home_team':g.home_team.team_name, 'home_abb':g.home_team.team_abbreviation,
+    #    'away_team':g.away_team.team_name, 'away_abb':g.away_team.team_abbreviation} 
+    #    for g in predicted_games]
     context= {'prediction_date': date, 'predicted_games': predicted_games}
     return render(request, 'index.html', context)
 
