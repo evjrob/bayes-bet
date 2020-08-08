@@ -14,7 +14,7 @@
 
         <main role="main" class="col-12 col-sm-12 col-md-9 col-lg-10 pt-3 px-4">
           <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-            <h1 class="h2">{{game_detail.away_team.team_name}} @ {{game_detail.home_team.team_name}} {{game_detail.game_date}} - Predicted on {{prediction_date}}</h1>
+            <h1 class="h2">{{game_detail.away_team}} @ {{game_detail.home_team}} {{game_detail.game_date}} - Predicted on {{prediction_date}}</h1>
           </div>
           {% include "plots/game_outcome.html" with game_pk=game_pk date=prediction_date home_abb=home_abb away_abb=away_abb %}
           <br>

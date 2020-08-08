@@ -43,13 +43,20 @@ def index(request, date=None):
 def game_detail(request, game_pk, date=None):
     if date is None:
         date = get_default_date()
-    game_detail = Games.objects.filter(game_pk=game_pk)
+    response = table.query(
+        Limit = 1,
+        ReturnConsumedCapacity='TOTAL',
+        KeyConditionExpression=
+            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+    )
+    games = response['Items'][0]['GamePredictions']
+    game = [g for g in games if str(g['game_pk']) == game_pk][0]
     context= {
         'prediction_date': date, 
-        'game_detail': game_detail[0],
+        'game_detail': game,
         'game_pk': game_pk,
-        'home_abb': game_detail[0].home_team.team_abbreviation,
-        'away_abb': game_detail[0].away_team.team_abbreviation
+        'home_abb': team_abbrevs[game['home_team']],
+        'away_abb': team_abbrevs[game['away_team']]
     }
     return render(request, 'game-detail.html', context)
 
