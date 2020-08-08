@@ -29,7 +29,10 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 ALLOWED_HOSTS = [
     'app',
     'bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com',
-    'hockey.everettsprojects.com'
+    'hockey.everettsprojects.com',
+    'c0mvuqurzl.execute-api.us-east-1.amazonaws.com',
+    'bayesbet.everettsprojects.com',
+    'dev.bayesbet.everettsprojects.com'
     ]
 if DEBUG is True:
     ALLOWED_HOSTS = ALLOWED_HOSTS + ['127.0.0.1']
@@ -84,17 +87,10 @@ WSGI_APPLICATION = 'bayesbet.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'default.db',                  
-        'USER': '',      # Not used with sqlite3.
-        'PASSWORD': '',  # Not used with sqlite3.
-        'HOST': '',      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',      # Set to empty string for default. Not used with sqlite3.
-    }
+    'default': {}
 }
 
-DATABASE_ROUTERS = ['bayesbet.dbrouters.DbRouter', ]
+DATABASE_ROUTERS = []
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -144,8 +140,15 @@ STATICFILES_DIRS = [
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = [
     "http://everettsprojects.com",
-    "http://hockey.everettsprojects.com",  
-    "http://bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com"
+    "https://everettsprojects.com",
+    "http://hockey.everettsprojects.com", 
+    "https://hockey.everettsprojects.com", 
+    "http://bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com",
+    "http://c0mvuqurzl.execute-api.us-east-1.amazonaws.com",
+    "http://bayesbet.everettsprojects.com",
+    "https://bayesbet.everettsprojects.com",
+    "http://dev.bayesbet.everettsprojects.com",
+    "https://dev.bayesbet.everettsprojects.com"
     ]
 if DEBUG is True:
     CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + \
