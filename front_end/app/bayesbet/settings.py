@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'django_s3_storage',
     'data.apps.DataConfig',
     'plots.apps.PlotsConfig',
 ]
@@ -135,6 +136,15 @@ STATICFILES_DIRS = [
    "plots/static",
    "bayesbet/static"
 ]
+
+YOUR_S3_BUCKET = "bayes-bet-prod"
+
+STATICFILES_STORAGE = "django_s3_storage.storage.StaticS3Storage"
+AWS_S3_BUCKET_NAME_STATIC = YOUR_S3_BUCKET
+
+# Serve the static files directly from the s3 bucket
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % YOUR_S3_BUCKET
+STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True

@@ -119,6 +119,15 @@ Resources:
     UpdateReplacePolicy: Delete
     Properties:
       BucketName: !FindInMap [EnvTypeVars, S3BucketName, !Ref EnvironmentType]
+      AccessControl: PublicRead
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: 
+              - "*"
+            AllowedMethods: 
+              - GET
+            AllowedHeaders: 
+              - "*"
 
   DynamoDBTable:
     Type: AWS::DynamoDB::Table
