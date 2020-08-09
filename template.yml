@@ -6,14 +6,6 @@ Parameters:
     Description: An environment name that is prefixed to resource names
     Type: String
 
-  EnvironmentType:
-    Description: Environment Type of the stack; test or prod?
-    Type: String
-    AllowedValues:
-      - prod
-      - test
-    Default: prod
-
   VpcCIDR:
     Description: Please enter the IP range (CIDR notation) for this VPC
     Type: String
@@ -25,18 +17,6 @@ Parameters:
     Type: String
     Default: 10.192.10.0/24
     AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
-
-Mappings:
-  EnvTypeVars:
-    S3BucketName:
-      test: bayes-bet-test
-      prod: bayes-bet-prod
-    DynamoDBTableName:
-      test: bayes-bet-table-test
-      prod: bayes-bet-table
-    EcrRepoName:
-      test: bayes-bet-repo-test
-      prod: bayes-bet-repo
 
 Resources:
   # Create VPC with internet gateway connected to single public subnet for Batch
@@ -118,7 +98,39 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      BucketName: !FindInMap [EnvTypeVars, S3BucketName, !Ref EnvironmentType]
+      BucketName: bayes-bet-prod
+      AccessControl: PublicRead
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: 
+              - "*"
+            AllowedMethods: 
+              - GET
+            AllowedHeaders: 
+              - "*"
+
+  TestS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      BucketName: bayes-bet-test
+      AccessControl: PublicRead
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: 
+              - "*"
+            AllowedMethods: 
+              - GET
+            AllowedHeaders: 
+              - "*"
+
+  DevS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      BucketName: bayes-bet-dev
       AccessControl: PublicRead
       CorsConfiguration:
         CorsRules:
@@ -132,7 +144,23 @@ Resources:
   DynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !FindInMap [EnvTypeVars, DynamoDBTableName, !Ref EnvironmentType]
+      TableName: bayes-bet-table
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: League
+          AttributeType: S
+        - AttributeName: PredictionDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: League
+          KeyType: HASH
+        - AttributeName: PredictionDate
+          KeyType: RANGE
+
+  DevDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: bayes-bet-table-dev
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: League
@@ -148,7 +176,15 @@ Resources:
   EcrRepository:
     Type: AWS::ECR::Repository
     Properties: 
-      RepositoryName: !FindInMap [EnvTypeVars, EcrRepoName, !Ref EnvironmentType]
+      RepositoryName: bayes-bet-repo
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} ECR Repository
+
+  DevEcrRepository:
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: bayes-bet-repo-dev
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} ECR Repository
@@ -281,17 +317,32 @@ Resources:
       Type: container
       ContainerProperties:
         Image: 
-          !Sub 
-            - '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EcrRepoName}:latest'
-            - { EcrRepoName: !FindInMap [EnvTypeVars, EcrRepoName, !Ref EnvironmentType] }
+          !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/bayes-bet-repo:latest'
         Vcpus: 4
         Memory: 8000
         Privileged: false
         Environment:
           - Name: S3_BUCKET_NAME
-            Value: !FindInMap [EnvTypeVars, S3BucketName, !Ref EnvironmentType]
+            Value: bayes-bet-prod
           - Name: DYNAMODB_TABLE_NAME
-            Value: !FindInMap [EnvTypeVars, DynamoDBTableName, !Ref EnvironmentType]
+            Value: bayes-bet-table
+
+  DevJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      JobDefinitionName: !Sub ${EnvironmentName}-model-update-job-def-dev
+      Type: container
+      ContainerProperties:
+        Image: 
+          !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/bayes-bet-repo-dev:latest'
+        Vcpus: 4
+        Memory: 8000
+        Privileged: false
+        Environment:
+          - Name: S3_BUCKET_NAME
+            Value: bayes-bet-dev
+          - Name: DYNAMODB_TABLE_NAME
+            Value: bayes-bet-table-dev
 
   ScheduledRuleRole:
     Type: AWS::IAM::Role
