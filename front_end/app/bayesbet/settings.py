@@ -28,7 +28,6 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
 ALLOWED_HOSTS = [
     'app',
-    'bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com',
     'hockey.everettsprojects.com',
     'c0mvuqurzl.execute-api.us-east-1.amazonaws.com',
     'bayesbet.everettsprojects.com',
@@ -137,7 +136,6 @@ CORS_ORIGIN_WHITELIST = [
     "https://everettsprojects.com",
     "http://hockey.everettsprojects.com", 
     "https://hockey.everettsprojects.com", 
-    "http://bayesbet-prod-env.jhpvgkwv5v.us-east-1.elasticbeanstalk.com",
     "http://c0mvuqurzl.execute-api.us-east-1.amazonaws.com",
     "http://bayesbet.everettsprojects.com",
     "https://bayesbet.everettsprojects.com",
