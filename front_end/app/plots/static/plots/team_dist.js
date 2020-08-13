@@ -104,7 +104,8 @@ function plot_team_dist(data, target_div) {
                       offence: d.offence_median,
                       defence: d.defence_median,
                       team_name: d.team_name,
-                      team:d.team_abb};
+                      team:d.team_abb,
+                      team_colors: d.team_colors};
     nodes.push(point_node);
   });
 
@@ -159,7 +160,9 @@ function plot_team_dist(data, target_div) {
   node.append("circle")
     .attr("r", radius)
     .attr("stroke-width", "1.5px")         
-    .attr("class", "color-primary")
+    //.attr("class", "color-primary")
+    .attr("fill", function(d) { return d.team_colors[0];})
+    .attr("stroke", function(d) { return d.team_colors[1] });
 
   // add node labels
   node.append("text")

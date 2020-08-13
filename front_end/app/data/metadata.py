@@ -31,3 +31,37 @@ team_abbrevs = {
     'Washington Capitals':'WSH',
     'Winnipeg Jets':'WPG'
 }
+
+team_colors = {
+    'Anaheim Ducks':['#F47A38', '#B9975B'],
+    'Arizona Coyotes':['#8C2633', '#E2D6B5'],
+    'Boston Bruins':['#000000', '#FFB81C'],
+    'Buffalo Sabres':['#002654', '#FCB514'],
+    'Calgary Flames':['#c8102E', '#F1BE48'],
+    'Carolina Hurricanes':['#cc0000', '#000000'],
+    'Chicago Blackhawks':['#CF0A2C', '#FF671B'],
+    'Colorado Avalanche':['#6F263D', '#236192'],
+    'Columbus Blue Jackets':['#002654', '#ce1126'],
+    'Dallas Stars':['#006847', '#8F8F8C'],
+    'Detroit Red Wings':['#ce1126', '#ce1126'],
+    'Edmonton Oilers':['#041E42', '#FF4C00'],
+    'Florida Panthers':['#041E42', '#c8102E'],
+    'Los Angeles Kings':['#111111', '#A2AAAD'],
+    'Minnesota Wild':['#154734', '#A6192E'],
+    'Montréal Canadiens':['#AF1E2D', '#192168'],
+    'Nashville Predators':['#041E42', '#FFB81C'],
+    'New Jersey Devils':['#CE1126', '#000000'],
+    'New York Islanders':['#00539b', '#f47d30'],
+    'New York Rangers':['#0038A8', '#CE1126'],
+    'Ottawa Senators':['#c52032', '#000000'],
+    'Philadelphia Flyers':['#F74902', '#000000'],
+    'Pittsburgh Penguins':['#000000', '#FCB514'],
+    'San Jose Sharks':['#006D75', '#000000'],
+    'St. Louis Blues':['#002F87', '#FCB514'],
+    'Tampa Bay Lightning':['#002868', '#002868'],
+    'Toronto Maple Leafs':['#00205b', '#00205b'],
+    'Vancouver Canucks':['#00205B', '#00205B'],
+    'Vegas Golden Knights':['#B4975A', '#333f42'],
+    'Washington Capitals':['#041E42', '#C8102E'],
+    'Winnipeg Jets':['#041E42', '#004C97']
+}

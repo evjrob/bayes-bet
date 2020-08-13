@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db import connections
 from django.shortcuts import render
 
-from data.metadata import team_abbrevs
+from data.metadata import team_abbrevs, team_colors
 
 import os
 from collections import defaultdict
@@ -88,7 +88,8 @@ def teams(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
     team_data = response['Items'][0]['ModelVariables']['teams']
     teams = []
     for team, mvars in team_data.items():
-        row = {'team_name':team, 'team_abb':team_abbrevs[team], 
+        row = {'team_name':team, 'team_abb':team_abbrevs[team],
+               'team_colors':team_colors[team], 
                'offence_median':mvars['o'][0], 
                'defence_median':mvars['d'][0]}
         teams.append(row)
