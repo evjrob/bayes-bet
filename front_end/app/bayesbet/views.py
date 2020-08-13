@@ -12,20 +12,29 @@ table_name = os.getenv('DYNAMODB_TABLE_NAME')
 table = dynamodb.Table(table_name)
 
 
-def get_default_date():
-    date = dt.datetime.today() - dt.timedelta(hours=9)
-    date = date.strftime("%Y-%m-%d")
-    return date
+def get_record(date):
+    if date is None:
+        date = dt.datetime.today() - dt.timedelta(hours=9)
+        date = date.strftime("%Y-%m-%d")
+        response = table.query(
+            Limit = 1,
+            ScanIndexForward = False,
+            ReturnConsumedCapacity='TOTAL',
+            KeyConditionExpression=
+                Key('League').eq('nhl') & Key('PredictionDate').lte(date)
+        )
+    else:
+        response = table.query(
+            Limit = 1,
+            ReturnConsumedCapacity='TOTAL',
+            KeyConditionExpression=
+                Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+        )
+    return response
 
 def index(request, date=None):
-    if date is None:
-        date = get_default_date()
-    response = table.query(
-        Limit = 1,
-        ReturnConsumedCapacity='TOTAL',
-        KeyConditionExpression=
-            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
-    )
+    response = get_record(date)
+    date = response['Items'][0]['PredictionDate']
     games = response['Items'][0]['GamePredictions']
     predicted_games = [{'game_pk':g['game_pk'], 'game_date': date, 
                         'home_team':g['home_team'], 'home_abb':team_abbrevs[g['home_team']],
@@ -41,14 +50,8 @@ def index(request, date=None):
     return render(request, 'index.html', context)
 
 def game_detail(request, game_pk, date=None):
-    if date is None:
-        date = get_default_date()
-    response = table.query(
-        Limit = 1,
-        ReturnConsumedCapacity='TOTAL',
-        KeyConditionExpression=
-            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
-    )
+    response = get_record(date)
+    date = response['Items'][0]['PredictionDate']
     games = response['Items'][0]['GamePredictions']
     game = [g for g in games if str(g['game_pk']) == game_pk][0]
     context= {
@@ -61,8 +64,8 @@ def game_detail(request, game_pk, date=None):
     return render(request, 'game-detail.html', context)
 
 def teams(request, date=None):
-    if date is None:
-        date = get_default_date()
+    response = get_record(date)
+    date = response['Items'][0]['PredictionDate']
     context= {
         'prediction_date': date
     }
