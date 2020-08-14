@@ -109,6 +109,24 @@ Resources:
             AllowedHeaders: 
               - "*"
 
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: BayesBetS3BucketPolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref S3Bucket
+                - /*
+      Bucket: !Ref S3Bucket
+
   TestS3Bucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -125,6 +143,24 @@ Resources:
             AllowedHeaders: 
               - "*"
 
+  TestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: BayesBetS3BucketPolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref TestS3Bucket
+                - /*
+      Bucket: !Ref TestS3Bucket
+
   DevS3Bucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -140,6 +176,24 @@ Resources:
               - GET
             AllowedHeaders: 
               - "*"
+
+  DevBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: BayesBetS3BucketPolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevS3Bucket
+                - /*
+      Bucket: !Ref DevS3Bucket
 
   DynamoDBTable:
     Type: AWS::DynamoDB::Table
