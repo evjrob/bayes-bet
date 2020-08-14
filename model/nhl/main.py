@@ -1,3 +1,5 @@
+import boto3
+import json
 import logging
 import os
 import numpy as np
@@ -121,6 +123,23 @@ def main():
         logger.info(f'Added prediction to bayes-bet-table with League=nhl and date={gd}')
     
     # Backfill model performance
+
+    # Add new pred_dates to the S3 Bucket
+    bucket_name = os.getenv('S3_BUCKET_NAME')
+    s3 = boto3.client('s3')
+    with open('pred_dates.json', 'wb') as f:
+        s3.download_fileobj(bucket_name, 'pred_dates.json', f)
+
+    with open('pred_dates.json', 'r') as f:  
+        pred_dates = json.load(f)
+        pred_dates = pred_dates + new_pred_dates
+        
+    with open('pred_dates.json', 'w') as f:  
+        f.write(json.dumps(pred_dates))
+
+    with open('pred_dates.json', 'rb') as f: 
+        s3.upload_fileobj(f, bucket_name, 'pred_dates.json')
+
 
     return
 

@@ -54,6 +54,17 @@
             var newLocation = dateAndPath.path + e.date.format('YYYY-MM-DD') + '/';
             window.location.replace('http://' + window.location.host + '/' + newLocation);
         });
+        $.ajax({
+            type: 'GET',
+            url:"https://bayes-bet-prod.s3.amazonaws.com/pred_dates.json",
+            dataType: 'json',
+            crossDomain: true,
+            success: function(data) {
+                $('#datetimepicker').datetimepicker(
+                    'enabledDates', data
+                );
+        }
+    })
     });
 
     $(document).ready(function() {
