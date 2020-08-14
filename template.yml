@@ -372,7 +372,7 @@ Resources:
       ContainerProperties:
         Image: 
           !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/bayes-bet-repo:latest'
-        Vcpus: 4
+        Vcpus: 2
         Memory: 8000
         Privileged: false
         Environment:
@@ -389,7 +389,7 @@ Resources:
       ContainerProperties:
         Image: 
           !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/bayes-bet-repo-dev:latest'
-        Vcpus: 4
+        Vcpus: 2
         Memory: 8000
         Privileged: false
         Environment:
