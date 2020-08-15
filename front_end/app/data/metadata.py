@@ -60,7 +60,7 @@ team_colors = {
     'St. Louis Blues':['#002F87', '#FCB514'],
     'Tampa Bay Lightning':['#002868', '#002868'],
     'Toronto Maple Leafs':['#00205b', '#00205b'],
-    'Vancouver Canucks':['#00205B', '#00205B'],
+    'Vancouver Canucks':['#00205B', '#00843d'],
     'Vegas Golden Knights':['#B4975A', '#333f42'],
     'Washington Capitals':['#041E42', '#C8102E'],
     'Winnipeg Jets':['#041E42', '#004C97']
