@@ -32,20 +32,32 @@ def get_record(date):
         )
     return response
 
+def game_outcome_prediction(game):
+    wp = game['WinPercentages']
+    game_outcome = {
+        'score':{
+            'home': game['score']['home'],
+            'away': game['score']['away']
+        },
+        'predictions': {
+            'home': [{'type': 'REG', 'value': float(wp[0])},
+                        {'type': 'OT', 'value': float(wp[1]) + float(wp[2])}],
+            'away': [{'type': 'REG', 'value': float(wp[3])},
+                        {'type': 'OT', 'value': float(wp[4]) + float(wp[5])}]
+        }
+    }
+    return game_outcome
+
 def index(request, date=None):
     response = get_record(date)
     date = response['Items'][0]['PredictionDate']
     games = response['Items'][0]['GamePredictions']
     predicted_games = [{'game_pk':g['game_pk'], 'game_date': date, 
                         'home_team':g['home_team'], 'home_abb':team_abbrevs[g['home_team']],
-                        'away_team':g['away_team'], 'away_abb':team_abbrevs[g['away_team']]
+                        'away_team':g['away_team'], 'away_abb':team_abbrevs[g['away_team']],
+                        'game_pred': game_outcome_prediction(g)
                         } for g in games]
-
-    #predicted_games = Games.objects.filter(game_date__range=(date, date_plus)).order_by('game_date')
-    #predicted_games = [{'game_pk':g.game_pk, 'game_date': g.game_date, 
-    #    'home_team':g.home_team.team_name, 'home_abb':g.home_team.team_abbreviation,
-    #    'away_team':g.away_team.team_name, 'away_abb':g.away_team.team_abbreviation} 
-    #    for g in predicted_games]
+    
     context= {'prediction_date': date, 'predicted_games': predicted_games}
     return render(request, 'index.html', context)
 
@@ -59,7 +71,8 @@ def game_detail(request, game_pk, date=None):
         'game_detail': game,
         'game_pk': game_pk,
         'home_abb': team_abbrevs[game['home_team']],
-        'away_abb': team_abbrevs[game['away_team']]
+        'away_abb': team_abbrevs[game['away_team']],
+        'game_pred': game_outcome_prediction(game)
     }
     return render(request, 'game-detail.html', context)
 

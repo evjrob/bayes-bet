@@ -49,35 +49,6 @@ def goal_distribution(request, game_pk, version='v1', date=dt.date.today().strft
     return JsonResponse(goals_dist, safe=False)
 
 
-def game_outcome(request, game_pk, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
-    response = table.query(
-        Limit = 1,
-        ReturnConsumedCapacity='TOTAL',
-        KeyConditionExpression=
-            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
-    )
-    games = response['Items'][0]['GamePredictions']
-    game = [g for g in games if str(g['game_pk']) == game_pk][0]
-    wp = game['WinPercentages']
-    game_outcome = {
-        'predictions': {
-            'home': [{'type': 'REG', 'value': float(wp[0])},
-                        {'type': 'OT', 'value': float(wp[1]) + float(wp[2])}],
-            'away': [{'type': 'REG', 'value': float(wp[3])},
-                        {'type': 'OT', 'value': float(wp[4]) + float(wp[5])}]
-        }
-    }
-    # Home and away scores
-    home_score = game['score']['home']
-    away_score = game['score']['away']
-    game_outcome['score'] = {
-        'home': home_score,
-        'away': away_score
-    }
-
-    return JsonResponse(game_outcome, safe=False)
-
-
 def teams(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
     response = table.query(
         Limit = 1,

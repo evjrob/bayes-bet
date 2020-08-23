@@ -2,8 +2,12 @@
 <div id="game-outcome-{{game_pk}}"></div>
 
 <script>
-//Read the data
-d3.json("/data/v1/gameoutcome/{{game_pk}}/{{prediction_date}}", function(data) {
+// Plot the data after extracting the game predictions
+(function(){
+  function unescapeHTML(text) {
+    return text.replaceAll('&#x27;', '"')
+  }
+  data = JSON.parse(unescapeHTML('{{game_pred}}'));
   plot_game_outcome(data, "#game-outcome-{{game_pk}}", "{{home_abb}}", "{{away_abb}}");
-})
+})();
 </script>
