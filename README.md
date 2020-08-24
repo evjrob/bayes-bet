@@ -13,6 +13,6 @@ Associated Blog Posts
 * [Hockey Modeling - Less Code, More Math! (Part 1) - Aug 20, 2020](http://everettsprojects.com/2020/08/20/hockey-modeling-less-code-more-math-1.html)
 * [Hockey Modeling - Less Code, More Math! (Part 2) - Aug 22, 2020](http://everettsprojects.com/2020/08/22/hockey-modeling-less-code-more-math-2.html)
 * [Hockey Modeling - Less Code, More Math! (Part 3) - Aug 23, 2020](http://everettsprojects.com/2020/08/23/hockey-modeling-less-code-more-math-3.html)
-
+* [Hockey Modeling - Less Code, More Math! (Part 4) - Aug 24, 2020](http://everettsprojects.com/2020/08/24/hockey-modeling-less-code-more-math-4.html)
 
 --------
