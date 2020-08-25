@@ -5,7 +5,7 @@
 // Plot the data after extracting the game predictions
 (function(){
   function unescapeHTML(text) {
-    return text.replaceAll('&#x27;', '"')
+    return text.replace(/&#x27;/g, '"')
   }
   data = JSON.parse(unescapeHTML('{{game_pred}}'));
   plot_game_outcome(data, "#game-outcome-{{game_pk}}", "{{home_abb}}", "{{away_abb}}");
