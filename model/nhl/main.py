@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 framework = 'PyMC3'
 model_version = 'v2.1'
-fattening_factor = 1.02  # Expand the posteriors by this amount before using as priors
+fattening_factor = 1.05  # Expand the posteriors by this amount before using as priors
 f_thresh = 0.075         # A cap on team variable standard deviation to prevent blowup
 window_size = 1          # The number previous game days used in each iteration
 delta_sigma = 0.001      # The standard deviaton of the random walk variables
@@ -92,12 +92,22 @@ def main():
     valid_rows = (games['home_team'].isin(teams) & games['away_team'].isin(teams))
     games = games[valid_rows]
     
+    # # Get existing game_predictions from s3
+    # bucket_name = os.getenv('S3_BUCKET_NAME')
+    # s3 = boto3.client('s3')
+    # with open('model_preds.csv', 'rb') as f:
+    #     s3.download_fileobj(bucket_name, 'model_preds.csv', f)
+    # model_preds = pd.read_csv('model_preds.csv')
+
     # Update scores in the last prediction
     updated_last_pred = last_pred.copy()
     if 'GamePredictions' in updated_last_pred.keys():
         for g in updated_last_pred['GamePredictions']:
             gpk = g['game_pk']
             game_row = games[games['game_pk'] == gpk]
+            if game_row.shape[0] == 0:
+                logger.info(f'Failed to update game scores on {last_pred_date} with game_pk {gpk}.')
+                continue
             home_fin_score = str(game_row['home_fin_score'].values[0])
             away_fin_score = str(game_row['away_fin_score'].values[0])
             g['score']['home'] = home_fin_score
@@ -110,6 +120,8 @@ def main():
     new_pred_dates = [gd for gd in game_dates if gd > last_pred_date]
     if len(new_pred_dates) == 0:
         logger.info(f'No new games to predict on.')
+        return
+
     for gd in new_pred_dates:
         logger.info(f'Generating new NHL model predictions for {gd}')
         # Get the most recent game date played
@@ -122,8 +134,6 @@ def main():
         put_dynamodb_item(record)
         logger.info(f'Added prediction to bayes-bet-table with League=nhl and date={gd}')
     
-    # Backfill model performance
-
     # Add new pred_dates to the S3 Bucket
     bucket_name = os.getenv('S3_BUCKET_NAME')
     s3 = boto3.client('s3')
