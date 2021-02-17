@@ -129,7 +129,9 @@ def main():
         logger.info(f'Generating new NHL model predictions for {gd}')
         # Get the most recent game date played
         prev_gd = max([gd2 for gd2 in game_dates if gd2 < gd])
-        obs_data = model_ready_data(games[games['game_date'] == prev_gd], teams_to_int)
+        obs_idx = (games['game_date'] == prev_gd) & (games['game_state'] != 'Postponed')
+        obs_data = games[obs_idx].reset_index(drop=True)
+        obs_data = model_ready_data(obs_data, teams_to_int)
         posteriors = model_update(obs_data, priors, n_teams, fattening_factor, f_thresh, delta_sigma)
         priors = posteriors.copy()
         pred_games = games[games['game_date'] == gd]
