@@ -108,10 +108,13 @@ def main():
             if game_row.shape[0] == 0:
                 logger.info(f'Failed to update game scores on {last_pred_date} with game_pk {gpk}.')
                 continue
-            home_fin_score = str(game_row['home_fin_score'].values[0])
-            away_fin_score = str(game_row['away_fin_score'].values[0])
-            g['score']['home'] = home_fin_score
-            g['score']['away'] = away_fin_score
+            # Only update the score if the game wasn't postponed
+            if game_row['game_state'].values[0] != 'Postponed':
+                home_fin_score = str(game_row['home_fin_score'].values[0])
+                away_fin_score = str(game_row['away_fin_score'].values[0])
+                if home_fin_score != '0' or away_fin_score != '0':
+                    g['score']['home'] = home_fin_score
+                    g['score']['away'] = away_fin_score
         put_dynamodb_item(updated_last_pred)
         logger.info(f'Updated scores for item in bayes-bet-table with League=nhl and date={last_pred_date}')
 
