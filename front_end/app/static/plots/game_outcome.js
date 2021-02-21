@@ -115,18 +115,11 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         return [a_odds, b_odds]
     }
 
-    var get_odds_ratio_string = function(away_abb, away_data, home_abb, home_data) {
+    var get_decimal_odds_string = function(away_abb, away_data, home_abb, home_data) {
         odds = decimal_odds(away_data, home_data);
         away_odds = odds[0];
         home_odds = odds[1];
-        if (away_odds > home_odds) {
-            away_odds = away_odds - 1;
-            home_odds = 1;
-        } else {
-            home_odds = home_odds - 1;
-            away_odds = 1;
-        }
-        return away_abb + ' ' + f(away_odds) + ' / ' + f(home_odds) + ' ' + home_abb 
+        return away_abb + ' ' + f(away_odds) + ' : ' + f(home_odds) + ' ' + home_abb 
     };
 
     var get_american_odds_string = function(away_abb, away_data, home_abb, home_data) {
@@ -321,13 +314,13 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .style("stroke", "black")
         .style("fill", "none");
 
-    // Fractional Odds
+    // Decimal Odds
     selection.append("text")
         .attr('class', 'prediction-label')
         .attr('text-anchor', 'middle')
         .attr('x', (width / 4) - margin.left)
         .attr('y', 95)
-        .text("Fractional Odds")
+        .text("Decimal Odds")
         .style("font", "12px sans-serif")
         .style("font-weight", "bold");
     
@@ -336,7 +329,7 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('text-anchor', 'middle')
         .attr('x', (width / 4) - margin.left)
         .attr('y', 112)
-        .text(get_odds_ratio_string(away_abb, _data_away, home_abb, _data_home))
+        .text(get_decimal_odds_string(away_abb, _data_away, home_abb, _data_home))
         .style("font", "12px sans-serif");
 
     // American Odds
