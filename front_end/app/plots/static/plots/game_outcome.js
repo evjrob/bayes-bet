@@ -11,6 +11,7 @@ function groupData(data) {
     const _data = data.map(d => {
       cumulative += d.value
       return {
+        type: d.type,
         value: d.value,
         // want the cumulative to prior value (start of rect)
         cumulative: cumulative - d.value,
@@ -30,13 +31,13 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
 
     var config = {
         f: d3.format('.2f'),
-        margin: {top: 25, right: 70, bottom: 20, left: 50},
+        margin: {top: 25, right: 70, bottom: 20, left: 100},
         width: div_width,
-        height: 100,
+        height: 150,
         barHeight: 30,
         color_classes: {
-            "away":["color-away", "color-away-light"],
-            "home":["color-home", "color-home-light"]
+            "away":["color-away", "color-away-mid", "color-away-light"],
+            "home":["color-home", "color-home-mid", "color-home-light"]
         }
     }
 
@@ -67,6 +68,84 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
     }
     get_pred_result();
 
+    // create a tooltip
+    var tooltip = d3.select(target_div)
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "2px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+        .style("position", "absolute")
+    
+    // Functions that change the tooltip when the user hovers / moves / leaves a cell
+    var mouseover = function(d) {
+        tooltip.style("opacity", 1)
+    };
+    var mousemove = function(d) {
+        if (d !== undefined) {
+            var chart_pos = selection.node().getBoundingClientRect();
+            tooltip
+            .html(d.type + ' : ' + f(d.value * 100.0) + '%')
+            .style("left", (d3.event.pageX - chart_pos.left) + "px")
+            .style("top", (d3.event.pageY - 30) + "px")
+        }
+    };
+    var mouseleave = function(d) {
+        tooltip.style("opacity", 0)
+    };
+
+    var totalprob = function(d) {
+        dvals = d.map(a => a.value);
+        dsum = dvals.reduce((a,b) => a + b)
+        return dsum
+    }
+
+    var probstr = function(p) {
+        return f(p * 100) + '%'
+    }
+
+    var decimal_odds = function(a,b) {
+        a_prob = totalprob(a);
+        b_prob = totalprob(b);
+        a_odds = 1 / a_prob;
+        b_odds = 1 / b_prob;
+        return [a_odds, b_odds]
+    }
+
+    var get_odds_ratio_string = function(away_abb, away_data, home_abb, home_data) {
+        odds = decimal_odds(away_data, home_data);
+        away_odds = odds[0];
+        home_odds = odds[1];
+        if (away_odds > home_odds) {
+            away_odds = away_odds - 1;
+            home_odds = 1;
+        } else {
+            home_odds = home_odds - 1;
+            away_odds = 1;
+        }
+        return away_abb + ' ' + f(away_odds) + ' / ' + f(home_odds) + ' ' + home_abb 
+    };
+
+    var get_american_odds_string = function(away_abb, away_data, home_abb, home_data) {
+        odds = decimal_odds(away_data, home_data);
+        away_odds = odds[0];
+        home_odds = odds[1];
+        if (away_odds >= 2) {
+            away_odds = '+' + Math.round((away_odds - 1) * 100);
+        } else {
+            away_odds = Math.round(-100 / (away_odds - 1));
+        }
+        if (home_odds >= 2) {
+            home_odds = '+' + Math.round((home_odds - 1) * 100);
+        } else {
+            home_odds = Math.round(-100 / (home_odds - 1));
+        }
+        return away_abb + ' ' + away_odds + ' : ' + home_odds + ' ' + home_abb 
+    };
+
     // set up scales for horizontal placement
     const xScale = d3.scaleLinear()
         .domain([0, 1])
@@ -78,7 +157,7 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('width', width)
         .attr('height', height)
         .append('g')
-        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
     // stack rect for each data value
     selection.selectAll('rect_away')
@@ -90,17 +169,9 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('height', barHeight)
         .attr('width', d => xScale(d.value))
         .attr('class', (d, i) => color_classes.away[i])
-
-    // add values on bar
-    selection.selectAll('.text-value-away')
-        .data(_data_away)
-        .enter().append('text')
-        .attr('class', 'text-value-away')
-        .attr('text-anchor', 'middle')
-        .attr('x', d => xScale(d.cumulative) + (xScale(d.value) / 2))
-        .attr('y', away_y_pos + halfBarHeight + 5)
-        .text(d => f(d.value * 100.0) + '%')
-        .style("font", "11px sans-serif");
+        .on("mouseover", mouseover)
+        .on("mousemove", d => mousemove(d))
+        .on("mouseleave", mouseleave);
 
     // stack rect for each data value
     selection.selectAll('rect_home')
@@ -112,23 +183,15 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('height', barHeight)
         .attr('width', d => xScale(d.value))
         .attr('class', (d, i) => color_classes.home[i])
-
-    // add values on bar
-    selection.selectAll('.text-value-home')
-        .data(_data_home)
-        .enter().append('text')
-        .attr('class', 'text-value-home')
-        .attr('text-anchor', 'middle')
-        .attr('x', d => xScale(d.cumulative) + (xScale(d.value) / 2))
-        .attr('y', home_y_pos + halfBarHeight + 5)
-        .text(d => f(d.value * 100.0) + '%')
-        .style("font", "11px sans-serif");
+        .on("mouseover", mouseover)
+        .on("mousemove", d => mousemove(d))
+        .on("mouseleave", mouseleave);
 
     // team labels
     selection.append("text")
         .attr('class', 'away-win')
         .attr('text-anchor', 'left')
-        .attr('x', -50)
+        .attr('x', -100)
         .attr('y', away_y_pos + halfBarHeight + 5)
         .text(!(home_win_pred) ? prediction_marker : "")
         .style("font", "14px sans-serif")
@@ -136,18 +199,27 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .style("fill", prediction_colour);
     
     selection.append("text")
-        .attr('class', 'away-labe')
+        .attr('class', 'away-label')
         .attr('text-anchor', 'middle')
-        .attr('x', -20)
+        .attr('x', -71)
         .attr('y', away_y_pos + halfBarHeight + 5)
         .text(away_abb)
         .style("font", "12px sans-serif")
-        .style("font-weight", !(home_win_pred) ? "bold" : "normal");;
+        .style("font-weight", !(home_win_pred) ? "bold" : "normal");
+
+    selection.append("text")
+        .attr('class', 'away-prob')
+        .attr('text-anchor', 'middle')
+        .attr('x', -27)
+        .attr('y', away_y_pos + halfBarHeight + 5)
+        .text(probstr(totalprob(_data_away)))
+        .style("font", "12px sans-serif")
+        .style("font-weight", !(home_win_pred === true) ? "bold" : "normal");
 
     selection.append("text")
         .attr('class', 'home-win')
         .attr('text-anchor', 'left')
-        .attr('x', -50)
+        .attr('x', -100)
         .attr('y', home_y_pos + halfBarHeight + 5)
         .text((home_win_pred) ? prediction_marker : "")
         .style("font", "14px sans-serif")
@@ -157,11 +229,20 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
     selection.append("text")
         .attr('class', 'home-label')
         .attr('text-anchor', 'middle')
-        .attr('x', -20)
+        .attr('x', -71)
         .attr('y', home_y_pos + halfBarHeight + 5)
         .text(home_abb)
         .style("font", "12px sans-serif")
-        .style("font-weight", (home_win_pred === true) ? "bold" : "normal");;
+        .style("font-weight", (home_win_pred === true) ? "bold" : "normal");
+
+    selection.append("text")
+        .attr('class', 'home-prob')
+        .attr('text-anchor', 'middle')
+        .attr('x', -27)
+        .attr('y', home_y_pos + halfBarHeight + 5)
+        .text(probstr(totalprob(_data_home)))
+        .style("font", "12px sans-serif")
+        .style("font-weight", (home_win_pred === true) ? "bold" : "normal");
 
     // scores
     selection.append("text")
@@ -197,7 +278,7 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('text-anchor', 'left')
         .attr('x', 5)
         .attr('y', -3)
-        .text("(Regulation / Overtime)")
+        .text("(Regulation / OT / SO)")
         .style("font", "12px sans-serif")
         .style("font-weight", "bold");
 
@@ -220,8 +301,6 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .style("font", "12px sans-serif")
         .style("font-weight", "bold");
 
-    // 
-
     // 100% bars
     selection.append("line")
         .attr("x1", w)  //<<== change your code here
@@ -241,4 +320,40 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .style("stroke-width", 1)
         .style("stroke", "black")
         .style("fill", "none");
+
+    // Fractional Odds
+    selection.append("text")
+        .attr('class', 'prediction-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', (width / 4) - margin.left)
+        .attr('y', 95)
+        .text("Fractional Odds")
+        .style("font", "12px sans-serif")
+        .style("font-weight", "bold");
+    
+    selection.append("text")
+        .attr('class', 'prediction-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', (width / 4) - margin.left)
+        .attr('y', 112)
+        .text(get_odds_ratio_string(away_abb, _data_away, home_abb, _data_home))
+        .style("font", "12px sans-serif");
+
+    // American Odds
+    selection.append("text")
+        .attr('class', 'prediction-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', (3 * width / 4) - margin.left)
+        .attr('y', 95)
+        .text("American Odds")
+        .style("font", "12px sans-serif")
+        .style("font-weight", "bold");
+
+    selection.append("text")
+        .attr('class', 'prediction-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', (3 * width / 4) - margin.left)
+        .attr('y', 112)
+        .text(get_american_odds_string(away_abb, _data_away, home_abb, _data_home))
+        .style("font", "12px sans-serif");
 }

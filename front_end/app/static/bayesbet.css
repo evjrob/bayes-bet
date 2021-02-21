@@ -186,6 +186,11 @@ body {
   fill: #CF6357;
 }
 
+.color-away-mid {
+  color: #cf756b;
+  fill: #cf756b;
+}
+
 .color-away-light {
   color: #CF867E;
   fill: #CF867E;
@@ -204,6 +209,11 @@ body {
 .color-home {
   color: #6B7FFF;
   fill: #6B7FFF;
+}
+
+.color-home-mid {
+  color: #8b9bf8;
+  fill:  #8b9bf8;
 }
 
 .color-home-light {

@@ -41,9 +41,11 @@ def game_outcome_prediction(game):
         },
         'predictions': {
             'home': [{'type': 'REG', 'value': float(wp[0])},
-                        {'type': 'OT', 'value': float(wp[1]) + float(wp[2])}],
+                        {'type': 'OT', 'value': float(wp[1])},
+                        {'type': 'SO', 'value': float(wp[2])}],
             'away': [{'type': 'REG', 'value': float(wp[3])},
-                        {'type': 'OT', 'value': float(wp[4]) + float(wp[5])}]
+                        {'type': 'OT', 'value': float(wp[4])},
+                        {'type': 'SO', 'value': float(wp[5])}]
         }
     }
     return game_outcome
