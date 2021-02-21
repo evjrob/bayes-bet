@@ -134,7 +134,8 @@ def main():
         obs_data = model_ready_data(obs_data, teams_to_int)
         posteriors = model_update(obs_data, priors, n_teams, fattening_factor, f_thresh, delta_sigma)
         priors = posteriors.copy()
-        pred_games = games[games['game_date'] == gd]
+        pred_idx = (games['game_date'] == gd) & (games['game_state'] != 'Postponed')
+        pred_games = games[pred_idx].reset_index(drop=True)
         record = create_dynamodb_item(gd, posteriors, int_to_teams, teams_to_int, metadata, games_to_predict=pred_games)
         put_dynamodb_item(record)
         logger.info(f'Added prediction to bayes-bet-table with League=nhl and date={gd}')
