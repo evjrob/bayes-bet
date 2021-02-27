@@ -69,6 +69,11 @@ function plot_goal_dist(data, target_div, home_abb, away_abb) {
     var max_home_prob = Math.max.apply(Math, axes_data.map(function(d){return d.home_probability;}));
     var max_away_prob = Math.max.apply(Math, axes_data.map(function(d){return d.away_probability;}));
 
+    const f = d3.format('.2f');
+    var probstr = function(p) {
+        return f(p * 100.0) + '%'
+    }
+
     // create a tooltip
     var tooltip = d3.select(target_div)
         .append("div")
@@ -89,7 +94,7 @@ function plot_goal_dist(data, target_div, home_abb, away_abb) {
         var chart_pos = svg.node().getBoundingClientRect();
         var main_pos = d3.select('#main').node().getBoundingClientRect();
         tooltip
-        .html(home_abb + " goals: " + d.home_goals + "<br>" + away_abb + " goals: " + d.away_goals + "<br>Probability: " + d.probability)
+        .html(home_abb + " goals: " + d.home_goals + "<br>" + away_abb + " goals: " + d.away_goals + "<br>Probability: " + probstr(d.probability))
         .style("left", (d3.event.clientX - chart_pos.left  - 30) + "px")
         .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
     }
@@ -97,7 +102,7 @@ function plot_goal_dist(data, target_div, home_abb, away_abb) {
         var chart_pos = svg.node().getBoundingClientRect();
         var main_pos = d3.select('#main').node().getBoundingClientRect();
         tooltip
-        .html(home_abb + " goals: " + d.goals + "<br>Probability: " + Math.round(d.home_probability * 10000)/10000)
+        .html(home_abb + " goals: " + d.goals + "<br>Probability: " + probstr(d.home_probability))
         .style("left", (d3.event.clientX - chart_pos.left  - 30) + "px")
         .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
     }
@@ -105,7 +110,7 @@ function plot_goal_dist(data, target_div, home_abb, away_abb) {
         var chart_pos = svg.node().getBoundingClientRect();
         var main_pos = d3.select('#main').node().getBoundingClientRect();
         tooltip
-        .html(away_abb + " goals: " + d.goals + "<br>Probability: " + Math.round(d.away_probability * 10000)/10000)
+        .html(away_abb + " goals: " + d.goals + "<br>Probability: " + probstr(d.away_probability))
         .style("left", (d3.event.clientX - chart_pos.left  - 30) + "px")
         .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
     }
