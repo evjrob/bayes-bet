@@ -112,18 +112,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
-
 STATICFILES_DIRS = [
-   "plots/static",
    "bayesbet/static"
 ]
 
-YOUR_S3_BUCKET = "bayes-bet-prod"
+YOUR_S3_BUCKET = os.environ['S3_BUCKET_NAME']
 
 STATICFILES_STORAGE = "django_s3_storage.storage.StaticS3Storage"
 AWS_S3_BUCKET_NAME_STATIC = YOUR_S3_BUCKET
+AWS_S3_FILE_OVERWRITE = True
 
 # Serve the static files directly from the s3 bucket
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % YOUR_S3_BUCKET
