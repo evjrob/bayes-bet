@@ -67,19 +67,5 @@
     })
     });
 
-    $(document).ready(function() {
-        if ($(window).width() < 768) {
-            $("#sidebar").toggleClass("collapsed");
-        }
-    });
-
-    $(".sidebar-button").click(function(e) {
-        e.preventDefault();
-        $("#sidebar").toggleClass("collapsed");
-        $("#main").toggleClass("col-lg-12 col-lg-10");
-        $("#main").toggleClass("col-md-12 col-md-9");
-        $("#main").toggleClass("col-sm-12 col-sm-7");
-    });
-
     feather.replace();
 </script>

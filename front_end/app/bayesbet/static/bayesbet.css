@@ -11,15 +11,26 @@ body {
 /*
  * Sidebar
  */
+ .aside {
+  padding-left: 0;
+  padding-right: 0;
+ }
+
+ .sidebarmain {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  padding: 0;
+ }
 
 .sidebar {
-  position: relative;
+  position: sticky;
   top: 0;
   bottom: 0;
   left: 0;
   z-index: 100; /* Behind the navbar */
-  padding: 0;
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .sidebar-sticky {
@@ -66,38 +77,26 @@ body {
   padding-right: 0.5rem;
 }
 
-#sidebar {
-  /* for the animation */
-  transition: margin 0.3s ease;
-}
-
-#main {
-  /* for the animation */
-  transition: margin 0.6s ease;
-}
-
-.collapsed {
-  /* hide it for small displays*/
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .collapsed {
-    display: none;
-  }
-}
-
 /*
  * Navbar
  */
 
+ .navbar-toggler {
+  margin-right: 1rem;
+  float: right;
+ }
+
+ .navbar-toggler-icon {
+  width: 1rem;
+  height: 1rem;
+ }
+
 .navbar-brand {
-  padding-top: .75rem;
-  padding-bottom: .75rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
   font-size: 1rem;
   margin-right: 0px;
   background-color: rgba(0, 0, 0, .25);
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
 }
 
 .navbar .form-control {
@@ -186,6 +185,11 @@ body {
   fill: #CF6357;
 }
 
+.color-away-mid {
+  color: #cf756b;
+  fill: #cf756b;
+}
+
 .color-away-light {
   color: #CF867E;
   fill: #CF867E;
@@ -204,6 +208,11 @@ body {
 .color-home {
   color: #6B7FFF;
   fill: #6B7FFF;
+}
+
+.color-home-mid {
+  color: #8b9bf8;
+  fill:  #8b9bf8;
 }
 
 .color-home-light {
