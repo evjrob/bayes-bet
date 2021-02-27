@@ -87,24 +87,27 @@ function plot_goal_dist(data, target_div, home_abb, away_abb) {
     }
     var mousemove_dist = function(d) {
         var chart_pos = svg.node().getBoundingClientRect();
+        var main_pos = d3.select('#main').node().getBoundingClientRect();
         tooltip
         .html(home_abb + " goals: " + d.home_goals + "<br>" + away_abb + " goals: " + d.away_goals + "<br>Probability: " + d.probability)
-        .style("left", (d3.event.pageX - chart_pos.left  + 60) + "px")
-        .style("top", (d3.event.pageY - 90) + "px")
+        .style("left", (d3.event.clientX - chart_pos.left  - 30) + "px")
+        .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
     }
     var mousemove_home = function(d) {
         var chart_pos = svg.node().getBoundingClientRect();
+        var main_pos = d3.select('#main').node().getBoundingClientRect();
         tooltip
         .html(home_abb + " goals: " + d.goals + "<br>Probability: " + Math.round(d.home_probability * 10000)/10000)
-        .style("left", (d3.event.pageX - chart_pos.left  + 60) + "px")
-        .style("top", (d3.event.pageY - 90) + "px")
+        .style("left", (d3.event.clientX - chart_pos.left  - 30) + "px")
+        .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
     }
     var mousemove_away = function(d) {
         var chart_pos = svg.node().getBoundingClientRect();
+        var main_pos = d3.select('#main').node().getBoundingClientRect();
         tooltip
         .html(away_abb + " goals: " + d.goals + "<br>Probability: " + Math.round(d.away_probability * 10000)/10000)
-        .style("left", (d3.event.pageX - chart_pos.left  + 60) + "px")
-        .style("top", (d3.event.pageY - 90) + "px")
+        .style("left", (d3.event.clientX - chart_pos.left  - 30) + "px")
+        .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
     }
     var mouseleave = function(d) {
         tooltip.style("opacity", 0)

@@ -128,20 +128,17 @@ function plot_team_dist(data, target_div) {
     .style("border-radius", "5px")
     .style("padding", "5px")
 
-  var get_chart_top = function() {
-    var chart_pos = svg.node().getBoundingClientRect();
-    return chart_pos.top;
-  }
-
   // Functions that change the tooltip when the user hovers / moves / leaves a team circle
   var mouseover = function(d) {
     tooltip.style("opacity", 1)
   }
   var mousemove = function(d) {
+    var chart_pos = svg.node().getBoundingClientRect();
+    var main_pos = d3.select('#main').node().getBoundingClientRect();
     tooltip
       .html(d.team_name + "<br>Offence: " + d.offence + "<br>Defence: " + d.defence)
-      .style("left", (d.x + d3.mouse(this)[0] + margin.left + 50) + "px")
-      .style("top", (d.y + d3.mouse(this)[1] + margin.top + 40) + "px")
+      .style("left", (d3.event.clientX - chart_pos.left  - 30) + "px")
+      .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
   }
   var mouseleave = function(d) {
     tooltip.style("opacity", 0)

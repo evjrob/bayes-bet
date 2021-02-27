@@ -87,10 +87,11 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
     var mousemove = function(d) {
         if (d !== undefined) {
             var chart_pos = selection.node().getBoundingClientRect();
+            var main_pos = d3.select('#main').node().getBoundingClientRect();
             tooltip
             .html(d.type + ' : ' + f(d.value * 100.0) + '%')
-            .style("left", (d3.event.pageX - chart_pos.left) + "px")
-            .style("top", (d3.event.pageY - 30) + "px")
+            .style("left", (d3.event.clientX - chart_pos.left - 30) + "px")
+            .style("top", (d3.event.clientY - main_pos.top + 80) + "px")
         }
     };
     var mouseleave = function(d) {
