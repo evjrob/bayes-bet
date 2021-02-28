@@ -51,7 +51,11 @@
             defaultDate: dateAndPath.date
         });
         $('#datetimepicker').on("change.datetimepicker", function (e) {
-            var newLocation = dateAndPath.path + e.date.format('YYYY-MM-DD') + '/';
+            if (dateAndPath.path.slice(0,4) == "game") {
+                var newLocation = e.date.format('YYYY-MM-DD') + '/';
+            } else {
+                var newLocation = dateAndPath.path + e.date.format('YYYY-MM-DD') + '/';
+            }
             window.location.replace('http://' + window.location.host + '/' + newLocation);
         });
         $.ajax({
