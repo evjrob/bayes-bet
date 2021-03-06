@@ -2,78 +2,13 @@ import logging
 import os
 
 import json
-import boto3
-from boto3.dynamodb.conditions import Key
 from math import factorial, exp, sqrt, pi
 import numpy as np
 from scipy.integrate import quad, dblquad
 
 
 logger = logging.getLogger(__name__)
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-table_name = os.getenv('DYNAMODB_TABLE_NAME')
-table = dynamodb.Table(table_name)
-
 t_before_shootout = 5.0/60.0    # 5 minute shootout, divided by regulation time
-
-def most_recent_dynamodb_item(hash_key, date):
-    logger.info(f'Get most recent item from bayes-bet-table with League={hash_key} and date={date}')
-    response = table.query(
-        Limit = 1,
-        ScanIndexForward = False,
-        ReturnConsumedCapacity='TOTAL',
-        KeyConditionExpression=
-            Key('League').eq(hash_key) & Key('PredictionDate').lte(date)
-    )
-    item_count = len(response['Items'])
-    capacity_units = response['ConsumedCapacity']['CapacityUnits']
-    logger.info(f'Query consumed {capacity_units} capacity units')
-    if item_count > 0:
-        most_recent_item = response['Items'][0]
-    else:
-        most_recent_item = None
-    
-    return most_recent_item
-
-def get_teams_int_maps(teams):
-    teams_to_int = {}
-    int_to_teams = {}
-    for i,t in enumerate(teams):
-        teams_to_int[t] = i
-        int_to_teams[i] = t
-    return teams_to_int, int_to_teams
-
-def model_vars_to_numeric(mv_in, teams_to_int):
-    mv = {}
-    n_teams = len(teams_to_int)
-    default_μ = 0.0
-    default_σ = 0.15
-    mv['i'] = [float(s) for s in mv_in['i']]
-    mv['h'] = [float(s) for s in mv_in['h']]
-    mv['o'] = [np.array([default_μ]*n_teams), np.array([default_σ]*n_teams)]
-    mv['d'] = [np.array([default_μ]*n_teams), np.array([default_σ]*n_teams)]
-    for t,n in teams_to_int.items():
-        mv['o'][0][n] = float(mv_in['teams'][t]['o'][0])
-        mv['o'][1][n] = float(mv_in['teams'][t]['o'][1])
-        mv['d'][0][n] = float(mv_in['teams'][t]['d'][0])
-        mv['d'][1][n] = float(mv_in['teams'][t]['d'][1])
-    return mv
-
-def model_vars_to_string(mv_in, int_to_teams, decimals=5):
-    mv = {}
-    precision = f'.{decimals}f'
-    mv['i'] = [f'{n:{precision}}' for n in mv_in['i']]
-    mv['h'] = [f'{n:{precision}}' for n in mv_in['h']]
-    mv['teams'] = {}
-    for n,t in int_to_teams.items():
-        o_μ = mv_in['o'][0][n]
-        o_σ = mv_in['o'][1][n]
-        d_μ = mv_in['d'][0][n]
-        d_σ = mv_in['d'][1][n]
-        mv['teams'][t] = {}
-        mv['teams'][t]['o'] = [f'{o_μ:{precision}}',  f'{o_σ:{precision}}']
-        mv['teams'][t]['d'] = [f'{d_μ:{precision}}',  f'{d_σ:{precision}}']
-    return mv
 
 def bayesian_poisson_pdf(μ, σ, max_y=10):
     def integrand(x, y, σ, μ):
@@ -199,24 +134,9 @@ def game_predictions(games, posteriors, teams_to_int, decimals=5):
         game_predictions_list.append(game_pred)
     return game_predictions_list
 
-def create_dynamodb_item(pred_date, posteriors, int_to_teams, teams_to_int, metadata, games_to_predict=None):
-    item = {'League':'nhl', 'PredictionDate':pred_date}
-    if games_to_predict is not None:
-        game_preds = game_predictions(games_to_predict, posteriors, teams_to_int)
-        item['GamePredictions'] = game_preds
-    model_vars = model_vars_to_string(posteriors, int_to_teams)
-    item['ModelVariables'] = model_vars
-    item['ModelMetadata'] = metadata
-
-    return item
-
-def put_dynamodb_item(item):
-    response = table.put_item(Item=item)
-    return response
-
 if __name__ == "__main__":
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
     #print(bayesian_poisson_pdf(1.75, 0.15))
-    item = most_recent_dynamodb_item('nhl', '2020-07-26')
+    #item = most_recent_dynamodb_item('nhl', '2020-07-26')
     #print(item)

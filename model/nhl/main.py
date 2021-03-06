@@ -6,10 +6,11 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-from query_api import check_for_games, fetch_recent_nhl_data, fetch_nhl_data_by_dates
-from results import most_recent_dynamodb_item, model_vars_to_numeric, model_vars_to_string, \
-    get_teams_int_maps, create_dynamodb_item, put_dynamodb_item
+from stats_api import check_for_games, fetch_recent_nhl_data, fetch_nhl_data_by_dates
+from data_utils import model_vars_to_numeric, model_vars_to_string, get_teams_int_maps
+from db import most_recent_dynamodb_item, create_dynamodb_item, put_dynamodb_item
 from model import model_ready_data, model_update
+from predict import game_predictions
 
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -79,6 +80,10 @@ def main():
 
     games = fetch_nhl_data_by_dates(start_date, today)
     games = games[games['game_type'] != 'A'] # No All Star games
+
+    # Get the first date of the season
+    current_season = games.loc[games['game_date'] == today]['season'].values[0]
+    season_start = games[games['season'] == current_season]['game_date'].min()
     
     teams = get_unique_teams(games)
     teams_to_int, int_to_teams = get_teams_int_maps(teams)
@@ -91,13 +96,6 @@ def main():
     # Drop games with non-nhl teams (usually preseason exhibition games)
     valid_rows = (games['home_team'].isin(teams) & games['away_team'].isin(teams))
     games = games[valid_rows]
-    
-    # # Get existing game_predictions from s3
-    # bucket_name = os.getenv('S3_BUCKET_NAME')
-    # s3 = boto3.client('s3')
-    # with open('model_preds.csv', 'rb') as f:
-    #     s3.download_fileobj(bucket_name, 'model_preds.csv', f)
-    # model_preds = pd.read_csv('model_preds.csv')
 
     # Update scores in the last prediction
     updated_last_pred = last_pred.copy()
@@ -115,8 +113,13 @@ def main():
                 if home_fin_score != '0' or away_fin_score != '0':
                     g['score']['home'] = home_fin_score
                     g['score']['away'] = away_fin_score
-        put_dynamodb_item(updated_last_pred)
-        logger.info(f'Updated scores for item in bayes-bet-table with League=nhl and date={last_pred_date}')
+    
+    # TODO: Update model performance
+    #     
+    
+    # Put updated DynamoDB item back into database 
+    put_dynamodb_item(updated_last_pred)
+    logger.info(f'Updated scores and performance for item in bayes-bet-table with League=nhl and date={last_pred_date}')
 
     # Backfill missing predictions
     game_dates = games['game_date'].drop_duplicates()
@@ -135,8 +138,9 @@ def main():
         posteriors = model_update(obs_data, priors, n_teams, fattening_factor, f_thresh, delta_sigma)
         priors = posteriors.copy()
         pred_idx = (games['game_date'] == gd) & (games['game_state'] != 'Postponed')
-        pred_games = games[pred_idx].reset_index(drop=True)
-        record = create_dynamodb_item(gd, posteriors, int_to_teams, teams_to_int, metadata, games_to_predict=pred_games)
+        games_to_predict = games[pred_idx].reset_index(drop=True)
+        game_preds = game_predictions(games_to_predict, posteriors, teams_to_int)
+        record = create_dynamodb_item(gd, posteriors, int_to_teams, teams_to_int, metadata, game_preds=game_preds)
         put_dynamodb_item(record)
         logger.info(f'Added prediction to bayes-bet-table with League=nhl and date={gd}')
     
