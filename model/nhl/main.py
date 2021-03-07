@@ -6,11 +6,12 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-from stats_api import check_for_games, fetch_recent_nhl_data, fetch_nhl_data_by_dates
 from data_utils import model_vars_to_numeric, model_vars_to_string, get_teams_int_maps
-from db import most_recent_dynamodb_item, create_dynamodb_item, put_dynamodb_item
+from db import query_dynamodb, create_dynamodb_item, put_dynamodb_item
+from evaluate import update_scores, prediction_performance
 from model import model_ready_data, model_update
 from predict import game_predictions
+from stats_api import check_for_games, fetch_recent_nhl_data, fetch_nhl_data_by_dates
 
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -22,6 +23,7 @@ fattening_factor = 1.05  # Expand the posteriors by this amount before using as 
 f_thresh = 0.075         # A cap on team variable standard deviation to prevent blowup
 window_size = 1          # The number previous game days used in each iteration
 delta_sigma = 0.001      # The standard deviaton of the random walk variables
+perf_ws = 14             # Window size for model performance stats
 metadata = {
     'framework': framework,
     'model_version': model_version,
@@ -72,11 +74,7 @@ def initialize():
 def main():
     today_dt = dt.date.today()
     today = today_dt.strftime('%Y-%m-%d')
-    last_pred = most_recent_dynamodb_item('nhl', today)
-    last_pred_date = last_pred['PredictionDate']
-    last_pred_dt = dt.date.fromisoformat(last_pred_date)
-    logger.info(f'Most recent prediction is from {last_pred_date}')
-    start_date = (last_pred_dt - dt.timedelta(days=365)).strftime('%Y-%m-%d')
+    start_date = (today_dt - dt.timedelta(days=365)).strftime('%Y-%m-%d')
 
     games = fetch_nhl_data_by_dates(start_date, today)
     games = games[games['game_type'] != 'A'] # No All Star games
@@ -89,37 +87,31 @@ def main():
     teams_to_int, int_to_teams = get_teams_int_maps(teams)
     n_teams = len(teams)
 
-    # Get last_pred posteriors to use as priors
-    priors = last_pred['ModelVariables']
-    priors = model_vars_to_numeric(priors, teams_to_int)
-
     # Drop games with non-nhl teams (usually preseason exhibition games)
     valid_rows = (games['home_team'].isin(teams) & games['away_team'].isin(teams))
     games = games[valid_rows]
 
+    # Get previous predictions and last_pred
+    season_db_records = query_dynamodb(season_start)
+    last_pred = season_db_records[-1]
+    last_pred_date = last_pred['PredictionDate']
+    last_pred_dt = dt.date.fromisoformat(last_pred_date)
+    logger.info(f'Most recent prediction is from {last_pred_date}')
+
     # Update scores in the last prediction
-    updated_last_pred = last_pred.copy()
-    if 'GamePredictions' in updated_last_pred.keys():
-        for g in updated_last_pred['GamePredictions']:
-            gpk = g['game_pk']
-            game_row = games[games['game_pk'] == gpk]
-            if game_row.shape[0] == 0:
-                logger.info(f'Failed to update game scores on {last_pred_date} with game_pk {gpk}.')
-                continue
-            # Only update the score if the game wasn't postponed
-            if game_row['game_state'].values[0] != 'Postponed':
-                home_fin_score = str(game_row['home_fin_score'].values[0])
-                away_fin_score = str(game_row['away_fin_score'].values[0])
-                if home_fin_score != '0' or away_fin_score != '0':
-                    g['score']['home'] = home_fin_score
-                    g['score']['away'] = away_fin_score
-    
-    # TODO: Update model performance
-    #     
-    
+    updated_last_pred = update_scores(last_pred, games)
+    season_db_records[-1] = updated_last_pred
+
+    # Get model performance for the last prediction
+    model_perf = prediction_performance(season_db_records, games, ws=perf_ws)
+    number_cols = ['cum_acc', 'rolling_acc', 'cum_ll', 'rolling_ll']
+    model_perf[number_cols] = model_perf[number_cols].applymap('{:,.5f}'.format)
+    model_perf_json = model_perf.iloc[-perf_ws:, :].to_dict(orient='records')
+    updated_last_pred['ModelPerformance'] = model_perf_json
+    logger.info(f'Updated scores and performance for item with League=nhl and date={last_pred_date}')
+
     # Put updated DynamoDB item back into database 
     put_dynamodb_item(updated_last_pred)
-    logger.info(f'Updated scores and performance for item in bayes-bet-table with League=nhl and date={last_pred_date}')
 
     # Backfill missing predictions
     game_dates = games['game_date'].drop_duplicates()
@@ -127,6 +119,10 @@ def main():
     if len(new_pred_dates) == 0:
         logger.info(f'No new games to predict on.')
         return
+
+    # Get last_pred posteriors to use as priors
+    priors = last_pred['ModelVariables']
+    priors = model_vars_to_numeric(priors, teams_to_int)
 
     for gd in new_pred_dates:
         logger.info(f'Generating new NHL model predictions for {gd}')
@@ -141,8 +137,8 @@ def main():
         games_to_predict = games[pred_idx].reset_index(drop=True)
         game_preds = game_predictions(games_to_predict, posteriors, teams_to_int)
         record = create_dynamodb_item(gd, posteriors, int_to_teams, teams_to_int, metadata, game_preds=game_preds)
-        put_dynamodb_item(record)
-        logger.info(f'Added prediction to bayes-bet-table with League=nhl and date={gd}')
+        logger.info(f'Generated predictions for League=nhl and date={gd}')
+        put_dynamodb_item(record)    
     
     # Add new pred_dates to the S3 Bucket
     bucket_name = os.getenv('S3_BUCKET_NAME')

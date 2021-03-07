@@ -16,7 +16,7 @@ table = dynamodb.Table(table_name)
 
 
 def most_recent_dynamodb_item(hash_key, date):
-    logger.info(f'Get most recent item from bayes-bet-table with League={hash_key} and date={date}')
+    logger.info(f'Get most recent item from {table_name} with League={hash_key} and date={date}')
     response = table.query(
         Limit = 1,
         ScanIndexForward = False,
@@ -34,17 +34,17 @@ def most_recent_dynamodb_item(hash_key, date):
     
     return most_recent_item
 
-def query_table(start_date, league='nhl'):
-    print(f'Get all items from bayes-bet-table with League={league} and start_date={start_date}')
+def query_dynamodb(start_date, league='nhl'):
+    logger.info(f'Get all items from {table_name} with League={league} and start_date={start_date}')
     response = table.query(
-        ScanIndexForward = False,
+        ScanIndexForward = True,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
             Key('League').eq(league) & Key('PredictionDate').gte(start_date)
     )
     item_count = len(response['Items'])
     capacity_units = response['ConsumedCapacity']['CapacityUnits']
-    print(f'Query consumed {capacity_units} capacity units')
+    logger.info(f'Query consumed {capacity_units} capacity units')
 
     return response['Items']
 
@@ -59,5 +59,8 @@ def create_dynamodb_item(pred_date, posteriors, int_to_teams, teams_to_int, meta
     return item
 
 def put_dynamodb_item(item):
+    league = item['League']
+    pred_date = item['PredictionDate']
     response = table.put_item(Item=item)
+    logger.info(f'Put item into table {table_name} with League=nhl and date={pred_date}')
     return response
