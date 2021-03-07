@@ -106,7 +106,9 @@ def main():
     model_perf = prediction_performance(season_db_records, games, ws=perf_ws)
     number_cols = ['cum_acc', 'rolling_acc', 'cum_ll', 'rolling_ll']
     model_perf[number_cols] = model_perf[number_cols].applymap('{:,.5f}'.format)
-    model_perf_json = model_perf.iloc[-perf_ws:, :].to_dict(orient='records')
+    perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws-1)).strftime('%Y-%m-%d')
+    perf_idx = (model_perf['date'] >= perf_start_date) & (model_perf['date'] <= last_pred_date)
+    model_perf_json = model_perf[perf_idx].to_dict(orient='records')
     updated_last_pred['ModelPerformance'] = model_perf_json
     logger.info(f'Updated scores and performance for item with League=nhl and date={last_pred_date}')
 
