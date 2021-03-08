@@ -21,7 +21,7 @@ SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     'app',
     'hockey.everettsprojects.com',
     'c0mvuqurzl.execute-api.us-east-1.amazonaws.com',
+    'fnnpmq6554.execute-api.us-east-1.amazonaws.com',
     'bayesbet.everettsprojects.com',
     'dev.bayesbet.everettsprojects.com'
     ]
@@ -116,10 +117,11 @@ STATICFILES_DIRS = [
    "bayesbet/static"
 ]
 
-YOUR_S3_BUCKET = os.environ['S3_BUCKET_NAME']
+YOUR_S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
 STATICFILES_STORAGE = "django_s3_storage.storage.StaticS3Storage"
 AWS_S3_BUCKET_NAME_STATIC = YOUR_S3_BUCKET
+AWS_S3_BUCKET_NAME = YOUR_S3_BUCKET
 AWS_S3_FILE_OVERWRITE = True
 
 # Serve the static files directly from the s3 bucket
@@ -134,6 +136,7 @@ CORS_ORIGIN_WHITELIST = [
     "http://hockey.everettsprojects.com", 
     "https://hockey.everettsprojects.com", 
     "http://c0mvuqurzl.execute-api.us-east-1.amazonaws.com",
+    "http://fnnpmq6554.execute-api.us-east-1.amazonaws.com",
     "http://bayesbet.everettsprojects.com",
     "https://bayesbet.everettsprojects.com",
     "http://dev.bayesbet.everettsprojects.com",

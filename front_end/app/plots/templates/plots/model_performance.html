@@ -1,0 +1,11 @@
+<div id="model-perf" class="col-12 col-sm-12 col-md-12 col-lg-9 col-xl-7"></div>
+<script>
+// Plot the data after extracting the game predictions
+(function(){
+  function unescapeHTML(text) {
+    return text.replace(/&#x27;/g, '"')
+  }
+  data = JSON.parse(unescapeHTML('{{chart_data}}'));
+  plot_model_performance(data, "#model-perf");
+})();
+</script>

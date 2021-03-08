@@ -85,3 +85,33 @@ def teams(request, date=None):
         'prediction_date': date
     }
     return render(request, 'teams.html', context)
+
+def performance(request, date=None):
+    response = get_record(date)
+    if len(response['Items']) == 0 or 'ModelPerformance' not in response['Items'][0]:
+        context= {
+            'has_perf': False,
+            'prediction_date': date,
+        }
+        return render(request, 'performance.html', context)
+    else:
+        item = response['Items'][0]
+        date = item['PredictionDate']
+        cum_acc = float(item['ModelPerformance'][-1]['cum_acc']) * 100
+        cum_acc = f'{cum_acc:.2f}'
+        rolling_acc = float(item['ModelPerformance'][-1]['rolling_acc']) * 100
+        rolling_acc = f'{rolling_acc:.2f}'
+        cum_ll = float(item['ModelPerformance'][-1]['cum_ll'])
+        rolling_ll = float(item['ModelPerformance'][-1]['rolling_ll'])
+        chart_data = item['ModelPerformance']
+        context= {
+            'has_perf': True,
+            'prediction_date': date,
+            'cum_acc': cum_acc,
+            'cum_ll': cum_ll,
+            'rolling_acc': rolling_acc,
+            'rolling_ll': rolling_ll,
+            'chart_data': chart_data
+        }
+        return render(request, 'performance.html', context)
+        

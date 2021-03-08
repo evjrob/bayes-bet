@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  {% include "header.html" %}
+  {% load static %}
+  <script src="{% static 'plots/model_performance.js' %}"></script>
+
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        {% include "sidebar.html" with date=prediction_date %}
+         <div class="col-12 col-sm-12 col-md-9 col-lg-10 p-0">
+          {% include "topbar.html" %}
+          <main role="main" id="main" class="p-3">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+              <h1 class="h2">Model Performance as of {{prediction_date}}</h1>
+            </div>
+            {% if has_perf %}
+            <div class="row">
+              <div class="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-6">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                    <th>Metric</th>
+                    <th>Since Season Start</th>
+                    <th>Rolling (14 day)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                    <td>Accuracy</td>
+                    <td>{{cum_acc}} %</td>
+                    <td>{{rolling_acc}} %</td>
+                    </tr>
+                    <tr>
+                    <td>Log Loss</td>
+                    <td>{{cum_ll}}</td>
+                    <td>{{rolling_ll}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="row" id="perf-plot">
+                {% include "plots/model_performance.html" with date=prediction_date %}
+            </div>
+            {% else %}
+                <h5>No model performance stats have been found for {{prediction_date}}. Please check back later!</h5>
+            {% endif %}
+          </main>
+        </div>
+      </div>
+    </div>
+    {% include "footer_scripts.html" %}
+  </body>
+</html>
