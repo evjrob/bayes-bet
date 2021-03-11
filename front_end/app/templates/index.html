@@ -20,7 +20,7 @@
               </div>
               <div class="outcome-plot">
                 <a href="/game/{{g.game_pk}}/{{prediction_date}}/">
-                  {% include "plots/game_outcome.html" with game_pk=g.game_pk game_pred=g.game_pred date=prediction_date home_abb=g.home_abb away_abb=g.away_abb %}
+                  {% include "plots/game_outcome.html" with game_pk=g.game_pk game_pred=g.game_pred home_abb=g.home_abb away_abb=g.away_abb home_color=g.home_color away_color=g.away_color %}
                 </a>
               </div>
               <br>

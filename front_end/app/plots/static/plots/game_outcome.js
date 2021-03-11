@@ -20,9 +20,22 @@ function groupData(data) {
     }).filter(d => d.value > 0)
     return _data
 }
+
+var LightenColor = function(color, percent) {
+    var num = parseInt(color.replace("#",""), 16),
+      amt = Math.round(2.55 * percent),
+      R = (num >> 16) + amt,
+      B = (num >> 8 & 0x00FF) + amt,
+      G = (num & 0x0000FF) + amt,
+      newR = (R<255?R<1?0:R:255)*0x10000,
+      newB = (B<255?B<1?0:B:255)*0x100,
+      newG = (G<255?G<1?0:G:255);
+
+      return "#" + (0x1000000 + newR + newB + newG).toString(16).slice(1);
+};
   
-  //Read the data
-function plot_game_outcome(data, target_div, home_abb, away_abb) {
+//Read the data
+function plot_game_outcome(data, target_div, home_abb, home_colors, away_abb, away_colors) {
 
     var parent_div = d3.select(target_div);
     var min_width = 350;
@@ -45,6 +58,7 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
     const w = width - margin.left - margin.right
     const h = height - margin.top - margin.bottom
     const halfBarHeight = barHeight / 2
+    const accentHeight = 5;
     const away_y_pos = 5;
     const home_y_pos = 10 + barHeight;
 
@@ -153,7 +167,7 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    // stack rect for each data value
+    // stack rect for each away team data value
     selection.selectAll('rect_away')
         .data(_data_away)
         .enter().append('rect')
@@ -162,12 +176,26 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('y', away_y_pos)
         .attr('height', barHeight)
         .attr('width', d => xScale(d.value))
-        .attr('class', (d, i) => color_classes.away[i])
+        .attr('fill', (d, i) => LightenColor(away_colors[0], i*12.5))
         .on("mouseover", mouseover)
         .on("mousemove", d => mousemove(d))
         .on("mouseleave", mouseleave);
 
-    // stack rect for each data value
+    // stack rect for each away team accent color
+    selection.selectAll('rect_away')
+        .data(_data_away)
+        .enter().append('rect')
+        .attr('class', 'rect-stacked')
+        .attr('x', d => xScale(d.cumulative))
+        .attr('y', away_y_pos + barHeight - accentHeight)
+        .attr('height', accentHeight)
+        .attr('width', d => xScale(d.value))
+        .attr('fill', (d, i) => LightenColor(away_colors[1], i*12.5))
+        .on("mouseover", mouseover)
+        .on("mousemove", d => mousemove(d))
+        .on("mouseleave", mouseleave);
+
+    // stack rect for each home team data value
     selection.selectAll('rect_home')
         .data(_data_home)
         .enter().append('rect')
@@ -176,7 +204,21 @@ function plot_game_outcome(data, target_div, home_abb, away_abb) {
         .attr('y', home_y_pos)
         .attr('height', barHeight)
         .attr('width', d => xScale(d.value))
-        .attr('class', (d, i) => color_classes.home[i])
+        .attr('fill', (d, i) => LightenColor(home_colors[0], i*12.5))
+        .on("mouseover", mouseover)
+        .on("mousemove", d => mousemove(d))
+        .on("mouseleave", mouseleave);
+
+    // stack rect for each home team accent color
+    selection.selectAll('rect_home')
+        .data(_data_home)
+        .enter().append('rect')
+        .attr('class', 'rect-stacked')
+        .attr('x', d => xScale(d.cumulative))
+        .attr('y', home_y_pos + barHeight - accentHeight)
+        .attr('height', accentHeight)
+        .attr('width', d => xScale(d.value))
+        .attr('fill', (d, i) => LightenColor(home_colors[1], i*12.5))
         .on("mouseover", mouseover)
         .on("mousemove", d => mousemove(d))
         .on("mouseleave", mouseleave);

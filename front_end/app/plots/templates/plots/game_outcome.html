@@ -8,6 +8,8 @@
     return text.replace(/&#x27;/g, '"')
   }
   data = JSON.parse(unescapeHTML('{{game_pred}}'));
-  plot_game_outcome(data, "#game-outcome-{{game_pk}}", "{{home_abb}}", "{{away_abb}}");
+  away_colors = JSON.parse(unescapeHTML("{{away_color}}"));
+  home_colors = JSON.parse(unescapeHTML("{{home_color}}"));
+  plot_game_outcome(data, "#game-outcome-{{game_pk}}", "{{home_abb}}", home_colors, "{{away_abb}}", away_colors);
 })();
 </script>

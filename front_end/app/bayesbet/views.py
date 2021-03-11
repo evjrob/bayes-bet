@@ -2,7 +2,7 @@ import datetime as dt
 from django.shortcuts import render
 from django.db import connections
 
-from data.metadata import team_abbrevs
+from data.metadata import team_abbrevs, team_colors
 
 import os
 import boto3
@@ -56,7 +56,9 @@ def index(request, date=None):
     games = response['Items'][0]['GamePredictions']
     predicted_games = [{'game_pk':g['game_pk'], 'game_date': date, 
                         'home_team':g['home_team'], 'home_abb':team_abbrevs[g['home_team']],
+                        'home_color': team_colors[g['home_team']],
                         'away_team':g['away_team'], 'away_abb':team_abbrevs[g['away_team']],
+                        'away_color': team_colors[g['away_team']],
                         'game_pred': game_outcome_prediction(g)
                         } for g in games]
     
@@ -73,7 +75,9 @@ def game_detail(request, game_pk, date=None):
         'game_detail': game,
         'game_pk': game_pk,
         'home_abb': team_abbrevs[game['home_team']],
+        'home_color': team_colors[game['home_team']],
         'away_abb': team_abbrevs[game['away_team']],
+        'away_color': team_colors[game['away_team']],
         'game_pred': game_outcome_prediction(game)
     }
     return render(request, 'game-detail.html', context)
