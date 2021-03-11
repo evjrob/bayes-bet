@@ -156,8 +156,7 @@ function plot_team_dist(data, target_div) {
   // add the nodes
   node.append("circle")
     .attr("r", radius)
-    .attr("stroke-width", "2.5px")         
-    //.attr("class", "color-primary")
+    .attr("stroke-width", "2.5px")
     .attr("fill", function(d) { return d.team_colors[0];})
     .attr("stroke", function(d) { return d.team_colors[1] });
 

@@ -47,14 +47,10 @@ function plot_game_outcome(data, target_div, home_abb, home_colors, away_abb, aw
         margin: {top: 25, right: 70, bottom: 20, left: 100},
         width: div_width,
         height: 150,
-        barHeight: 30,
-        color_classes: {
-            "away":["color-away", "color-away-mid", "color-away-light"],
-            "home":["color-home", "color-home-mid", "color-home-light"]
-        }
+        barHeight: 30
     }
 
-    const { f, margin, width, height, barHeight, color_classes } = config
+    const { f, margin, width, height, barHeight } = config
     const w = width - margin.left - margin.right
     const h = height - margin.top - margin.bottom
     const halfBarHeight = barHeight / 2
