@@ -170,12 +170,25 @@ body {
  */
 
 .color-primary {
-  color: #7F3E8F;
-  fill: #7F3E8F;
-  stroke: #422047;
+  color: 	#3183BD;
+  fill: 	#3183BD;
+  stroke:	#3183BD;
 }
 
-.color-primary-light {
-  color: #83598F;
-  fill: #83598F;
+.color-primary-dark {
+  color: 	#1b4868;
+  fill: 	#1b4868;
+  stroke:	#1b4868;
+}
+
+.color-secondary {
+  color: #CF2F2B;
+  fill: #CF2F2B;
+  stroke: #CF2F2B;
+}
+
+.color-secondary-dark {
+  color: #771b19;
+  fill: #771b19;
+  stroke: #771b19;
 }

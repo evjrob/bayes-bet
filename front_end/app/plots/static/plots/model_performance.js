@@ -154,7 +154,7 @@ function plot_model_performance(data, target_div) {
     
     svg.append("path")
       .attr("class", "line")
-      .style("stroke", "#550000")
+      .attr("class", "color-secondary-dark")
       .style("fill", "none")
       .style("stroke-width", 2)
       .attr("d", cumAccLine(data));
@@ -163,7 +163,7 @@ function plot_model_performance(data, target_div) {
       .data(data)
         .enter()
       .append("circle")
-      .attr("fill", "#550000")
+      .attr("class", "color-secondary-dark")
       .attr("stroke", "none")
       .attr("cx", function(d) { return xAccScale(d.date) })
       .attr("cy", function(d) { return yAccScale(d.cum_acc) })
@@ -179,7 +179,7 @@ function plot_model_performance(data, target_div) {
 
     svg.append("path")
       .attr("class", "line")
-      .style("stroke", "#AA0000")
+      .attr("class", "color-secondary")
       .style("fill", "none")
       .style("stroke-width", 2)
       .attr("d", rollingAccLine(data));
@@ -188,7 +188,7 @@ function plot_model_performance(data, target_div) {
       .data(data)
         .enter()
       .append("circle")
-      .attr("fill", "#AA0000")
+      .attr("class", "color-secondary")
       .attr("stroke", "none")
       .attr("cx", function(d) { return xAccScale(d.date) })
       .attr("cy", function(d) { return yAccScale(d.rolling_acc) })
@@ -204,7 +204,7 @@ function plot_model_performance(data, target_div) {
     
     svg.append("path")
       .attr("class", "line")
-      .style("stroke", "#000055")
+      .attr("class", "color-primary-dark")
       .style("fill", "none")
       .style("stroke-width", 2)
       .attr("d", cumLossLine(data));
@@ -213,7 +213,7 @@ function plot_model_performance(data, target_div) {
       .data(data)
         .enter()
       .append("circle")
-      .attr("fill", "#000055")
+      .attr("class", "color-primary-dark")
       .attr("stroke", "none")
       .attr("cx", function(d) { return xLossScale(d.date) })
       .attr("cy", function(d) { return yLossScale(d.cum_ll) })
@@ -229,7 +229,7 @@ function plot_model_performance(data, target_div) {
 
     svg.append("path")
       .attr("class", "line")
-      .style("stroke", "#0000AA")
+      .attr("class", "color-primary")
       .style("fill", "none")
       .style("stroke-width", 2)
       .attr("d", rollingLossLine(data));
@@ -238,7 +238,7 @@ function plot_model_performance(data, target_div) {
       .data(data)
         .enter()
       .append("circle")
-      .attr("fill", "#0000AA")
+      .attr("class", "color-primary")
       .attr("stroke", "none")
       .attr("cx", function(d) { return xLossScale(d.date) })
       .attr("cy", function(d) { return yLossScale(d.rolling_ll) })
