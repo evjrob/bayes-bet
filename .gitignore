@@ -100,3 +100,6 @@ model/docker_commands.txt
 
 # Zappa settings
 front_end/app/zappa_settings.json
+
+# Social script artifacts
+social/game_preds_plot.png
