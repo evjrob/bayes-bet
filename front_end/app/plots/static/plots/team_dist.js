@@ -163,7 +163,7 @@ function plot_team_dist(data, target_div) {
   // add node labels
   node.append("text")
     .style("font-size", "9px")
-    .style("fill", "white")
+    .style("fill",  function(d) { return d.team_colors[2];})
     .style("font-weight", "bold")
     .style("text-anchor", "middle")
     .style("dominant-baseline", "central")
