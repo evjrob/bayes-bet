@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  {% include "header.html" %}
+  {% load static %}
+  <script src="{% static 'plots/social_preds.js' %}"></script>
+
+  <body>
+    <div class="container-fluid" style="width: 980px;">
+      <div class="row">
+         <div class="col-12 p-0">
+          <main role="main" id="main" class="p-3">
+              <h3 class="h3 center-block text-center border-bottom pb-2 mb-3">BayesBet Estimated Hockey Game Win Probabilities - {{prediction_date}}</h3>
+            <div class="container">
+              <div class="row row-cols-2">
+                {%for i, g in predicted_games%}
+                    <div class="col-6">
+                        <div class="game_title">
+                            <h6><strong>{{g.away_team}} @ {{g.home_team}}</strong></h6>
+                        </div>
+                        <div class="outcome-plot">
+                            <div id="game-outcome-{{g.game_pk}}"></div>
+
+                            <script>
+                            // Plot the data after extracting the game predictions
+                            (function(){
+                            function unescapeHTML(text) {
+                                return text.replace(/&#x27;/g, '"')
+                            }
+                            data = JSON.parse(unescapeHTML('{{g.game_pred}}'));
+                            away_colors = JSON.parse(unescapeHTML("{{g.away_color}}"));
+                            home_colors = JSON.parse(unescapeHTML("{{g.home_color}}"));
+                            plot_social_game_outcome(data, "#game-outcome-{{g.game_pk}}", "{{g.home_abb}}", home_colors, "{{g.away_abb}}", away_colors);
+                            })();
+                            </script>
+                        </div>
+                    </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-4 text-left">Everett Robinson (@evjrob)</div>
+              <div class="col-4"></div>
+              <div class="col-4 text-right">bayesbet.everettsprojects.com</div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
