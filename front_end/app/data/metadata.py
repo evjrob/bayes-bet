@@ -49,7 +49,7 @@ team_colors = {
     'Los Angeles Kings':['#111111', '#A2AAAD'],
     'Minnesota Wild':['#154734', '#A6192E'],
     'Montréal Canadiens':['#AF1E2D', '#192168'],
-    'Nashville Predators':['#041E42', '#FFB81C'],
+    'Nashville Predators':['#FFB81C', '#041E42'],
     'New Jersey Devils':['#CE1126', '#000000'],
     'New York Islanders':['#00539b', '#f47d30'],
     'New York Rangers':['#0038A8', '#CE1126'],
