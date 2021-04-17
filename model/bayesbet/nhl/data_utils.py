@@ -1,9 +1,19 @@
 import logging
 import os
 import numpy as np
+import pandas as pd
 
 
 logger = logging.getLogger(__name__)
+
+def get_unique_teams(game_data):
+    # We only want teams that play in the regular season
+    reg_season_data = game_data[game_data['game_type'] == 'R']
+    home_teams = reg_season_data['home_team']
+    away_teams = reg_season_data['away_team']
+    teams = list(pd.concat([home_teams, away_teams]).sort_values().unique())
+    
+    return teams
 
 def get_teams_int_maps(teams):
     teams_to_int = {}
@@ -44,3 +54,13 @@ def model_vars_to_string(mv_in, int_to_teams, decimals=5):
         mv['teams'][t]['o'] = [f'{o_μ:{precision}}',  f'{o_σ:{precision}}']
         mv['teams'][t]['d'] = [f'{d_μ:{precision}}',  f'{d_σ:{precision}}']
     return mv
+
+def model_ready_data(game_data, teams_to_int):
+    model_data = pd.DataFrame()
+    model_data['idₕ'] = game_data['home_team'].replace(teams_to_int)
+    model_data['sₕ'] = game_data['home_reg_score']
+    model_data['idₐ'] = game_data['away_team'].replace(teams_to_int)
+    model_data['sₐ'] = game_data['away_reg_score']
+    model_data['hw'] = game_data['home_fin_score'] > game_data['away_fin_score']
+
+    return model_data

@@ -6,7 +6,7 @@ import boto3
 from boto3.dynamodb.conditions import Key
 import numpy as np
 
-from data_utils import model_vars_to_string
+from bayesbet.nhl.data_utils import model_vars_to_string
 
 
 logger = logging.getLogger(__name__)

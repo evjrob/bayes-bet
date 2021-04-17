@@ -6,12 +6,13 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-from data_utils import model_vars_to_numeric, model_vars_to_string, get_teams_int_maps
-from db import query_dynamodb, create_dynamodb_item, put_dynamodb_item
-from evaluate import update_scores, prediction_performance
-from model import model_ready_data, model_update
-from predict import game_predictions
-from stats_api import check_for_games, fetch_recent_nhl_data, fetch_nhl_data_by_dates
+from bayesbet.nhl.data_utils import model_ready_data, model_vars_to_numeric, model_vars_to_string
+from bayesbet.nhl.data_utils import get_teams_int_maps, get_unique_teams
+from bayesbet.nhl.db import query_dynamodb, create_dynamodb_item, put_dynamodb_item
+from bayesbet.nhl.evaluate import update_scores, prediction_performance
+from bayesbet.nhl.model import model_update
+from bayesbet.nhl.predict import game_predictions
+from bayesbet.nhl.stats_api import check_for_games, fetch_recent_nhl_data, fetch_nhl_data_by_dates
 
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -33,43 +34,35 @@ metadata = {
 }
 
 
-def get_unique_teams(game_data):
-    # We only want teams that play in the regular season
-    reg_season_data = game_data[game_data['game_type'] == 'R']
-    home_teams = reg_season_data['home_team']
-    away_teams = reg_season_data['away_team']
-    teams = list(pd.concat([home_teams, away_teams]).sort_values().unique())
-    
-    return teams
+# TODO: Delete this
+# def init_model(games, teams_to_int, f, f_thresh):
+#     obs_data = model_ready_data(games, teams_to_int)
 
-def init_model(games, teams_to_int, f, f_thresh):
-    obs_data = model_ready_data(games, teams_to_int)
+#     n_teams = len(teams_to_int)
+#     init_priors = {
+#         'h': [0.2, 0.1],
+#         'i': [1.0, 0.1],
+#         'o': [np.array([0.0] * n_teams), np.array([0.2] * n_teams)],
+#         'd': [np.array([0.0] * n_teams), np.array([0.2] * n_teams)]
+#     }
 
-    n_teams = len(teams_to_int)
-    init_priors = {
-        'h': [0.2, 0.1],
-        'i': [1.0, 0.1],
-        'o': [np.array([0.0] * n_teams), np.array([0.2] * n_teams)],
-        'd': [np.array([0.0] * n_teams), np.array([0.2] * n_teams)]
-    }
+#     posteriors = model_update(obs_data, init_priors, n_teams, f, f_thresh, 0.25)
 
-    posteriors = model_update(obs_data, init_priors, n_teams, f, f_thresh, 0.25)
+#     #create_dynamodb_item(date, posteriors, int_to_teams, teams_to_int, metadata)
 
-    #create_dynamodb_item(date, posteriors, int_to_teams, teams_to_int, metadata)
+#     return posteriors
 
-    return posteriors
-
-def initialize():
-    start_date = '2017-08-01'
-    end_date = '2018-08-01'
-    games = fetch_nhl_data_by_dates(start_date, end_date)
-    games = games[games['game_type'] != 'A'] # No All Star games
-    teams = get_unique_teams(games)
-    teams_to_int, int_to_teams = get_teams_int_maps(teams)
-    posteriors = init_model(games, teams_to_int, 1.0, 0.25)
-    record = create_dynamodb_item(end_date, posteriors, int_to_teams, teams_to_int, metadata)
-    put_dynamodb_item(record)
-    return
+# def initialize():
+#     start_date = '2017-08-01'
+#     end_date = '2018-08-01'
+#     games = fetch_nhl_data_by_dates(start_date, end_date)
+#     games = games[games['game_type'] != 'A'] # No All Star games
+#     teams = get_unique_teams(games)
+#     teams_to_int, int_to_teams = get_teams_int_maps(teams)
+#     posteriors = init_model(games, teams_to_int, 1.0, 0.25)
+#     record = create_dynamodb_item(end_date, posteriors, int_to_teams, teams_to_int, metadata)
+#     put_dynamodb_item(record)
+#     return
 
 def main():
     today_dt = dt.date.today()

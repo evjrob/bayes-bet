@@ -15,6 +15,7 @@ def update_scores(last_pred, games):
     updated_last_pred = last_pred.copy()
     # Nothing to update unless there are existing game predictions
     if 'GamePredictions' in updated_last_pred.keys():
+        last_pred_date = last_pred['PredictionDate']
         for g in updated_last_pred['GamePredictions']:
             gpk = g['game_pk']
             game_row = games[games['game_pk'] == gpk]

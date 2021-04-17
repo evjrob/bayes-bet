@@ -11,16 +11,6 @@ from scipy.stats import norm
 
 logger = logging.getLogger(__name__)
 
-def model_ready_data(game_data, teams_to_int):
-    model_data = pd.DataFrame()
-    model_data['idₕ'] = game_data['home_team'].replace(teams_to_int)
-    model_data['sₕ'] = game_data['home_reg_score']
-    model_data['idₐ'] = game_data['away_team'].replace(teams_to_int)
-    model_data['sₐ'] = game_data['away_reg_score']
-    model_data['hw'] = game_data['home_fin_score'] > game_data['away_fin_score']
-
-    return model_data
-
 def get_model_posteriors(trace, n_teams):
     posteriors = {}
     h_μ, h_σ = norm.fit(trace['h'])
@@ -52,7 +42,7 @@ def fatten_priors(prev_posteriors, factor, f_thresh):
 
     return priors
 
-def model_iteration(obs_data, priors, n_teams, Δσ):
+def model_iteration(obs_data, priors, n_teams, Δσ, samples=5000, tune=2000, cores=3):
     idₕ = obs_data['idₕ'].to_numpy()
     sₕ_obs = obs_data['sₕ'].to_numpy()
     idₐ = obs_data['idₐ'].to_numpy()
@@ -87,7 +77,7 @@ def model_iteration(obs_data, priors, n_teams, Δσ):
         sₐ = pm.Poisson('sₐ', mu=λₐ, observed=sₐ_obs)
         hw = pm.Bernoulli('hw', p=pₕ, observed=hw_obs)
 
-        trace = pm.sample(5000, tune=2000, cores=3, progressbar=True)
+        trace = pm.sample(samples, tune=tune, cores=cores, progressbar=True)
         
         posteriors = get_model_posteriors(trace, n_teams)
         
