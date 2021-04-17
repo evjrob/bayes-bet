@@ -77,7 +77,7 @@ def model_iteration(obs_data, priors, n_teams, Δσ, samples=5000, tune=2000, co
         sₐ = pm.Poisson('sₐ', mu=λₐ, observed=sₐ_obs)
         hw = pm.Bernoulli('hw', p=pₕ, observed=hw_obs)
 
-        trace = pm.sample(samples, tune=tune, cores=cores, progressbar=True)
+        trace = pm.sample(samples, tune=tune, cores=cores, progressbar=True, return_inferencedata=False)
         
         posteriors = get_model_posteriors(trace, n_teams)
         
