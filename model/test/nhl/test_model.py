@@ -83,7 +83,7 @@ def test_model_iteration(mock_data, mock_priors):
     n_teams = 3
     Δσ = 0.001
     # Test with a small number of samples, just to verify model works
-    posteriors = model_iteration(mock_data, mock_priors, n_teams, Δσ, 100, 25)
+    posteriors = model_iteration(mock_data, mock_priors, n_teams, Δσ, 100, 25, 1)
     assert isinstance(posteriors, dict), "Did not get a posteriors dict back from model_iteration()!"
     assert 'i' in posteriors.keys(), "Did not find 'i' in returned posteriors dict!"
     assert 'h' in posteriors.keys(), "Did not find 'h' in returned posteriors dict!"
