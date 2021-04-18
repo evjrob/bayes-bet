@@ -1,8 +1,12 @@
 FROM python:3.8-slim-buster
 
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
-COPY bayesbet bayesbet
+WORKDIR /model
+
+COPY Pipfile /model/Pipfile
+COPY Pipfile.lock /model/Pipfile.lock
+COPY pyproject.toml /model/pyproject.toml
+COPY setup.py /model/setup.py
+COPY bayesbet /model/bayesbet
 
 RUN apt-get update
 RUN apt-get upgrade -y
@@ -14,4 +18,4 @@ RUN python -m pip install --upgrade pip
 RUN pip install pipenv
 RUN pipenv sync
 
-CMD ["pipenv", "run", "python", "bayesbet/nhl/main.py" ]
+CMD ["pipenv", "run", "python", "/model/bayesbet/nhl/main.py" ]
