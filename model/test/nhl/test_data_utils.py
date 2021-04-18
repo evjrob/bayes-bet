@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from pandas.testing import assert_frame_equal
+from common_test_functions import compare_mv_num_dict
 
 from bayesbet.nhl.data_utils import get_unique_teams
 from bayesbet.nhl.data_utils import get_teams_int_maps
@@ -85,14 +86,6 @@ def expected_model_vars():
         'd':[np.array([0.15, 0.25, 0.3]), np.array([0.075, 0.125, 0.15])],
     }
     return mv_num, mv_str_3, mv_str_5
-
-def compare_mv_num_dict(d1, d2):
-    assert d1['i'] == d2['i'], "The numeric model vars 'i' does not match!"
-    assert d1['h'] == d2['h'], "The numeric model vars 'h' does not match!"
-    assert np.all(d1['o'][0] == d2['o'][0]), "The numeric model vars 'o'[0] does not match!"
-    assert np.all(d1['o'][1] == d2['o'][1]), "The numeric model vars 'o'[1] does not match!"
-    assert np.all(d1['d'][0] == d2['d'][0]), "The numeric model vars 'd'[0] does not match!"
-    assert np.all(d1['d'][1] == d2['d'][1]), "The numeric model vars 'd'[1] does not match!"
 
 def test_model_vars_to_numeric(expected_teams_maps, expected_model_vars):
     teams, teams_to_int, int_to_teams = expected_teams_maps

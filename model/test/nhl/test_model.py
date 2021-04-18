@@ -2,19 +2,58 @@ import numpy as np
 import pandas as pd
 import pytest
 
-# from bayesbet.nhl.model import get_model_posteriors
-# from bayesbet.nhl.model import fatten_priors
+from common_test_functions import compare_mv_num_dict
+from bayesbet.nhl.model import get_model_posteriors
+from bayesbet.nhl.model import fatten_priors
 from bayesbet.nhl.model import model_iteration
 
 @pytest.fixture
 def mock_trace():
     trace = {
-        'h': np.array([]),
-        'i': np.array([]),
-        'o': np.array([]),
-        'd': np.array([])
+        'h': np.array([0.375, 0.625, 0.75, 0.875, 1.125]),
+        'i': np.array([0.25, 0.75, 1.0, 1.25, 1.75]),
+        'o': np.array([[-0.375, -0.125],
+            [-0.125,  0.125],
+            [0.0, 0.25],
+            [0.125, 0.375],
+            [0.375, 0.625]]),
+        'd': np.array([
+            [-0.75, -0.25],
+            [-0.25,  0.25],
+            [ 0.  ,  0.5 ],
+            [ 0.25,  0.75],
+            [ 0.75,  1.25]])
     }
     return trace
+
+@pytest.fixture
+def mock_posteriors():
+    posteriors = {
+        'h': [0.75, 0.25],
+        'i': [1.0, 0.5],
+        'o': [np.array([0.0, 0.25]), np.array([0.25, 0.25])],
+        'd': [np.array([0.0, 0.5]), np.array([0.5, 0.5])],
+    }
+    return posteriors
+
+def test_get_model_posteriors(mock_trace, mock_posteriors):
+    expected_posteriors = mock_posteriors
+    n_teams = 2
+    posteriors = get_model_posteriors(mock_trace, n_teams)
+    compare_mv_num_dict(posteriors, expected_posteriors)
+
+def test_fatten_priors(mock_posteriors):
+    priors = mock_posteriors
+    factor = 2.0
+    f_thresh = 0.75
+    expected_priors = {
+        'h': [0.75, 0.5],
+        'i': [1.0, 0.75],
+        'o': [np.array([0.0, 0.25]), np.array([0.5, 0.5])],
+        'd': [np.array([0.0, 0.5]), np.array([0.75, 0.75])],
+    }
+    priors = fatten_priors(priors, factor, f_thresh)
+    compare_mv_num_dict(priors, expected_priors)
 
 @pytest.fixture
 def mock_data():
@@ -37,6 +76,9 @@ def mock_priors():
     }
     return priors
 
+# This test takes close to a minute to run. Only execute it if the --runslow 
+# argument has been passed.
+@pytest.mark.slow
 def test_model_iteration(mock_data, mock_priors):
     n_teams = 3
     Δσ = 0.001
