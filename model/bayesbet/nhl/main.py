@@ -34,36 +34,6 @@ metadata = {
 }
 
 
-# TODO: Delete this
-# def init_model(games, teams_to_int, f, f_thresh):
-#     obs_data = model_ready_data(games, teams_to_int)
-
-#     n_teams = len(teams_to_int)
-#     init_priors = {
-#         'h': [0.2, 0.1],
-#         'i': [1.0, 0.1],
-#         'o': [np.array([0.0] * n_teams), np.array([0.2] * n_teams)],
-#         'd': [np.array([0.0] * n_teams), np.array([0.2] * n_teams)]
-#     }
-
-#     posteriors = model_update(obs_data, init_priors, n_teams, f, f_thresh, 0.25)
-
-#     #create_dynamodb_item(date, posteriors, int_to_teams, teams_to_int, metadata)
-
-#     return posteriors
-
-# def initialize():
-#     start_date = '2017-08-01'
-#     end_date = '2018-08-01'
-#     games = fetch_nhl_data_by_dates(start_date, end_date)
-#     games = games[games['game_type'] != 'A'] # No All Star games
-#     teams = get_unique_teams(games)
-#     teams_to_int, int_to_teams = get_teams_int_maps(teams)
-#     posteriors = init_model(games, teams_to_int, 1.0, 0.25)
-#     record = create_dynamodb_item(end_date, posteriors, int_to_teams, teams_to_int, metadata)
-#     put_dynamodb_item(record)
-#     return
-
 def main():
     today_dt = dt.date.today()
     today = today_dt.strftime('%Y-%m-%d')
