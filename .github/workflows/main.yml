@@ -23,8 +23,9 @@ jobs:
         with:
           python-version: 3.8
       - name: Install pipenv
+        run: pip install pipenv
+      - name: Run model tests
         run: |
-          pip install pipenv
+          cd model
           pipenv sync
-      - name: Run tests
-        run: pipenv run pytest --runslow
+          pipenv run pytest --runslow
