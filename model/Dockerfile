@@ -1,17 +1,17 @@
-FROM python:3.8-slim-buster
-
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
-COPY bayesbet bayesbet
+FROM continuumio/miniconda3
 
 RUN apt-get update
 RUN apt-get upgrade -y
 
-# Get G++ for Theano
-RUN apt-get install -y g++ libopenblas-dev
+RUN conda install -y python=3.8
+RUN conda install -y pip setuptools wheel
+RUN conda install -c conda-forge -y pymc3==3.11.4
 
-RUN python -m pip install --upgrade pip
-RUN pip install pipenv
-RUN pipenv sync
+COPY requirements.txt /workspace/bayes-bet/model/requirements.txt
+RUN pip install -r /workspace/bayes-bet/model/requirements.txt
 
-CMD ["pipenv", "run", "python", "bayesbet/nhl/main.py" ]
+COPY pyproject.toml /workspace/bayes-bet/model/pyproject.toml
+COPY setup.py /workspace/bayes-bet/model/setup.py
+RUN mkdir /workspace/bayes-bet/model/bayesbet
+RUN cd /workspace/bayes-bet/model && pip install -e .
+COPY bayesbet /workspace/bayes-bet/model/bayesbet
