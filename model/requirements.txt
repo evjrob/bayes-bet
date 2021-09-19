@@ -1,0 +1,6 @@
+boto3>=1.17
+numpy>=1.19
+pandas>=1.2
+pytest>=6.2
+requests>=2.25
+scipy>=1.6
