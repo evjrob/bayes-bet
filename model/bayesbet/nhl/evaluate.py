@@ -63,7 +63,7 @@ def prediction_performance(db_records, games, ws=14):
     for d in game_dates:
         upr = d
         if d >= game_dates[min(ws, len(game_dates)-1)]:
-            lwr = game_dates[game_dates.index(d) - ws]
+            lwr = game_dates[max(game_dates.index(d) - ws, 0)]
         else:
             lwr = game_dates[0]
         
