@@ -9,6 +9,7 @@ import datetime as dt
 from bayesbet.nhl.data_utils import model_ready_data, model_vars_to_numeric, model_vars_to_string
 from bayesbet.nhl.data_utils import get_teams_int_maps, get_unique_teams
 from bayesbet.nhl.db import query_dynamodb, create_dynamodb_item, put_dynamodb_item
+from bayesbet.nhl.db import most_recent_dynamodb_item
 from bayesbet.nhl.evaluate import update_scores, prediction_performance
 from bayesbet.nhl.model import model_update
 from bayesbet.nhl.predict import game_predictions
@@ -54,18 +55,22 @@ def main():
     valid_rows = (games['home_team'].isin(teams) & games['away_team'].isin(teams))
     games = games[valid_rows]
 
-    # Get previous predictions and last_pred
-    season_db_records = query_dynamodb(season_start)
-    last_pred = season_db_records[-1]
+    # Get last_pred
+    last_pred = most_recent_dynamodb_item('nhl', today)
     last_pred_date = last_pred['PredictionDate']
     last_pred_dt = dt.date.fromisoformat(last_pred_date)
     logger.info(f'Most recent prediction is from {last_pred_date}')
 
     # Update scores in the last prediction
     updated_last_pred = update_scores(last_pred, games)
-    season_db_records[-1] = updated_last_pred
 
     # Get model performance for the last prediction
+    if last_pred_date < season_start:
+        performance_start_date = (last_pred_dt - dt.timedelta(days=perf_ws+1)).strftime('%Y-%m-%d')
+        season_db_records = query_dynamodb(performance_start_date)
+    else:
+        season_db_records = query_dynamodb(season_start)
+    season_db_records[-1] = updated_last_pred
     model_perf = prediction_performance(season_db_records, games, ws=perf_ws)
     number_cols = ['cum_acc', 'rolling_acc', 'cum_ll', 'rolling_ll']
     model_perf[number_cols] = model_perf[number_cols].applymap('{:,.5f}'.format)
