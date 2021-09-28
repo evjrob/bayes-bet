@@ -12,6 +12,9 @@ def get_unique_teams(game_data):
     home_teams = reg_season_data['home_team']
     away_teams = reg_season_data['away_team']
     teams = list(pd.concat([home_teams, away_teams]).sort_values().unique())
+
+    # Seattle Kraken!
+    teams = teams + ["Seattle Kraken"]
     
     return teams
 
@@ -33,10 +36,14 @@ def model_vars_to_numeric(mv_in, teams_to_int):
     mv['o'] = [np.array([default_μ]*n_teams), np.array([default_σ]*n_teams)]
     mv['d'] = [np.array([default_μ]*n_teams), np.array([default_σ]*n_teams)]
     for t,n in teams_to_int.items():
-        mv['o'][0][n] = float(mv_in['teams'][t]['o'][0])
-        mv['o'][1][n] = float(mv_in['teams'][t]['o'][1])
-        mv['d'][0][n] = float(mv_in['teams'][t]['d'][0])
-        mv['d'][1][n] = float(mv_in['teams'][t]['d'][1])
+        if t in mv_in['teams'].keys():
+            mv['o'][0][n] = float(mv_in['teams'][t]['o'][0])
+            mv['o'][1][n] = float(mv_in['teams'][t]['o'][1])
+            mv['d'][0][n] = float(mv_in['teams'][t]['d'][0])
+            mv['d'][1][n] = float(mv_in['teams'][t]['d'][1])
+        else:
+            logger.warning(f'Did not find team {t} in model_vars! Defaulting to μ={default_μ} and σ={default_σ}!')
+
     return mv
 
 def model_vars_to_string(mv_in, int_to_teams, decimals=5):
