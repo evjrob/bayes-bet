@@ -3,15 +3,19 @@ FROM continuumio/miniconda3
 RUN apt-get update
 RUN apt-get upgrade -y
 
+# Get G++ for Theano
+RUN apt-get install -y g++
+
 RUN conda install -y python=3.8
 RUN conda install -y pip setuptools wheel
-RUN conda install -c conda-forge -y pymc3==3.11.4
+run conda install -y -c conda-forge theano-pymc mkl
+RUN conda install -y -c conda-forge pymc3=3.11.4
 
-COPY requirements.txt /workspace/bayes-bet/model/requirements.txt
-RUN pip install -r /workspace/bayes-bet/model/requirements.txt
+COPY requirements.txt /workspaces/bayes-bet/model/requirements.txt
+RUN pip install -r /workspaces/bayes-bet/model/requirements.txt
 
-COPY pyproject.toml /workspace/bayes-bet/model/pyproject.toml
-COPY setup.py /workspace/bayes-bet/model/setup.py
-RUN mkdir /workspace/bayes-bet/model/bayesbet
-RUN cd /workspace/bayes-bet/model && pip install -e .
-COPY bayesbet /workspace/bayes-bet/model/bayesbet
+COPY pyproject.toml /workspaces/bayes-bet/model/pyproject.toml
+COPY setup.py /workspaces/bayes-bet/model/setup.py
+RUN mkdir /workspaces/bayes-bet/model/bayesbet
+RUN cd /workspaces/bayes-bet/model && pip install -e .
+COPY bayesbet /workspaces/bayes-bet/model/bayesbet
