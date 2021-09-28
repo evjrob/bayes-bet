@@ -1,7 +1,7 @@
 asgiref==3.2.10
 boto3==1.14.35
 botocore==1.14.35
-Django==3.1.6
+Django>=3.1.13
 django-cors-headers==3.4.0
 django-s3-storage==0.13.3
 docutils==0.15.2
@@ -12,5 +12,5 @@ pytz==2020.1
 s3transfer==0.3.3
 six==1.15.0
 sqlparse==0.3.1
-urllib3==1.25.10
+urllib3>=1.26.5
 zappa==0.51.0
