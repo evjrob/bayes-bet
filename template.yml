@@ -372,6 +372,7 @@ Resources:
       ContainerProperties:
         Image: 
           !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/bayes-bet-repo:latest'
+        Command: ["python", "-m", "bayesbet.nhl.main"]
         Vcpus: 2
         Memory: 8000
         Privileged: false
