@@ -13,9 +13,6 @@ def get_unique_teams(game_data):
     away_teams = reg_season_data['away_team']
     teams = list(pd.concat([home_teams, away_teams]).sort_values().unique())
 
-    # Seattle Kraken!
-    teams = teams + ["Seattle Kraken"]
-    
     return teams
 
 def get_teams_int_maps(teams):
