@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  lambda:
+    build:
+      context: ../model
+      dockerfile: Dockerfile.lambda
+    entrypoint: /aws-lambda/aws-lambda-rie
+    working_dir: /workspaces/bayes-bet/model/awslambda
+    command: ["python", "-m", "awslambdaric", "app.lambda_handler"]
+    ports:
+      - "9000:8080"
+    volumes:
+      - ".aws-lambda-rie:/aws-lambda"
+    
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "53:53"
+      - "53:53/udp"
+      - "443:443"
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=dynamodb,s3,stepfunctions
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
+      - STEPFUNCTIONS_LAMBDA_ENDPOINT=http://172.17.0.1:9000
+    volumes:
+      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
