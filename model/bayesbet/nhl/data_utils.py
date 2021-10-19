@@ -3,8 +3,10 @@ import os
 import numpy as np
 import pandas as pd
 
+from bayesbet.logger import get_logger
 
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
 
 def get_unique_teams(game_data):
     # We only want teams that play in the regular season

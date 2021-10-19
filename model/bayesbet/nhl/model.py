@@ -8,8 +8,10 @@ import theano.tensor as tt
 import theano
 from scipy.stats import norm
 
+from bayesbet.logger import get_logger
 
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
 
 def get_model_posteriors(trace, n_teams):
     posteriors = {}

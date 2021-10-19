@@ -5,9 +5,10 @@ import datetime as dt
 import json
 import pandas as pd
 import requests
+from bayesbet.logger import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # The NHL Statistics API URL
 base_url = 'https://statsapi.web.nhl.com'

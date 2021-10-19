@@ -6,6 +6,9 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
+from requests.api import get
+
+from bayesbet.logger import get_logger
 from bayesbet.nhl.data_utils import model_ready_data, model_vars_to_numeric, model_vars_to_string
 from bayesbet.nhl.data_utils import get_teams_int_maps, get_unique_teams
 from bayesbet.nhl.db import query_dynamodb, create_dynamodb_item, put_dynamodb_item
@@ -15,9 +18,8 @@ from bayesbet.nhl.model import model_update
 from bayesbet.nhl.predict import game_predictions
 from bayesbet.nhl.stats_api import check_for_games, fetch_recent_nhl_data, fetch_nhl_data_by_dates
 
-log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(level=logging.INFO, format=log_fmt)
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
 
 framework = 'PyMC3'
 model_version = 'v2.1'
@@ -111,8 +113,11 @@ def main():
         put_dynamodb_item(record)    
     
     # Add new pred_dates to the S3 Bucket
-    bucket_name = os.getenv('S3_BUCKET_NAME')
-    s3 = boto3.client('s3')
+    bucket_name = os.getenv('WEB_S3_BUCKET')
+    region = os.getenv('AWS_REGION')
+    endpoint_url = os.getenv('AWS_ENDPOINT_URL')
+    use_ssl = os.getenv('AWS_USE_SSL')
+    s3 = boto3.client('s3', region_name=region, endpoint_url=endpoint_url, use_ssl=use_ssl)
     with open('pred_dates.json', 'wb') as f:
         s3.download_fileobj(bucket_name, 'pred_dates.json', f)
 

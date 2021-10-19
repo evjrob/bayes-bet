@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
+from bayesbet.logger import get_logger
 
-log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(level=logging.INFO, format=log_fmt)
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
 
 def update_scores(last_pred, games):
     updated_last_pred = last_pred.copy()

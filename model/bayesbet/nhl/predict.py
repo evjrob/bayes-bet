@@ -6,8 +6,10 @@ from math import factorial, exp, sqrt, pi
 import numpy as np
 from scipy.integrate import quad, dblquad
 
+from bayesbet.logger import get_logger
 
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
 t_before_shootout = 5.0/60.0    # 5 minute shootout, divided by regulation time
 
 def bayesian_poisson_pdf(μ, σ, max_y=10):

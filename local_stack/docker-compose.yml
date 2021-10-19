@@ -10,8 +10,20 @@ services:
     command: ["python", "-m", "awslambdaric", "app.lambda_handler"]
     ports:
       - "9000:8080"
+    environment:
+      - AWS_REGION=us-east-1 
+      - AWS_ENDPOINT_URL=http://172.17.0.1:4566
+      - AWS_USE_SSL=False
+      - WEB_S3_BUCKET=bayesbet-web-local
+      - PIPELINE_S3_BUCKET=bayesbet-pipeline-local
+      - DYNAMODB_TABLE_NAME=bayesbet-main-local
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_LAMBDA_FUNCTION_TIMEOUT=900
     volumes:
       - ".aws-lambda-rie:/aws-lambda"
+      - "../model/:/workspaces/bayes-bet/model"
+
     
   localstack:
     image: localstack/localstack

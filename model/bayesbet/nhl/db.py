@@ -6,13 +6,18 @@ import boto3
 from boto3.dynamodb.conditions import Key
 import numpy as np
 
+from bayesbet.logger import get_logger
 from bayesbet.nhl.data_utils import model_vars_to_string
 
 
-logger = logging.getLogger(__name__)
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+logger = get_logger(__name__)
 table_name = os.getenv('DYNAMODB_TABLE_NAME')
+region = os.getenv('AWS_REGION')
+endpoint_url = os.getenv('AWS_ENDPOINT_URL')
+use_ssl = os.getenv('AWS_USE_SSL')
+dynamodb = boto3.resource('dynamodb', region_name=region, endpoint_url=endpoint_url, use_ssl=use_ssl)
 table = dynamodb.Table(table_name)
+logger.info(f'Connected to table={table_name} in region {region} of endpoint {endpoint_url}')
 
 
 def most_recent_dynamodb_item(hash_key, date):
