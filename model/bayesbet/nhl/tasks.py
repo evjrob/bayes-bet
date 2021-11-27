@@ -96,9 +96,18 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
         json.dump(last_pred, f)
 
+    # Figure out what the next game date is
+    next_game_date = None
+    next_games = games[
+        (games["game_date"] > last_pred_date) & (games["game_date"] <= today)
+    ]
+    if next_games.shape[0] > 0:
+        next_game_date = next_games["game_date"].min()
+
     return {
         "current_season": current_season,
         "last_pred_date": last_pred_date,
+        "next_game_date": next_game_date,
         "season_start": season_start,
         "teams": teams,
         "teams_to_int": teams_to_int,
