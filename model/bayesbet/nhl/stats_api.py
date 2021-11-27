@@ -2,7 +2,7 @@ import logging
 import os
 
 import datetime as dt
-import json
+import simplejson as json
 import pandas as pd
 import requests
 from bayesbet.logger import get_logger

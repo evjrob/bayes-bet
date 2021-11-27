@@ -1,7 +1,7 @@
 import logging
 import os
 
-import json
+import simplejson as json
 from math import factorial, exp, sqrt, pi
 import numpy as np
 from scipy.integrate import quad, dblquad

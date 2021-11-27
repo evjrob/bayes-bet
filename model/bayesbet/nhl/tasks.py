@@ -1,5 +1,5 @@
 import boto3
-import json
+import simplejson as json
 import logging
 import os
 import numpy as np
@@ -89,8 +89,16 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/games.csv", "wb") as f:
         games.to_csv(f, index=False)
 
+    # Get the last record and save to S3
+    last_pred = most_recent_dynamodb_item("nhl", today)
+    last_pred_date = last_pred["PredictionDate"]
+    logger.info(f"Most recent prediction is from {last_pred_date}")
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
+        json.dump(last_pred, f)
+
     return {
         "current_season": current_season,
+        "last_pred_date": last_pred_date,
         "season_start": season_start,
         "teams": teams,
         "teams_to_int": teams_to_int,

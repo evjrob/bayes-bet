@@ -1,5 +1,5 @@
 import boto3
-import json
+import simplejson as json
 import logging
 import os
 import numpy as np
