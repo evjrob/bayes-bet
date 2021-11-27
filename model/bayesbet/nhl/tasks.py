@@ -121,33 +121,6 @@ def model_inference(games, gd):
     return
 
 
-def model_performance():
-    # Get model performance for the last prediction
-    if last_pred_date < season_start:
-        performance_start_date = (
-            last_pred_dt - dt.timedelta(days=perf_ws + 1)
-        ).strftime("%Y-%m-%d")
-        season_db_records = query_dynamodb(performance_start_date)
-    else:
-        season_db_records = query_dynamodb(season_start)
-    season_db_records[-1] = updated_last_pred
-    model_perf = prediction_performance(season_db_records, games, ws=perf_ws)
-    number_cols = ["cum_acc", "rolling_acc", "cum_ll", "rolling_ll"]
-    model_perf[number_cols] = model_perf[number_cols].applymap("{:,.5f}".format)
-    perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws - 1)).strftime(
-        "%Y-%m-%d"
-    )
-    perf_idx = (model_perf["date"] >= perf_start_date) & (
-        model_perf["date"] <= last_pred_date
-    )
-    model_perf_json = model_perf[perf_idx].to_dict(orient="records")
-    updated_last_pred["ModelPerformance"] = model_perf_json
-    logger.info(
-        f"Updated scores and performance for item with League=nhl and date={last_pred_date}"
-    )
-    return
-
-
 def predict():
     return
 
@@ -175,6 +148,55 @@ def update_pred_dates():
     return
 
 
-def update_previous_record():
+def update_previous_record(
+    bucket_name, pipeline_name, job_id, last_pred_date, season_start
+):
+    # Get the games CSV from s3
+    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    use_ssl = os.getenv("AWS_USE_SSL")
+    s3 = s3fs.S3FileSystem(
+        client_kwargs={
+            "endpoint_url": endpoint_url,
+            "use_ssl": use_ssl,
+        }
+    )
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/games.csv", "rb") as f:
+        games = pd.read_csv(f)
+
+    # Get the last record JSON from S3
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "rb") as f:
+        last_pred = json.load(f)
+
+    # Update the scores for the previous record
+    updated_last_pred = update_scores(last_pred, games)
+
+    # Update the model performance if it does not exist
+    if "ModelPerformance" not in last_pred:
+        # Get model performance for the last prediction
+        last_pred_dt = dt.date.fromisoformat(last_pred_date)
+        if last_pred_date < season_start:
+            performance_start_date = (
+                last_pred_dt - dt.timedelta(days=perf_ws + 1)
+            ).strftime("%Y-%m-%d")
+            season_db_records = query_dynamodb(performance_start_date)
+        else:
+            season_db_records = query_dynamodb(season_start)
+        season_db_records[-1] = updated_last_pred
+        model_perf = prediction_performance(season_db_records, games, ws=perf_ws)
+        number_cols = ["cum_acc", "rolling_acc", "cum_ll", "rolling_ll"]
+        model_perf[number_cols] = model_perf[number_cols].applymap("{:,.5f}".format)
+        perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws - 1)).strftime(
+            "%Y-%m-%d"
+        )
+        perf_idx = (model_perf["date"] >= perf_start_date) & (
+            model_perf["date"] <= last_pred_date
+        )
+        model_perf_json = model_perf[perf_idx].to_dict(orient="records")
+        updated_last_pred["ModelPerformance"] = model_perf_json
+        logger.info(
+            "Updated scores and performance for item with "
+            f"League=nhl and date={last_pred_date}"
+        )
+
     put_dynamodb_item(updated_last_pred)
     return
