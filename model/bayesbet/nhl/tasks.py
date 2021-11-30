@@ -96,6 +96,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
         json.dump(last_pred, f)
 
+<<<<<<< Updated upstream
     # Figure out what the next game date is
     next_game_date = None
     next_games = games[
@@ -113,6 +114,11 @@ def ingest_data(bucket_name, pipeline_name, job_id):
         "last_pred_date": last_pred_date,
         "next_game_date": next_game_date,
         "games_to_predict": games_to_predict,
+=======
+    return {
+        "current_season": current_season,
+        "last_pred_date": last_pred_date,
+>>>>>>> Stashed changes
         "season_start": season_start,
         "teams": teams,
         "teams_to_int": teams_to_int,
