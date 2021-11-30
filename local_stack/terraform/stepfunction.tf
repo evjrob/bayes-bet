@@ -69,17 +69,49 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
               "Default": "Finish"
             },
             "ModelInference": {
-              "Type": "Pass",
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678912:function:function",
+              "ResultPath": "$.posteriors",
+              "Parameters": {
+                "league": "nhl",
+                "task": "model_inference",
+                "task_parameters": {
+                  "bucket_name": "${aws_s3_bucket.bayesbet_pipeline_bucket.id}",
+                  "pipeline_name": "${var.project}-main-${var.env}",
+                  "job_id.$": "$$.Execution.Name",
+                  "last_pred_date.$": "$.last_pred_date",
+                  "teams_to_int.$": "$.teams_to_int",
+                  "n_teams.$": "$.n_teams"
+                }
+              },
               "Next": "PredictGames"
             },
             "PredictGames": {
               "Type": "Map",
+              "MaxConcurrency": 1,
+              "Parameters": {
+                "game.$": "$$.Map.Item.Value",
+                "posteriors.$": "$.posteriors",
+                "teams_to_int.$": "$.teams_to_int"
+              },
+              "ItemsPath": "$.games_to_predict",
+              "ResultPath": "$.predictions",
               "Next": "CreateNewRecord",
               "Iterator": {
                 "StartAt": "PredictGame",
                 "States": {
                   "PredictGame": {
-                    "Type": "Pass",
+                    "Type": "Task",
+                    "Resource": "arn:aws:lambda:us-east-1:012345678912:function:function",
+                    "Parameters": {
+                      "league": "nhl",
+                      "task": "predict_game",
+                      "task_parameters": {
+                        "game.$": "$.game",
+                        "posteriors.$": "$.posteriors",
+                        "teams_to_int.$": "$.teams_to_int"
+                      }
+                    },
                     "End": true
                   }
                 }

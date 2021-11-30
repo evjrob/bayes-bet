@@ -1,0 +1,2 @@
+project = "bayesbet"
+env     = "dev"

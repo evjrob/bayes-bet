@@ -1,9 +1,9 @@
 variable "project" {
   default = "bayesbet"
-  type = string
+  type    = string
 }
 
 variable "env" {
   default = "local"
-  type = string
+  type    = string
 }

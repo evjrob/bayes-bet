@@ -1,30 +1,6 @@
 version: "3.8"
 
-services:
-  lambda:
-    build:
-      context: ../model
-      dockerfile: Dockerfile.lambda
-    entrypoint: /aws-lambda/aws-lambda-rie
-    working_dir: /workspaces/bayes-bet/model/awslambda
-    command: ["python", "-m", "awslambdaric", "app.lambda_handler"]
-    ports:
-      - "9000:8080"
-    environment:
-      - AWS_REGION=us-east-1 
-      - AWS_ENDPOINT_URL=http://172.17.0.1:4566
-      - AWS_USE_SSL=False
-      - WEB_S3_BUCKET=bayesbet-web-local
-      - PIPELINE_S3_BUCKET=bayesbet-pipeline-local
-      - DYNAMODB_TABLE_NAME=bayesbet-main-local
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_LAMBDA_FUNCTION_TIMEOUT=900
-    volumes:
-      - ".aws-lambda-rie:/aws-lambda"
-      - "../model/:/workspaces/bayes-bet/model"
-
-    
+services: 
   localstack:
     image: localstack/localstack
     ports:
@@ -33,13 +9,16 @@ services:
       - "443:443"
       - "4566:4566"
       - "4571:4571"
+      - "4510:4510"
     environment:
-      - SERVICES=dynamodb,s3,stepfunctions
+      - SERVICES=dynamodb,ecr,iam,lambda,s3,stepfunctions
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
       - DOCKER_HOST=unix:///var/run/docker.sock
       - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
-      - STEPFUNCTIONS_LAMBDA_ENDPOINT=http://172.17.0.1:9000
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"

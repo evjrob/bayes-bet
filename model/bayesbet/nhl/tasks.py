@@ -20,7 +20,7 @@ from bayesbet.nhl.db import query_dynamodb, create_dynamodb_item, put_dynamodb_i
 from bayesbet.nhl.db import most_recent_dynamodb_item
 from bayesbet.nhl.evaluate import update_scores, prediction_performance
 from bayesbet.nhl.model import model_update
-from bayesbet.nhl.predict import game_predictions
+from bayesbet.nhl.predict import single_game_prediction
 from bayesbet.nhl.stats_api import (
     check_for_games,
     fetch_recent_nhl_data,
@@ -104,10 +104,15 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     if next_games.shape[0] > 0:
         next_game_date = next_games["game_date"].min()
 
+    # Get the games that need to be predicted
+    games_to_predict = games[games["game_date"] == next_game_date]
+    games_to_predict = games_to_predict.to_dict(orient="records")
+
     return {
         "current_season": current_season,
         "last_pred_date": last_pred_date,
         "next_game_date": next_game_date,
+        "games_to_predict": games_to_predict,
         "season_start": season_start,
         "teams": teams,
         "teams_to_int": teams_to_int,
@@ -116,13 +121,52 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     }
 
 
-def model_inference(games, gd):
+def model_inference(
+    bucket_name,
+    pipeline_name,
+    job_id,
+    last_pred_date,
+    teams_to_int,
+    n_teams,
+):
+    # Get the games CSV from s3
+    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    use_ssl = os.getenv("AWS_USE_SSL")
+    s3 = s3fs.S3FileSystem(
+        client_kwargs={
+            "endpoint_url": endpoint_url,
+            "use_ssl": use_ssl,
+        }
+    )
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/games.csv", "rb") as f:
+        games = pd.read_csv(f)
 
-    return
+    # Get the last record JSON from S3
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "rb") as f:
+        last_pred = json.load(f)
+
+    # Get last_pred posteriors to use as priors
+    priors = last_pred["ModelVariables"]
+    priors = model_vars_to_numeric(priors, teams_to_int)
+
+    logger.info(f"Generating new NHL model predictions for {last_pred_date}")
+
+    # Get games from the most recent game date played
+    obs_idx = (games["game_date"] == last_pred_date) & (
+        games["game_state"] != "Postponed"
+    )
+    obs_data = games[obs_idx].reset_index(drop=True)
+    obs_data = model_ready_data(obs_data, teams_to_int)
+    posteriors = model_update(
+        obs_data, priors, n_teams, fattening_factor, f_thresh, delta_sigma
+    )
+
+    return posteriors
 
 
-def predict():
-    return
+def predict_game(game, posteriors, teams_to_int):
+    prediction = single_game_prediction(game, posteriors, teams_to_int)
+    return prediction
 
 
 def update_pred_dates():
