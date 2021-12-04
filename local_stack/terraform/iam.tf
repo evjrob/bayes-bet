@@ -93,3 +93,49 @@ resource "aws_iam_role_policy_attachment" "bayesbet_model_lambda_policy_attach" 
   role       = aws_iam_role.bayesbet_model_lambda_role.name
   policy_arn = aws_iam_policy.bayesbet_model_lambda_policy.arn
 }
+
+resource "aws_iam_role" "bayesbet_sfn_role" {
+  name = "${var.project}-sfn-role-${var.env}"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+
+resource "aws_iam_policy" "bayesbet_sfn_policy" {
+  name        = "${var.project}-sfn-policy-${var.env}"
+  description = "Allow bayesbet step functions to connect to resources"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "bayesbet_sfn_policy_attach" {
+  role       = aws_iam_role.bayesbet_sfn_role.name
+  policy_arn = aws_iam_policy.bayesbet_sfn_policy.arn
+}

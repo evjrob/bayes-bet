@@ -4,6 +4,6 @@ variable "project" {
 }
 
 variable "env" {
-  default = "local"
+  default = "dev"
   type    = string
 }

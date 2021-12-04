@@ -1,27 +1,9 @@
-# resource "null_resource" "s3_initialization" {
-#   provisioner "local-exec" {
-#     command = "aws --endpoint=http://localhost:4566 s3 cp assets/pred_dates.json s3://${aws_s3_bucket.bayesbet_web_bucket.id}/pred_dates.json"
-#   }
-#   depends_on = [
-#     aws_s3_bucket.bayesbet_web_bucket,
-#   ]
-# }
+resource "null_resource" "ecr_docker_image" {
+  provisioner "local-exec" {
+    command = "/bin/bash assets/deploy_image.sh ${aws_ecr_repository.bayesbet_model_ecr.repository_url}"
+  }
+  depends_on = [
+    aws_ecr_repository.bayesbet_model_ecr,
+  ]
 
-# resource "null_resource" "dynamodb_initialization" {
-#   provisioner "local-exec" {
-#     command = "aws --endpoint=http://localhost:4566 dynamodb put-item --table-name ${aws_dynamodb_table.bayesbet_games.name} --item file://assets/db_item.json"
-#   }
-#   depends_on = [
-#     aws_dynamodb_table.bayesbet_games,
-#   ]
-# }
-
-# resource "null_resource" "ecr_docker_image" {
-#   provisioner "local-exec" {
-#     command = "command = /bin/bash assets/deploy_image.sh"
-#   }
-#   depends_on = [
-#     aws_ecr_repository.bayesbet_model_ecr,
-#   ]
-
-# }
+}

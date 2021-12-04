@@ -12,11 +12,13 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
 
   environment {
     variables = {
-      AWS_ENDPOINT_URL    = "http://172.17.0.1:4566"
-      AWS_USE_SSL         = "False"
       WEB_S3_BUCKET       = "${aws_s3_bucket.bayesbet_web_bucket.id}"
       PIPELINE_S3_BUCKET  = "${aws_s3_bucket.bayesbet_pipeline_bucket.id}"
       DYNAMODB_TABLE_NAME = "${aws_dynamodb_table.bayesbet_games.id}"
     }
   }
+
+  depends_on = [
+    null_resource.ecr_docker_image,
+  ]
 }

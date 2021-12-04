@@ -1,6 +1,6 @@
 resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
   name     = "${var.project}-main-${var.env}"
-  role_arn = "arn:aws:iam::012345678901:role/DummyRole"
+  role_arn = "${aws_iam_role.bayesbet_sfn_role.arn}"
 
   definition = <<EOF
 {
@@ -9,7 +9,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
   "States": {
     "IngestData": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-1:012345678912:function:function",
+      "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}",
       "Parameters": {
         "league": "nhl",
         "task": "ingest_data",
@@ -30,7 +30,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
           "States": {
             "UpdatePreviousRecord": {
               "Type": "Task",
-              "Resource": "arn:aws:lambda:us-east-1:012345678912:function:function",
+              "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}",
               "Parameters": {
                 "league": "nhl",
                 "task": "update_previous_record",
@@ -70,7 +70,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
             },
             "ModelInference": {
               "Type": "Task",
-              "Resource": "arn:aws:lambda:us-east-1:012345678912:function:function",
+              "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}",
               "ResultPath": "$.posteriors",
               "Parameters": {
                 "league": "nhl",
@@ -102,7 +102,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
                 "States": {
                   "PredictGame": {
                     "Type": "Task",
-                    "Resource": "arn:aws:lambda:us-east-1:012345678912:function:function",
+                    "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}",
                     "Parameters": {
                       "league": "nhl",
                       "task": "predict_game",
