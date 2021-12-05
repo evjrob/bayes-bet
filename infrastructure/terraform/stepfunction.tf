@@ -1,10 +1,10 @@
 resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
-  name     = "${var.project}-main-${var.env}"
+  name     = "${var.project}-nhl-main-${var.env}"
   role_arn = "${aws_iam_role.bayesbet_sfn_role.arn}"
 
   definition = <<EOF
 {
-  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "Comment": "The main BayesBet NHL model pipeline for daily game predictions",
   "StartAt": "IngestData",
   "States": {
     "IngestData": {
