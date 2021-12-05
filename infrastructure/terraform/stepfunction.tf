@@ -95,7 +95,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
                 "teams_to_int.$": "$.teams_to_int"
               },
               "ItemsPath": "$.games_to_predict",
-              "ResultPath": "$.predictions",
+              "ResultPath": "$.game_preds",
               "Next": "CreateNewRecord",
               "Iterator": {
                 "StartAt": "PredictGame",
@@ -118,7 +118,19 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
               }
             },
             "CreateNewRecord": {
-              "Type": "Pass",
+              "Type": "Task",
+              "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}",
+              "Parameters": {
+                "league": "nhl",
+                "task": "create_record",
+                "task_parameters": {
+                  "bucket_name": "${aws_s3_bucket.bayesbet_web_bucket.id}",
+                  "game_date.$": "$.next_game_date",
+                  "posteriors.$": "$.posteriors",
+                  "int_to_teams.$": "$.int_to_teams",
+                  "game_preds.$": "$.game_preds"
+                }
+              },
               "Next": "Finish"
             },
             "Finish": {

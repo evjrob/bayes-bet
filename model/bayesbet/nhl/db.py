@@ -53,7 +53,7 @@ def query_dynamodb(start_date, league='nhl'):
 
     return response['Items']
 
-def create_dynamodb_item(pred_date, posteriors, int_to_teams, teams_to_int, metadata, game_preds=None):
+def create_dynamodb_item(pred_date, posteriors, int_to_teams, metadata, game_preds=None):
     item = {'League':'nhl', 'PredictionDate':pred_date}
     if game_preds is not None:
         item['GamePredictions'] = game_preds

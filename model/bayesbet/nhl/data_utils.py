@@ -52,6 +52,7 @@ def model_vars_to_string(mv_in, int_to_teams, decimals=5):
     mv['h'] = [f'{n:{precision}}' for n in mv_in['h']]
     mv['teams'] = {}
     for n,t in int_to_teams.items():
+        n = int(n)
         o_μ = mv_in['o'][0][n]
         o_σ = mv_in['o'][1][n]
         d_μ = mv_in['d'][0][n]

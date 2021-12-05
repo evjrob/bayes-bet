@@ -47,13 +47,38 @@ metadata = {
 
 
 def create_record(
-    gd, posteriors, int_to_teams, teams_to_int, metadata, game_preds=None
+    bucket_name,
+    game_date,
+    posteriors,
+    int_to_teams,
+    game_preds=None,
 ):
     record = create_dynamodb_item(
-        gd, posteriors, int_to_teams, teams_to_int, metadata, game_preds=game_preds
+        game_date,
+        posteriors,
+        int_to_teams,
+        metadata,
+        game_preds=game_preds,
     )
-    logger.info(f"Generated predictions for League=nhl and date={gd}")
+    logger.info(f"Generated new record for League=nhl and date={game_date}")
     put_dynamodb_item(record)
+
+    # Get the pred_dates from s3 and update
+    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    use_ssl = os.getenv("AWS_USE_SSL")
+    s3 = s3fs.S3FileSystem(
+        client_kwargs={
+            "endpoint_url": endpoint_url,
+            "use_ssl": use_ssl,
+        }
+    )
+    with s3.open(f"{bucket_name}/pred_dates.json", "rb") as f:
+        pred_dates = json.load(f)
+        pred_dates = pred_dates + [game_date]
+
+    with s3.open(f"{bucket_name}/pred_dates.json", "w") as f:
+        json.dump(pred_dates, f)
+
     return
 
 
@@ -167,29 +192,6 @@ def model_inference(
 def predict_game(game, posteriors, teams_to_int):
     prediction = single_game_prediction(game, posteriors, teams_to_int)
     return prediction
-
-
-def update_pred_dates():
-    bucket_name = os.getenv("WEB_S3_BUCKET")
-    region = os.getenv("AWS_REGION")
-    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
-    use_ssl = os.getenv("AWS_USE_SSL")
-    s3 = boto3.client(
-        "s3", region_name=region, endpoint_url=endpoint_url, use_ssl=use_ssl
-    )
-    with open("pred_dates.json", "wb") as f:
-        s3.download_fileobj(bucket_name, "pred_dates.json", f)
-
-    with open("pred_dates.json", "r") as f:
-        pred_dates = json.load(f)
-        pred_dates = pred_dates + new_pred_dates
-
-    with open("pred_dates.json", "w") as f:
-        f.write(json.dumps(pred_dates))
-
-    with open("pred_dates.json", "rb") as f:
-        s3.upload_fileobj(f, bucket_name, "pred_dates.json")
-    return
 
 
 def update_previous_record(
