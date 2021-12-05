@@ -1,6 +1,8 @@
 resource "aws_lambda_function" "bayesbet_model_lambda" {
   function_name = "${var.project}-model-${var.env}"
   role          = aws_iam_role.bayesbet_model_lambda_role.arn
+  memory_size   = 4096
+  timeout       = 300
   package_type  = "Image"
   image_uri     = "${aws_ecr_repository.bayesbet_model_ecr.repository_url}:latest"
 
