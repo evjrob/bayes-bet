@@ -30,8 +30,8 @@ def get_model_posteriors(trace, n_teams):
         dᵢ_μ, dᵢ_σ = norm.fit(trace['d'][:,i])
         d_μ.append(dᵢ_μ)
         d_σ.append(dᵢ_σ)
-    posteriors['o'] = [np.array(o_μ), np.array(o_σ)]
-    posteriors['d'] = [np.array(d_μ), np.array(d_σ)]
+    posteriors['o'] = [o_μ, o_σ]
+    posteriors['d'] = [d_μ, d_σ]
     
     return posteriors
 
