@@ -94,6 +94,11 @@ resource "aws_iam_role_policy_attachment" "bayesbet_model_lambda_policy_attach" 
   policy_arn = aws_iam_policy.bayesbet_model_lambda_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "bayesbet_model_basic_lambda_attach" {  
+  role       = aws_iam_role.bayesbet_model_lambda_role.name  
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 resource "aws_iam_role" "bayesbet_sfn_role" {
   name = "${var.project}-sfn-role-${var.env}"
 
