@@ -44,7 +44,7 @@ def fatten_priors(prev_posteriors, factor, f_thresh):
 
     return priors
 
-def model_iteration(obs_data, priors, n_teams, Δσ, samples=5000, tune=2000, cores=3):
+def model_iteration(obs_data, priors, n_teams, Δσ, samples=5000, tune=2000, cores=1):
     idₕ = obs_data['idₕ'].to_numpy().astype(int)
     sₕ_obs = obs_data['sₕ'].to_numpy().astype(int)
     idₐ = obs_data['idₐ'].to_numpy().astype(int)

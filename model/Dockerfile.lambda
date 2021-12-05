@@ -21,3 +21,5 @@ RUN mkdir /workspaces/bayes-bet/model/bayesbet
 RUN cd /workspaces/bayes-bet/model && pip install -e .
 COPY bayesbet /workspaces/bayes-bet/model/bayesbet
 COPY awslambda /workspaces/bayes-bet/model/awslambda
+
+ENV THEANO_FLAGS='base_compiledir=/tmp/theano'
