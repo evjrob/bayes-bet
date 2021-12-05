@@ -104,7 +104,7 @@ resource "aws_iam_role" "bayesbet_sfn_role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": "states.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""
