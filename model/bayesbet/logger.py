@@ -3,10 +3,16 @@ import logging
 
 def get_logger(name):
     if logging.getLogger().hasHandlers():
+        log_fmt = f"[%(levelname)s]\t%(asctime)s.%(msecs)dZ\t%(aws_request_id)s\t{name}\t%(message)s\n"
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
+        for h in logger.handlers:
+            h.setFormatter(logging.Formatter(log_fmt))
     else:
-        log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        log_fmt = "[%(levelname)s]\t%(asctime)s.%(msecs)dZ\t%(name)s\t%(message)s\n"
         logging.basicConfig(level=logging.INFO, format=log_fmt)
         logger = logging.getLogger(name)
+    # Hush theano logging
+    logging.getLogger("theano").setLevel(logging.WARNING)
+    logging.getLogger("pymc3").setLevel(logging.WARNING)
     return logger

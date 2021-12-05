@@ -2,6 +2,7 @@ from bayesbet.nhl import tasks as nhl_tasks
 from bayesbet.logger import get_logger
 
 
+# Set the log leve to warning or higher for theano and pymc3
 logger = get_logger(__name__)
 
 task_modules = {
@@ -19,6 +20,7 @@ def lambda_handler(event, context):
         for k, v in function_parameters.items():
             logger.info(f"{k}: {v}")
     if hasattr(task_module, task):
+        get_logger(task)
         return getattr(task_module, task)(**function_parameters)
     else:
         logger.info(f'Task="{task}" does not exist for league="{league}"!')
