@@ -134,6 +134,13 @@ resource "aws_iam_policy" "bayesbet_sfn_policy" {
       ],
       "Effect": "Allow",
       "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}"
+    },
+    {
+      "Action": [
+        "states:StartExecution"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_sfn_state_machine.bayesbet_nhl_sfn.arn}"
     }
   ]
 }

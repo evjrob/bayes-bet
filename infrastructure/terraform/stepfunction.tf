@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
   name     = "${var.project}-nhl-main-${var.env}"
   role_arn = "${aws_iam_role.bayesbet_sfn_role.arn}"
@@ -88,7 +90,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
             },
             "PredictGames": {
               "Type": "Map",
-              "MaxConcurrency": 1,
+              "MaxConcurrency": 6,
               "Parameters": {
                 "game.$": "$$.Map.Item.Value",
                 "posteriors.$": "$.posteriors",
@@ -120,6 +122,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
             "CreateNewRecord": {
               "Type": "Task",
               "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}",
+              "ResultPath": "$.new_record_output",
               "Parameters": {
                 "league": "nhl",
                 "task": "create_record",
@@ -130,6 +133,26 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
                   "int_to_teams.$": "$.int_to_teams",
                   "game_preds.$": "$.game_preds"
                 }
+              },
+              "Next": "BackfillChoice"
+            },
+            "BackfillChoice":{
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.next_game_date",
+                  "StringLessThanPath": "$.most_recent_game_date",
+                  "Next": "NewBackfillExecution"
+                }
+              ],
+              "Default": "Finish"
+            },
+            "NewBackfillExecution": {
+              "Type":"Task",
+              "Resource":"arn:aws:states:::states:startExecution",
+              "Parameters":{  
+                  "Input":{},
+                  "StateMachineArn":"arn:aws:states:us-east-1:${data.aws_caller_identity.current.account_id}:stateMachine:${var.project}-nhl-main-${var.env}"
               },
               "Next": "Finish"
             },

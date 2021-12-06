@@ -128,6 +128,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     ]
     if next_games.shape[0] > 0:
         next_game_date = next_games["game_date"].min()
+        most_recent_game_date = next_games["game_date"].max()
 
     # Get the games that need to be predicted
     games_to_predict = games[games["game_date"] == next_game_date]
@@ -137,6 +138,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
         "current_season": current_season,
         "last_pred_date": last_pred_date,
         "next_game_date": next_game_date,
+        "most_recent_game_date": most_recent_game_date,
         "games_to_predict": games_to_predict,
         "season_start": season_start,
         "teams": teams,
