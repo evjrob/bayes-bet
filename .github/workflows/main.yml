@@ -25,5 +25,5 @@ jobs:
       - name: Run model tests
         run: |
           cd model
-          pipenv sync
-          pipenv run pytest --runslow
+          pip install -r requirements.txt
+          python -m pytest --runslow
