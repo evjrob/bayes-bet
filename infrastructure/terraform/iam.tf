@@ -151,3 +151,47 @@ resource "aws_iam_role_policy_attachment" "bayesbet_sfn_policy_attach" {
   role       = aws_iam_role.bayesbet_sfn_role.name
   policy_arn = aws_iam_policy.bayesbet_sfn_policy.arn
 }
+
+resource "aws_iam_role" "bayesbet_eventbridge_role" {
+  name = "${var.project}-eventbridge-role-${var.env}"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "bayesbet_eventbridge_policy" {
+  name   = "${var.project}-eventbridge-policy-${var.env}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "states:StartExecution"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_sfn_state_machine.bayesbet_nhl_sfn.arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "bayesbet_eventbridge_policy_attach" {
+  role       = aws_iam_role.bayesbet_eventbridge_role.name
+  policy_arn = aws_iam_policy.bayesbet_eventbridge_policy.arn
+}
