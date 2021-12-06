@@ -1,2 +1,3 @@
-project = "bayesbet"
-env     = "dev"
+project   = "bayesbet"
+env       = "dev"
+scheduled = false

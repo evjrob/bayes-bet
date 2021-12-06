@@ -7,3 +7,8 @@ variable "env" {
   default = "dev"
   type    = string
 }
+
+variable "scheduled" {
+  default = false
+  type    = bool
+}
