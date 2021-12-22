@@ -102,6 +102,9 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     valid_rows = games["home_team"].isin(teams) & games["away_team"].isin(teams)
     games = games[valid_rows]
 
+    # Drop postponed games
+    games = games[games["game_state"] != "Postponed"]  # No Postponed games
+
     # Save games to S3
     endpoint_url = os.getenv("AWS_ENDPOINT_URL")
     use_ssl = os.getenv("AWS_USE_SSL")
