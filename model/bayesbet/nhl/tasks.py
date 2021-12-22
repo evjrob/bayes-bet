@@ -131,7 +131,10 @@ def ingest_data(bucket_name, pipeline_name, job_id):
         most_recent_game_date = next_games["game_date"].max()
 
     # Get the games that need to be predicted
-    games_to_predict = games[games["game_date"] == next_game_date]
+    pred_idx = (games["game_date"] == next_game_date) & (
+        games["game_state"] != "Postponed"
+    )
+    games_to_predict = games[pred_idx]
     games_to_predict = games_to_predict.to_dict(orient="records")
 
     return {
