@@ -126,6 +126,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
 
     # Figure out what the next game date is
     next_game_date = None
+    most_recent_game_date = None
     next_games = games[
         (games["game_date"] > last_pred_date) & (games["game_date"] <= today)
     ]
