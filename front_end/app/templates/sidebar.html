@@ -1,31 +1,33 @@
 <aside class="col-12 col-sm-12 col-md-3 col-lg-2 bg-dark aside">
     <nav class="navbar navbar-expand-md navbar-dark bg-dark align-items-start flex-sm-column flex-row sidebarmain">
         <span class="navbar-brand bg-black w-100" href="#">
-            <span class="m-3">BayesBet</span>
+            <span class="m-3">
+                {% include "logo.html" %}
+            </span>
             <a href class="navbar-toggler" data-toggle="collapse" data-target=".sidebar">
                 <span class="navbar-toggler-icon"></span>
             </a>
         </span>
         <div class="collapse navbar-collapse sidebar">
             <ul class="flex-column navbar-nav w-100 justify-content-between">
-            <li class="nav-item m-2">
-                <a class="nav-link" href="/{{date}}/">
-                <span data-feather="align-left"></span>
-                Game Predictions
-                </a>
-            </li>
-            <li class="nav-item m-2">
-                <a class="nav-link" href="/teams/{{date}}/">
-                <span data-feather="users"></span>
-                Team Comparison
-                </a>
-            </li>
-            <li class="nav-item m-2">
-                <a class="nav-link" href="/performance/{{date}}/">
-                <span data-feather="activity"></span>
-                Model Performance
-                </a>
-            </li>
+                <li class="nav-item m-2">
+                    <a class="nav-link" href="/{{date}}/">
+                        <span data-feather="align-left"></span>
+                        Game Predictions
+                    </a>
+                </li>
+                <li class="nav-item m-2">
+                    <a class="nav-link" href="/teams/{{date}}/">
+                        <span data-feather="users"></span>
+                        Team Comparison
+                    </a>
+                </li>
+                <li class="nav-item m-2">
+                    <a class="nav-link" href="/performance/{{date}}/">
+                        <span data-feather="activity"></span>
+                        Model Performance
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
