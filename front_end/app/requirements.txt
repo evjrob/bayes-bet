@@ -11,6 +11,6 @@ python-dateutil==2.6.1
 pytz==2020.1
 s3transfer==0.3.3
 six==1.15.0
-sqlparse==0.3.1
+sqlparse==0.4.4
 urllib3>=1.26.5
 zappa==0.51.0
