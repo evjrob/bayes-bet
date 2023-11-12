@@ -7,9 +7,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "bayesbet-terraform-state"
+    bucket = "bayes-bet-terraform-state"
     key    = "terraform.tfstate"
-    region = "east-us-1"
+    region = "us-east-1"
   }
 }
 
