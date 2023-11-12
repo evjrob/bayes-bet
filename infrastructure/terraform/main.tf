@@ -1,18 +1,19 @@
-provider "aws" {
-  region  = "us-east-1"
-  profile = "terraform"
-  # skip_credentials_validation = true
-  # skip_metadata_api_check     = true
-  # skip_requesting_account_id  = true
-  # s3_force_path_style         = true
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
 
-  # endpoints {
-  #   iam           = "http://localhost:4566"
-  #   lambda        = "http://localhost:4566"
-  #   ecr           = "http://localhost:4566"
-  #   dynamodb      = "http://localhost:4566"
-  #   s3            = "http://localhost:4566"
-  #   stepfunctions = "http://localhost:4566"
-  # }
+  backend "s3" {
+    bucket = "bayesbet-terraform-state"
+    key    = "terraform.tfstate"
+    region = "east-us-1"
+  }
 }
 
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-east-1"
+}
