@@ -1,4 +1,4 @@
-name: Deploy
+name: Prod Deployment
 
 on:
   push:
@@ -9,6 +9,8 @@ jobs:
   terraform:
     name: "Terraform Deployment"
     runs-on: ubuntu-latest
+    environment: 
+      name: prod
     defaults:
       run:
         working-directory: infrastructure/terraform
