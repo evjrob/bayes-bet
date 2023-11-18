@@ -23,8 +23,8 @@ from bayesbet.nhl.model import model_update
 from bayesbet.nhl.predict import single_game_prediction
 from bayesbet.nhl.stats_api import (
     check_for_games,
-    fetch_recent_nhl_data,
-    fetch_nhl_data_by_dates,
+    fetch_nhl_data_by_date,
+    get_season_start_date,
 )
 
 
@@ -85,14 +85,28 @@ def create_record(
 def ingest_data(bucket_name, pipeline_name, job_id):
     today_dt = dt.date.today()
     today = today_dt.strftime("%Y-%m-%d")
-    start_date = (today_dt - dt.timedelta(days=365)).strftime("%Y-%m-%d")
+    
+    # Get last_pred
+    last_pred = most_recent_dynamodb_item('nhl', today)
+    last_pred_date = last_pred['PredictionDate']
+    last_pred_dt = dt.date.fromisoformat(last_pred_date)
+    logger.info(f'Most recent prediction is from {last_pred_date}')
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
+        json.dump(last_pred, f)
 
-    games = fetch_nhl_data_by_dates(start_date, today)
-    games = games[games["game_type"] != "A"]  # No All Star games
+    last_pred_games, date_metadata = fetch_nhl_data_by_date(last_pred_date)
+
+    # Update scores in the last prediction
+    updated_last_pred = update_scores(last_pred, last_pred_games)
+    next_game_date = date_metadata["next_game_date"]
+    
+    games, previous_game_date = fetch_nhl_data_by_date(next_game_date)
+    games = games[games['game_type'] != 'A'] # No All Star games
 
     # Get the first date of the season
-    current_season = games.loc[games["game_date"] == today]["season"].values[0]
-    season_start = games[games["season"] == current_season]["game_date"].min()
+    current_pred_season = games['season'].max()
+    if current_pred_season:
+        season_start = get_season_start_date(current_pred_season)
 
     teams = get_unique_teams(games)
     teams_to_int, int_to_teams = get_teams_int_maps(teams)
@@ -114,25 +128,12 @@ def ingest_data(bucket_name, pipeline_name, job_id):
             "use_ssl": use_ssl,
         }
     )
+
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_pred_games.csv", "wb") as f:
+        last_pred_games.to_csv(f, index=False)
+
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/games.csv", "wb") as f:
-        games.to_csv(f, index=False)
-
-    # Get the last record and save to S3
-    last_pred = most_recent_dynamodb_item("nhl", today)
-    last_pred_date = last_pred["PredictionDate"]
-    logger.info(f"Most recent prediction is from {last_pred_date}")
-    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
-        json.dump(last_pred, f)
-
-    # Figure out what the next game date is
-    next_game_date = None
-    most_recent_game_date = None
-    next_games = games[
-        (games["game_date"] > last_pred_date) & (games["game_date"] <= today)
-    ]
-    if next_games.shape[0] > 0:
-        next_game_date = next_games["game_date"].min()
-        most_recent_game_date = next_games["game_date"].max()
+        games.to_csv(f, index=False)    
 
     # Get the games that need to be predicted
     pred_idx = (games["game_date"] == next_game_date) & (
@@ -145,7 +146,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
         "current_season": current_season,
         "last_pred_date": last_pred_date,
         "next_game_date": next_game_date,
-        "most_recent_game_date": most_recent_game_date,
+        "most_recent_game_date": today,
         "games_to_predict": games_to_predict,
         "season_start": season_start,
         "teams": teams,
@@ -215,7 +216,7 @@ def update_previous_record(
             "use_ssl": use_ssl,
         }
     )
-    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/games.csv", "rb") as f:
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_pred_games.csv", "rb") as f:
         games = pd.read_csv(f)
 
     # Get the last record JSON from S3
