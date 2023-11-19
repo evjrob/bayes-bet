@@ -197,7 +197,8 @@ def get_season_start_date(season):
     """
     path = '/v1/standings-season/'
     response = requests.get(base_url + path)
-    seasons = {s["id"]:s["standingsStart"] for s in response["seasons"]}
+    seasons_json = response.json()
+    seasons = {s["id"]:s["standingsStart"] for s in seasons_json["seasons"]}
 
     return seasons[season]
 
