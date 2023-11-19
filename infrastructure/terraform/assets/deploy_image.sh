@@ -19,4 +19,3 @@ docker build -t $ecr_image_name -f ../../model/Dockerfile ../../model
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ecr_base_url
 docker tag $ecr_image_name:$ecr_image_tag $ecr_full_url:$ecr_image_tag
 docker push $ecr_full_url:$ecr_image_tag
-```
