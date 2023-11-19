@@ -101,16 +101,18 @@ def extract_game_data(games_json):
         home_fin_score = home_team['score']
         away_fin_score = away_team['score']
 
-        win_type = game["gameOutcome"]["lastPeriodType"]
-
         home_reg_score = home_fin_score
         away_reg_score = away_fin_score
 
-        if win_type in ["OT", "SO"]:
-            if home_fin_score > away_fin_score:
-                home_reg_score -= 1
-            elif away_fin_score > home_reg_score:
-                away_reg_score -= 1
+        if "gameOutcome" in game:
+            win_type = game["gameOutcome"]["lastPeriodType"]
+            if win_type in ["OT", "SO"]:
+                if home_fin_score > away_fin_score:
+                    home_reg_score -= 1
+                elif away_fin_score > home_reg_score:
+                    away_reg_score -= 1
+        else:
+            win_type = "NA"
 
         games.append(
             {
