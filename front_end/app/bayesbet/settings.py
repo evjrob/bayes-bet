@@ -32,7 +32,9 @@ ALLOWED_HOSTS = [
     'c0mvuqurzl.execute-api.us-east-1.amazonaws.com',
     'fnnpmq6554.execute-api.us-east-1.amazonaws.com',
     'bayesbet.everettsprojects.com',
-    'dev.bayesbet.everettsprojects.com'
+    'dev.bayesbet.everettsprojects.com',
+    'r54ouxpx73.execute-api.us-east-1.amazonaws.com',
+    'bayesbet.com',
     ]
 if DEBUG is True:
     ALLOWED_HOSTS = ALLOWED_HOSTS + ['127.0.0.1']
@@ -140,7 +142,10 @@ CORS_ORIGIN_WHITELIST = [
     "http://bayesbet.everettsprojects.com",
     "https://bayesbet.everettsprojects.com",
     "http://dev.bayesbet.everettsprojects.com",
-    "https://dev.bayesbet.everettsprojects.com"
+    "https://dev.bayesbet.everettsprojects.com",
+    "http://r54ouxpx73.execute-api.us-east-1.amazonaws.com",
+    "http://bayesbet.com",
+    "https://bayesbet.com",
     ]
 if DEBUG is True:
     CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + \

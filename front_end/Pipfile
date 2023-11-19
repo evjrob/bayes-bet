@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+asgiref = "==3.2.10"
+boto3 = "==1.29.2"
+botocore = "==1.32.2"
+django = "==3.1.13"
+django-cors-headers = "==3.4.0"
+django-s3-storage = "==0.13.3"
+docutils = "==0.15.2"
+gunicorn = "==20.0.4"
+jmespath = "==0.10.0"
+python-dateutil = "==2.6.1"
+pytz = "==2020.1"
+s3transfer = ">=0.7.0"
+six = "==1.15.0"
+sqlparse = "==0.3.1"
+urllib3 = "==1.26.5"
+zappa = "==0.54.2"
+werkzeug = "==0.16.1"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"

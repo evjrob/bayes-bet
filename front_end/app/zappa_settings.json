@@ -1,0 +1,15 @@
+{
+    "prod": {
+        "aws_region": "us-east-1",
+        "django_settings": "bayesbet.settings",
+        "project_name": "front-end",
+        "runtime": "python3.8",
+        "use_regional_endpoint": true,
+        "environment_variables": {},
+        "aws_environment_variables": {
+            "DJANGO_DEBUG": "False"
+        },
+        "remote_env": {},
+        "domain": "bayesbet.com"
+    }
+}
