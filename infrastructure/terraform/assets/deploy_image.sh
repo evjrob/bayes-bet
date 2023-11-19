@@ -11,7 +11,7 @@ echo "ECR BASE URL: $ecr_base_url"
 echo "ECR IMAGE NAME: $ecr_image_name"
 
 # Build the image
-docker build -t $ecr_image_name -f ../../model/Dockerfile.lambda ../../model
+docker build -t $ecr_image_name -f ../../model/Dockerfile ../../model
 
 # Push it to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ecr_base_url

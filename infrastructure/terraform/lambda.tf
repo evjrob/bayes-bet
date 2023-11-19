@@ -9,7 +9,7 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
   image_config {
     command           = ["app.lambda_handler"]
     entry_point       = ["python", "-m", "awslambdaric"]
-    working_directory = "/workspaces/bayes-bet/model/awslambda"
+    working_directory = "/workspaces/bayes-bet/model"
   }
 
   environment {

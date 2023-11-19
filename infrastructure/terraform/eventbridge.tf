@@ -2,7 +2,7 @@ resource "aws_cloudwatch_event_rule" "bayesbet_nhl_main_schedule" {
   name                = "${var.project}-nhl-main-schedule-${var.env}"
   description         = "Scheduled trigger for main nhl pipeline"
   schedule_expression = "cron(0 8 * * ? *)"
-  is_enabled          = false
+  is_enabled          = true
 }
 
 resource "aws_cloudwatch_event_target" "bayesbet_nhl_main_target" {
