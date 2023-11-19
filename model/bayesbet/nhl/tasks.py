@@ -143,7 +143,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     games_to_predict = games_to_predict.to_dict(orient="records")
 
     return {
-        "current_season": current_pred_season,
+        "current_season": int(current_pred_season),
         "last_pred_date": last_pred_date,
         "next_game_date": next_game_date,
         "most_recent_game_date": today,
