@@ -7,6 +7,10 @@ on:
   # Triggers the workflow on push or pull request events to dev and master
   push:
     branches: [ dev, master ]
+    paths:
+      - model/bayesbet/**
+      - model/Pipfile*
+
   pull_request:
     branches: [ dev, master ]
 
@@ -14,16 +18,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: model
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
+
+      - name: Install pipenv
+        run: |
+          pip install pipenv
+
+      - name: Cache pipenv virtualenv
+        id: cache-pipenv
+        uses: actions/cache@v1
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }} 
+
+      - name: Install dependencies
+        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        run: pipenv install
+
       - name: Run model tests
         run: |
           cd model
-          pip install -r requirements.txt
-          python -m pytest --runslow
+          pipenv run pytest --runslow
