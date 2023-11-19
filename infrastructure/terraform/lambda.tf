@@ -4,7 +4,7 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
   memory_size   = 2048
   timeout       = 450
   package_type  = "Image"
-  image_uri     = "${aws_ecr_repository.bayesbet_model_ecr.repository_url}:latest"
+  image_uri     = "${aws_ecr_repository.bayesbet_model_ecr.repository_url}:${random_id.image_tag.hex}"
 
   image_config {
     command           = ["app.lambda_handler"]
