@@ -88,16 +88,16 @@ jobs:
         run: pipenv install
 
       - name: Update Zappa Settings
-        uses: restack/update-json-file-action@v1.1
+        uses: restackio/update-json-file-action@v2.0
         with:
           file: ./app/zappa_settings.json
           fields: >
             "{
-              'prod.s3_bucket': '${{ secrets.ZAPPA_S3_BUCKET }}',
-              'prod.aws_environment_variables.DJANGO_TABLE_NAME': '${{ secrets.DJANGO_DYNAMODB_TABLE_NAME }}',
-              'prod.aws_environment_variables.S3_BUCKET_NAME': '${{ secrets.DJANGO_S3_BUCKET_NAME }}',
-              'prod.aws_environment_variables.DJANGO_SECRET_KEY': '${{ secrets.DJANGO_SECRET_KEY }}',
-              'prod.certificate_arn': '${{ secrets.ACM_CERTIFICATE_ARN }}'
+              \"prod.s3_bucket\": \"${{ secrets.ZAPPA_S3_BUCKET }}",
+              \"prod.aws_environment_variables.DJANGO_TABLE_NAME\": \"${{ secrets.DJANGO_DYNAMODB_TABLE_NAME }}\",
+              \"prod.aws_environment_variables.S3_BUCKET_NAME\": \"${{ secrets.DJANGO_S3_BUCKET_NAME }}\",
+              \"prod.aws_environment_variables.DJANGO_SECRET_KEY\": \"${{ secrets.DJANGO_SECRET_KEY }}\",
+              \"prod.certificate_arn\": \"${{ secrets.ACM_CERTIFICATE_ARN }}\"
             }"
 
       - name: Zappa Deploy
