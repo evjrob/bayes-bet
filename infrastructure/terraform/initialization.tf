@@ -1,4 +1,8 @@
 resource "random_id" "image_tag" {
+  keepers = {
+    uuid = uuid()
+  }
+  
   byte_length = 4
 }
 
