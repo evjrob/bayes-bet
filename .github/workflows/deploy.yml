@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - master
+    paths:
+      - .github/workflows/deploy.yml
+      - front_end/**
+      - infrastructure/**
+      - model/**
 
 jobs:
   terraform:
@@ -41,3 +46,59 @@ jobs:
       - name: Terraform Apply
         id: apply
         run: terraform apply -no-color -var-file=variables/prod.tfvars -auto-approve
+
+  zappa:
+    needs: terraform
+    name: "Zappa Deployment"
+    runs-on: ubuntu-latest
+    environment: 
+      name: prod
+    defaults:
+      run:
+        working-directory: front_end
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v1
+      - uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/bayes-bet-github-actions-deployment
+          aws-region: ${{ vars.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+
+      - name: Install pipenv
+        run: |
+          pip install pipenv
+
+      - name: Cache pipenv virtualenv
+        id: cache-pipenv
+        uses: actions/cache@v1
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }} 
+
+      - name: Install dependencies
+        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        run: pipenv install
+
+      - name: Update Zappa Settings
+        uses: restack/update-json-file-action@v1.1
+        with:
+          file: ./app/zappa_settings.json
+          fields: >
+            "{
+              'prod.s3_bucket': '${{ secrets.ZAPPA_S3_BUCKET }}',
+              'prod.aws_environment_variables.DJANGO_TABLE_NAME': '${{ secrets.DJANGO_DYNAMODB_TABLE_NAME }}',
+              'prod.aws_environment_variables.S3_BUCKET_NAME': '${{ secrets.DJANGO_S3_BUCKET_NAME }}',
+              'prod.aws_environment_variables.DJANGO_SECRET_KEY': '${{ secrets.DJANGO_SECRET_KEY }}',
+              'prod.certificate_arn': '${{ secrets.ACM_CERTIFICATE_ARN }}'
+            }"
+
+      - name: Zappa Deploy
+        run: pipenv shell && cd app && zappa update prod
