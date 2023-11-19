@@ -60,12 +60,11 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/bayes-bet-github-actions-deployment
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: hashicorp/setup-terraform@v2
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
@@ -89,9 +88,8 @@ jobs:
 
       - name: Update Zappa Settings
         uses: restackio/update-json-file-action@v2.0
-        working-directory: front_end/app
         with:
-          file: zappa_settings.json
+          file: front_end/app/zappa_settings.json
           fields: >
             "{
               \"prod.s3_bucket\": \"${{ secrets.ZAPPA_S3_BUCKET }}",
