@@ -20,6 +20,10 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
     }
   }
 
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
   depends_on = [
     null_resource.ecr_docker_image,
   ]
