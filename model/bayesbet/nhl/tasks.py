@@ -85,6 +85,15 @@ def create_record(
 def ingest_data(bucket_name, pipeline_name, job_id):
     today_dt = dt.date.today()
     today = today_dt.strftime("%Y-%m-%d")
+
+    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    use_ssl = os.getenv("AWS_USE_SSL")
+    s3 = s3fs.S3FileSystem(
+        client_kwargs={
+            "endpoint_url": endpoint_url,
+            "use_ssl": use_ssl,
+        }
+    )
     
     # Get last_pred
     last_pred = most_recent_dynamodb_item('nhl', today)
@@ -120,15 +129,6 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     games = games[games["game_state"] != "Postponed"]  # No Postponed games
 
     # Save games to S3
-    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
-    use_ssl = os.getenv("AWS_USE_SSL")
-    s3 = s3fs.S3FileSystem(
-        client_kwargs={
-            "endpoint_url": endpoint_url,
-            "use_ssl": use_ssl,
-        }
-    )
-
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_pred_games.csv", "wb") as f:
         last_pred_games.to_csv(f, index=False)
 
@@ -143,7 +143,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     games_to_predict = games_to_predict.to_dict(orient="records")
 
     return {
-        "current_season": current_season,
+        "current_season": current_pred_season,
         "last_pred_date": last_pred_date,
         "next_game_date": next_game_date,
         "most_recent_game_date": today,
