@@ -98,8 +98,12 @@ def extract_game_data(games_json):
         home_team_name = home_team['abbrev']
         away_team_name = away_team['abbrev']
 
-        home_fin_score = home_team['score']
-        away_fin_score = away_team['score']
+        if 'score' in home_team and 'score' in away_team:
+            home_fin_score = home_team['score']
+            away_fin_score = away_team['score']
+        else:
+            home_fin_score = 0
+            away_fin_score = 0
 
         home_reg_score = home_fin_score
         away_reg_score = away_fin_score
