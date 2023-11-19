@@ -76,11 +76,11 @@ jobs:
           pip install pipenv
 
       - name: Cache pipenv virtualenv
-        id: cache-pipenv
+        id: cache-pipenv-front-end-prod
         uses: actions/cache@v1
         with:
           path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }} 
+          key: ${{ runner.os }}-pipenv-front-end-prod-${{ hashFiles('**/Pipfile.lock') }} 
 
       - name: Install dependencies
         if: steps.cache-pipenv.outputs.cache-hit != 'true'
