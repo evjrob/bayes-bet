@@ -90,7 +90,7 @@ jobs:
       - name: Update Zappa Settings
         uses: restackio/update-json-file-action@v2.0
         with:
-          file: ./app/zappa_settings.json
+          file: app/zappa_settings.json
           fields: >
             "{
               \"prod.s3_bucket\": \"${{ secrets.ZAPPA_S3_BUCKET }}",
