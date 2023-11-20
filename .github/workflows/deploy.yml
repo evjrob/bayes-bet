@@ -93,4 +93,4 @@ jobs:
           fields: "{\"prod.s3_bucket\": \"${{ secrets.ZAPPA_S3_BUCKET }}\", \"prod.aws_environment_variables.DJANGO_TABLE_NAME\": \"${{ secrets.DJANGO_DYNAMODB_TABLE_NAME }}\", \"prod.aws_environment_variables.S3_BUCKET_NAME\": \"${{ secrets.DJANGO_S3_BUCKET_NAME }}\", \"prod.aws_environment_variables.DJANGO_SECRET_KEY\": \"${{ secrets.DJANGO_SECRET_KEY }}\", \"prod.certificate_arn\": \"${{ secrets.ACM_CERTIFICATE_ARN }}\"}"
 
       - name: Zappa Deploy
-        run: pipenv run cd app && python -m zappa update prod
+        run: cd app && pipenv run python -m zappa update prod
