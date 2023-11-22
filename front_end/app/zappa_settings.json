@@ -10,6 +10,6 @@
             "DJANGO_DEBUG": "False"
         },
         "remote_env": {},
-        "domain": "bayesbet.com"
+        "domain": "bayesbet.io"
     }
 }
