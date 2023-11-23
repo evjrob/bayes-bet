@@ -25,6 +25,7 @@ from bayesbet.nhl.stats_api import (
     check_for_games,
     fetch_nhl_data_by_date,
     get_season_start_date,
+    team_abbrevs,
 )
 
 
@@ -117,7 +118,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     if current_pred_season:
         season_start = get_season_start_date(current_pred_season)
 
-    teams = get_unique_teams(games)
+    teams = sorted(list(team_abbrevs.keys()))
     teams_to_int, int_to_teams = get_teams_int_maps(teams)
     n_teams = len(teams)
 
