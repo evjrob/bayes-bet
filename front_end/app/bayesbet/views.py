@@ -51,17 +51,19 @@ def game_outcome_prediction(game):
     return game_outcome
 
 def index(request, date=None):
-    response = get_record(date)
-    date = response['Items'][0]['PredictionDate']
-    games = response['Items'][0]['GamePredictions']
-    predicted_games = [{'game_pk':g['game_pk'], 'game_date': date, 
-                        'home_team':g['home_team'], 'home_abb':team_abbrevs[g['home_team']],
-                        'home_color': team_colors[g['home_team']],
-                        'away_team':g['away_team'], 'away_abb':team_abbrevs[g['away_team']],
-                        'away_color': team_colors[g['away_team']],
-                        'game_pred': game_outcome_prediction(g)
-                        } for g in games]
-    
+    try:
+        response = get_record(date)
+        date = response['Items'][0]['PredictionDate']
+        games = response['Items'][0]['GamePredictions']
+        predicted_games = [{'game_pk':g['game_pk'], 'game_date': date, 
+                            'home_team':g['home_team'], 'home_abb':team_abbrevs[g['home_team']],
+                            'home_color': team_colors[g['home_team']],
+                            'away_team':g['away_team'], 'away_abb':team_abbrevs[g['away_team']],
+                            'away_color': team_colors[g['away_team']],
+                            'game_pred': game_outcome_prediction(g)
+                            } for g in games]
+    except IndexError:
+        predicted_games = []
     context= {'prediction_date': date, 'predicted_games': predicted_games}
     return render(request, 'index.html', context)
 
