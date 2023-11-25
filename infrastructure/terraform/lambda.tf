@@ -21,6 +21,29 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
   }
 
   depends_on = [
-    null_resource.ecr_docker_image,
+    null_resource.ecr_docker_image_model,
+  ]
+}
+
+resource "aws_lambda_function" "screenshot_function" {
+  function_name = "${var.project}-social-${var.env}"
+  role          = aws_iam_role.bayesbet_social_lambda_role.arn
+  memory_size   = 2048
+  timeout       = 450
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.bayesbet_model_ecr.repository_url}:${random_id.image_tag.hex}"
+
+  environment {
+    variables = {
+      TWITTER_BEARER_TOKEN = var.twitter_bearer_token
+      TWITTER_CONSUMER_KEY = var.twitter_consumer_key
+      TWITTER_CONSUMER_SECRET = var.twitter_consumer_secret
+      TWITTER_ACCESS_TOKEN = var.twitter_access_token
+      TWITTER_ACCESS_TOKEN_SECRET = var.twitter_access_token_secret
+    }
+  }
+
+  depends_on = [
+    null_resource.ecr_docker_image_social,
   ]
 }
