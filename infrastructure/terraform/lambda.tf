@@ -31,7 +31,7 @@ resource "aws_lambda_function" "screenshot_function" {
   memory_size   = 2048
   timeout       = 450
   package_type  = "Image"
-  image_uri     = "${aws_ecr_repository.bayesbet_model_ecr.repository_url}:${random_id.image_tag.hex}"
+  image_uri     = "${aws_ecr_repository.bayesbet_social_ecr.repository_url}:${random_id.image_tag.hex}"
 
   environment {
     variables = {
