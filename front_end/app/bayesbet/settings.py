@@ -28,11 +28,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
 ALLOWED_HOSTS = [
     'app',
-    'hockey.everettsprojects.com',
-    'c0mvuqurzl.execute-api.us-east-1.amazonaws.com',
-    'fnnpmq6554.execute-api.us-east-1.amazonaws.com',
-    'bayesbet.everettsprojects.com',
-    'dev.bayesbet.everettsprojects.com',
+    'xvekw1n6mb.execute-api.us-east-1.amazonaws.com',
     'r54ouxpx73.execute-api.us-east-1.amazonaws.com',
     'bayesbet.io',
     ]
@@ -133,16 +129,8 @@ STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = [
-    "http://everettsprojects.com",
-    "https://everettsprojects.com",
-    "http://hockey.everettsprojects.com", 
-    "https://hockey.everettsprojects.com", 
-    "http://c0mvuqurzl.execute-api.us-east-1.amazonaws.com",
-    "http://fnnpmq6554.execute-api.us-east-1.amazonaws.com",
-    "http://bayesbet.everettsprojects.com",
-    "https://bayesbet.everettsprojects.com",
-    "http://dev.bayesbet.everettsprojects.com",
-    "https://dev.bayesbet.everettsprojects.com",
+    "http://xvekw1n6mb.execute-api.us-east-1.amazonaws.com",
+    "https://xvekw1n6mb.execute-api.us-east-1.amazonaws.com",
     "http://r54ouxpx73.execute-api.us-east-1.amazonaws.com",
     "https://r54ouxpx73.execute-api.us-east-1.amazonaws.com",
     "http://bayesbet.io",
