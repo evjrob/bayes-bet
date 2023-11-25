@@ -52,10 +52,10 @@ def game_outcome_prediction(game):
     return game_outcome
 
 
-def index(request):
+def index(request, *callback_args, **callback_kwargs):
     return HttpResponse("Hello, world. You're at the plots index.")
 
-def social_preds(request):
+def social_preds(request, *callback_args, **callback_kwargs):
     date=None
     response = get_record(date)
     date = dt.date.fromisoformat(response['Items'][0]['PredictionDate']).strftime('%B %d, %Y')
