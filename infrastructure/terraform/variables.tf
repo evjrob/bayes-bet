@@ -8,6 +8,11 @@ variable "env" {
   type    = string
 }
 
+variable "socials_scheduled" {
+  default = false
+  type    = bool
+}
+
 variable "twitter_bearer_token" {
   default = ""
   type    = string
