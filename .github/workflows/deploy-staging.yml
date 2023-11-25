@@ -66,10 +66,10 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/bayes-bet-github-actions-deployment
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: 3.11
 
       - name: Install pipenv
         run: |
