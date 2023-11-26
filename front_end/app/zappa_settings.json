@@ -2,6 +2,7 @@
     "staging": {
         "aws_region": "us-east-1",
         "django_settings": "bayesbet.settings",
+        "num_retained_versions": 10,
         "project_name": "front-end",
         "runtime": "python3.11",
         "use_regional_endpoint": true,
@@ -14,6 +15,7 @@
     "prod": {
         "aws_region": "us-east-1",
         "django_settings": "bayesbet.settings",
+        "num_retained_versions": 10,
         "project_name": "front-end",
         "runtime": "python3.11",
         "use_regional_endpoint": true,
