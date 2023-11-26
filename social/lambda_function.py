@@ -1,4 +1,6 @@
+from datetime import date
 import os
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -7,6 +9,13 @@ import tweepy
 
 
 def lambda_handler(event, context):
+    # Check if the predictions have been updated before prodeeding
+    url = event['url']
+    response = requests.get(f"{url}/ready").json()
+    if not response["ready_to_post"]:
+        print("No current predictions to post. Exiting.")
+        return
+
     # Set up Selenium with the Chromium driver
     options = webdriver.ChromeOptions()
     options.binary_location = '/opt/chrome/chrome'
@@ -37,7 +46,6 @@ def lambda_handler(event, context):
     driver.set_window_size(2000, 2000)
 
     # Navigate to the URL and screenshot the DOM element with id="screenshot"
-    url = event['url']
     driver.get(url)
     element = driver.find_element(By.ID, "screenshot")
     element.screenshot("/tmp/screenshot.png")
@@ -68,5 +76,7 @@ def lambda_handler(event, context):
     media_id = api.media_upload(filename="/tmp/screenshot.png").media_id_string
 
     # # Send the tweet with the media ID
-    tweet_message = event['tweet_message']
+    prediction_date = response["prediction_date"]
+    pretty_date = date.fromisoformat(prediction_date).strftime("%B %d, %Y")
+    tweet_message = f"BayesBet NHL game predictions for {pretty_date}: https://bayesbet.io/{prediction_date}/"
     client.create_tweet(text=tweet_message, media_ids=[media_id])
