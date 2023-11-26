@@ -28,3 +28,11 @@ resource "aws_cloudwatch_event_target" "bayesbet_nhl_social_target" {
     url = var.socials_url
   })
 }
+
+resource "aws_lambda_permission" "bayesbet_nhl_social_lambda_permission" {
+  statement_id = "AllowExecutionFromCloudWatch"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.screenshot_function.function_name
+  principal = "events.amazonaws.com"
+  source_arn = aws_cloudwatch_event_rule.bayesbet_nhl_social_schedul.arn
+}
