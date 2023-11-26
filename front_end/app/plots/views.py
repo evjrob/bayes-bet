@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import datetime as dt
 from django.shortcuts import render
 from django.db import connections
@@ -52,10 +52,10 @@ def game_outcome_prediction(game):
     return game_outcome
 
 
-def index(request):
+def index(request, *callback_args, **callback_kwargs):
     return HttpResponse("Hello, world. You're at the plots index.")
 
-def social_preds(request):
+def social_preds(request, *callback_args, **callback_kwargs):
     date=None
     response = get_record(date)
     date = dt.date.fromisoformat(response['Items'][0]['PredictionDate']).strftime('%B %d, %Y')
@@ -70,3 +70,17 @@ def social_preds(request):
     
     context= {'prediction_date': date, 'predicted_games': predicted_games}
     return render(request, 'plots/social_preds.html', context)
+
+def social_preds_ready(request, *callback_args, **callback_kwargs):
+    date=None
+    response = get_record(date)
+    prediction_date = response['Items'][0]['PredictionDate']
+    today = dt.datetime.today().strftime("%Y-%m-%d")
+    ready_to_post = prediction_date == today
+
+    response = JsonResponse(
+        {"ready_to_post" : ready_to_post, "prediction_date" : prediction_date}
+    )
+
+    return response
+    
