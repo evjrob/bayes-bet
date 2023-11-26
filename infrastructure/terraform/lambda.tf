@@ -25,7 +25,7 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
   ]
 }
 
-resource "aws_lambda_function" "screenshot_function" {
+resource "aws_lambda_function" "bayesbet_social_lambda" {
   function_name = "${var.project}-social-${var.env}"
   role          = aws_iam_role.bayesbet_social_lambda_role.arn
   memory_size   = 2048

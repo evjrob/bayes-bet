@@ -22,7 +22,7 @@ resource "aws_cloudwatch_event_rule" "bayesbet_nhl_social_schedule" {
 resource "aws_cloudwatch_event_target" "bayesbet_nhl_social_target" {
   rule      = aws_cloudwatch_event_rule.bayesbet_nhl_social_schedule.name
   target_id = "${var.project}-nhl-social-target-${var.env}"
-  arn       = aws_lambda_function.screenshot_function.arn
+  arn       = aws_lambda_function.bayesbet_social_lambda.arn
 
   input = jsonencode({
     url = var.socials_url
@@ -32,7 +32,7 @@ resource "aws_cloudwatch_event_target" "bayesbet_nhl_social_target" {
 resource "aws_lambda_permission" "bayesbet_nhl_social_lambda_permission" {
   statement_id = "AllowExecutionFromCloudWatch"
   action = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.screenshot_function.function_name
+  function_name = aws_lambda_function.bayesbet_social_lambda.function_name
   principal = "events.amazonaws.com"
   source_arn = aws_cloudwatch_event_rule.bayesbet_nhl_social_schedule.arn
 }

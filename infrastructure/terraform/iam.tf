@@ -216,7 +216,7 @@ resource "aws_iam_policy" "bayesbet_eventbridge_policy" {
         "lambda:InvokeFunction"
       ],
       "Effect": "Allow",
-      "Resource": "${aws_lambda_function.screenshot_function.arn}"
+      "Resource": "${aws_lambda_function.bayesbet_social_lambda.arn}"
     }
   ]
 }
