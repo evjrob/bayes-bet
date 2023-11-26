@@ -13,6 +13,11 @@ variable "socials_scheduled" {
   type    = bool
 }
 
+variable "socials_url" {
+  default = ""
+  type    = string
+}
+
 variable "twitter_bearer_token" {
   default = ""
   type    = string

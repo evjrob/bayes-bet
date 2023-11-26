@@ -210,6 +210,13 @@ resource "aws_iam_policy" "bayesbet_eventbridge_policy" {
       ],
       "Effect": "Allow",
       "Resource": "${aws_sfn_state_machine.bayesbet_nhl_sfn.arn}"
+    },
+    {
+      "Action": [
+        "lambda:InvokeFunction",
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_lambda_function.screenshot_function.arn}"
     }
   ]
 }
