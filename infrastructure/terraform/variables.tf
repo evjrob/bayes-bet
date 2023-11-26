@@ -19,31 +19,31 @@ variable "socials_url" {
 }
 
 variable "twitter_bearer_token" {
-  default = ""
-  type    = string
+  default   = ""
+  type      = string
   sensitive = true
 }
 
 variable "twitter_consumer_key" {
-  default = ""
-  type    = string
+  default   = ""
+  type      = string
   sensitive = true
 }
 
 variable "twitter_consumer_secret" {
-  default = ""
-  type    = string
+  default   = ""
+  type      = string
   sensitive = true
 }
 
 variable "twitter_access_token" {
-  default = ""
-  type    = string
+  default   = ""
+  type      = string
   sensitive = true
 }
 
 variable "twitter_access_token_secret" {
-  default = ""
-  type    = string
+  default   = ""
+  type      = string
   sensitive = true
 }

@@ -35,10 +35,10 @@ resource "aws_lambda_function" "bayesbet_social_lambda" {
 
   environment {
     variables = {
-      TWITTER_BEARER_TOKEN = var.twitter_bearer_token
-      TWITTER_CONSUMER_KEY = var.twitter_consumer_key
-      TWITTER_CONSUMER_SECRET = var.twitter_consumer_secret
-      TWITTER_ACCESS_TOKEN = var.twitter_access_token
+      TWITTER_BEARER_TOKEN        = var.twitter_bearer_token
+      TWITTER_CONSUMER_KEY        = var.twitter_consumer_key
+      TWITTER_CONSUMER_SECRET     = var.twitter_consumer_secret
+      TWITTER_ACCESS_TOKEN        = var.twitter_access_token
       TWITTER_ACCESS_TOKEN_SECRET = var.twitter_access_token_secret
     }
   }
