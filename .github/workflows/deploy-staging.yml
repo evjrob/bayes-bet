@@ -5,7 +5,7 @@ on:
     branches:
       - staging
     paths:
-      - .github/workflows/deploy.yml
+      - .github/workflows/deploy-staging.yml
       - front_end/**
       - infrastructure/**
       - model/**
