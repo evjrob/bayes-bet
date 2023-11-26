@@ -16,6 +16,7 @@ resource "aws_ecr_lifecycle_policy" "bayesbet_model_ecr_policy" {
         rulePriority = 1
         description  = "Keep last 5 images"
         selection = {
+          tagStatus   = "any"
           countType   = "imageCountMoreThan"
           countNumber = 5
         }
@@ -45,6 +46,7 @@ resource "aws_ecr_lifecycle_policy" "bayesbet_social_ecr" {
         rulePriority = 1
         description  = "Keep last 5 images"
         selection = {
+          tagStatus   = "any"
           countType   = "imageCountMoreThan"
           countNumber = 5
         }
