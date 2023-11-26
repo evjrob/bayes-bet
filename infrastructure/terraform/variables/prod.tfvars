@@ -1,4 +1,4 @@
 project           = "bayes-bet"
 env               = "prod"
 socials_scheduled = true
-socials_url       = "bayesbet.io/plots/socialpreds"
+socials_url       = "http://bayesbet.io/plots/socialpreds"
