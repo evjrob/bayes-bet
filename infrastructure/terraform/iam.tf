@@ -94,8 +94,8 @@ resource "aws_iam_role_policy_attachment" "bayesbet_model_lambda_policy_attach" 
   policy_arn = aws_iam_policy.bayesbet_model_lambda_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "bayesbet_model_basic_lambda_attach" {  
-  role       = aws_iam_role.bayesbet_model_lambda_role.name  
+resource "aws_iam_role_policy_attachment" "bayesbet_model_basic_lambda_attach" {
+  role       = aws_iam_role.bayesbet_model_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -119,8 +119,8 @@ resource "aws_iam_role" "bayesbet_social_lambda_role" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "bayesbet_social_basic_lambda_attach" {  
-  role       = aws_iam_role.bayesbet_social_lambda_role.name  
+resource "aws_iam_role_policy_attachment" "bayesbet_social_basic_lambda_attach" {
+  role       = aws_iam_role.bayesbet_social_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -198,7 +198,7 @@ EOF
 }
 
 resource "aws_iam_policy" "bayesbet_eventbridge_policy" {
-  name   = "${var.project}-eventbridge-policy-${var.env}"
+  name = "${var.project}-eventbridge-policy-${var.env}"
 
   policy = <<EOF
 {

@@ -2,7 +2,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
   name     = "${var.project}-nhl-main-${var.env}"
-  role_arn = "${aws_iam_role.bayesbet_sfn_role.arn}"
+  role_arn = aws_iam_role.bayesbet_sfn_role.arn
 
   definition = <<EOF
 {
