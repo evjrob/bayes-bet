@@ -66,7 +66,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
                     },
                     {
                       "Variable": "$.next_game_date",
-                      "StringLessThanEqualsPath": "$.today",
+                      "StringLessThanEqualsPath": "$.today"
                     }
                   ],
                   "Next": "ModelInference"
