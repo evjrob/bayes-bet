@@ -2,7 +2,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
   name     = "${var.project}-nhl-main-${var.env}"
-  role_arn = "${aws_iam_role.bayesbet_sfn_role.arn}"
+  role_arn = aws_iam_role.bayesbet_sfn_role.arn
 
   definition = <<EOF
 {
@@ -63,6 +63,10 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
                     {
                       "Variable": "$.next_game_date",
                       "StringGreaterThanPath": "$.last_pred_date"
+                    },
+                    {
+                      "Variable": "$.next_game_date",
+                      "StringLessThanEqualsPath": "$.today"
                     }
                   ],
                   "Next": "ModelInference"
@@ -141,7 +145,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
               "Choices": [
                 {
                   "Variable": "$.next_game_date",
-                  "StringLessThanPath": "$.most_recent_game_date",
+                  "StringLessThanPath": "$.today",
                   "Next": "NewBackfillExecution"
                 }
               ],

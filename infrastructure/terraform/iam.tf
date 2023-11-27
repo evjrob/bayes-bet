@@ -94,8 +94,33 @@ resource "aws_iam_role_policy_attachment" "bayesbet_model_lambda_policy_attach" 
   policy_arn = aws_iam_policy.bayesbet_model_lambda_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "bayesbet_model_basic_lambda_attach" {  
-  role       = aws_iam_role.bayesbet_model_lambda_role.name  
+resource "aws_iam_role_policy_attachment" "bayesbet_model_basic_lambda_attach" {
+  role       = aws_iam_role.bayesbet_model_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role" "bayesbet_social_lambda_role" {
+  name = "${var.project}-social-role-${var.env}"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "bayesbet_social_basic_lambda_attach" {
+  role       = aws_iam_role.bayesbet_social_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -173,7 +198,7 @@ EOF
 }
 
 resource "aws_iam_policy" "bayesbet_eventbridge_policy" {
-  name   = "${var.project}-eventbridge-policy-${var.env}"
+  name = "${var.project}-eventbridge-policy-${var.env}"
 
   policy = <<EOF
 {
@@ -185,6 +210,13 @@ resource "aws_iam_policy" "bayesbet_eventbridge_policy" {
       ],
       "Effect": "Allow",
       "Resource": "${aws_sfn_state_machine.bayesbet_nhl_sfn.arn}"
+    },
+    {
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_lambda_function.bayesbet_social_lambda.arn}"
     }
   ]
 }

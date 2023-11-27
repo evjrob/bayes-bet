@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths:
-      - .github/workflows/deploy.yml
+      - .github/workflows/deploy-prod.yml
       - front_end/**
       - infrastructure/**
       - model/**
@@ -45,6 +45,12 @@ jobs:
 
       - name: Terraform Apply
         id: apply
+        env:
+          TF_VAR_twitter_bearer_token: ${{ secrets.TWITTER_BEARER_TOKEN }}
+          TF_VAR_twitter_consumer_key: ${{ secrets.TWITTER_CONSUMER_KEY }}
+          TF_VAR_twitter_consumer_secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+          TF_VAR_twitter_access_token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TF_VAR_twitter_access_token_secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
         run: terraform apply -no-color -var-file=variables/prod.tfvars -auto-approve
 
   zappa:

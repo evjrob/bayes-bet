@@ -147,7 +147,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
         "current_season": int(current_pred_season),
         "last_pred_date": last_pred_date,
         "next_game_date": next_game_date,
-        "most_recent_game_date": today,
+        "today": today,
         "games_to_predict": games_to_predict,
         "season_start": season_start,
         "teams": teams,
