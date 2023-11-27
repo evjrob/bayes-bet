@@ -7,5 +7,6 @@ COPY requirements.txt /workspaces/bayes-bet/model/requirements.txt
 RUN pip install -r /workspaces/bayes-bet/model/requirements.txt
 RUN pip install awslambdaric
 
-COPY . /workspaces/bayes-bet/model
+ENV PYTENSOR_FLAGS='base_compiledir=/tmp/pytensor'
 
+COPY . /workspaces/bayes-bet/model
