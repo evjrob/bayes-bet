@@ -1,11 +1,5 @@
-import logging
-import os
-
 import numpy as np
-import pandas as pd
-import pymc3 as pm
-import theano.tensor as tt
-import theano
+import pymc as pm
 from scipy.stats import norm
 
 from bayesbet.logger import get_logger
@@ -60,15 +54,15 @@ def model_iteration(obs_data, priors, n_teams, Δσ, samples=5000, tune=2000, co
         o_star_init = pm.Normal('o_star_init', mu=priors['o'][0], sigma=priors['o'][1], shape=n_teams)
         Δ_o = pm.Normal('Δ_o', mu=0.0, sigma=Δσ, shape=n_teams)
         o_star = pm.Deterministic('o_star', o_star_init + Δ_o)
-        o = pm.Deterministic('o', o_star - tt.mean(o_star))
+        o = pm.Deterministic('o', o_star - o_star.mean())
                                                
         d_star_init = pm.Normal('d_star_init', mu=priors['d'][0], sigma=priors['d'][1], shape=n_teams)
         Δ_d = pm.Normal('Δ_d', mu=0.0, sigma=Δσ, shape=n_teams)
         d_star = pm.Deterministic('d_star', d_star_init + Δ_d)
-        d = pm.Deterministic('d', d_star - tt.mean(d_star))
+        d = pm.Deterministic('d', d_star - d_star.mean())
         
-        λₕ = tt.exp(i + h + o[idₕ] - d[idₐ])
-        λₐ = tt.exp(i + o[idₐ] - d[idₕ])
+        λₕ = pm.math.exp(i + h + o[idₕ] - d[idₐ])
+        λₐ = pm.math.exp(i + o[idₐ] - d[idₕ])
 
         # OT/SO home win bernoulli model parameter
         # P(T < Y), where T ~ a, Y ~ b: a/(a + b)
