@@ -23,7 +23,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/bayes-bet-github-actions-deployment
