@@ -12,7 +12,5 @@ def get_logger(name):
         log_fmt = "[%(levelname)s]\t%(asctime)s.%(msecs)dZ\t%(name)s\t%(message)s\n"
         logging.basicConfig(level=logging.INFO, format=log_fmt)
         logger = logging.getLogger(name)
-    # Hush theano logging
-    logging.getLogger("theano").setLevel(logging.WARNING)
-    logging.getLogger("pymc3").setLevel(logging.WARNING)
+    logging.getLogger("pymc").setLevel(logging.WARNING)
     return logger

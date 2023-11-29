@@ -31,7 +31,7 @@ from bayesbet.nhl.stats_api import (
 
 logger = get_logger(__name__)
 
-framework = "PyMC3"
+framework = "pymc"
 model_version = "v2.1"
 fattening_factor = 1.05  # Expand the posteriors by this amount before using as priors
 f_thresh = 0.075  # A cap on team variable standard deviation to prevent blowup
