@@ -1,0 +1,11 @@
+stages:
+  fetch_data:
+    cmd: python stages/fetch_data.py
+    deps:
+    - ../../bayesbet/nhl/stats_api.py
+    - stages/fetch_data.py
+    params:
+    - fetch_data.end_date
+    - fetch_data.start_date
+    outs:
+    - ../data/raw

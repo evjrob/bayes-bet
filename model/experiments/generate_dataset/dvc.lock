@@ -1,0 +1,23 @@
+schema: '2.0'
+stages:
+  fetch_data:
+    cmd: python stages/fetch_data.py
+    deps:
+    - path: ../../bayesbet/nhl/stats_api.py
+      hash: md5
+      md5: 57a6bc8db6074862b301f9175948b6c0
+      size: 6562
+    - path: stages/fetch_data.py
+      hash: md5
+      md5: c493c92b98421a66b9898b46dc084983
+      size: 1349
+    params:
+      params.yaml:
+        fetch_data.end_date: '2023-12-01'
+        fetch_data.start_date: '2015-08-01'
+    outs:
+    - path: ../data/raw
+      hash: md5
+      md5: d2eaebd85cf4329bc66f9ed0f1710645.dir
+      size: 4556605
+      nfiles: 1
