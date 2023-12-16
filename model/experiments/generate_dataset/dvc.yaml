@@ -9,3 +9,10 @@ stages:
     - fetch_data.start_date
     outs:
     - ../data/raw
+  preprocess_data:
+    cmd: python stages/preprocess_data.py
+    deps:
+    - ../../bayesbet/nhl/stats_api.py
+    - stages/preprocess_data.py
+    outs:
+    - ../data/preprocessed

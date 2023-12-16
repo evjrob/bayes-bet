@@ -21,3 +21,20 @@ stages:
       md5: d2eaebd85cf4329bc66f9ed0f1710645.dir
       size: 4556605
       nfiles: 1
+  preprocess_data:
+    cmd: python stages/preprocess_data.py
+    deps:
+    - path: ../../bayesbet/nhl/stats_api.py
+      hash: md5
+      md5: 57a6bc8db6074862b301f9175948b6c0
+      size: 6562
+    - path: stages/preprocess_data.py
+      hash: md5
+      md5: 8462c57941092bb151258adef995eedc
+      size: 660
+    outs:
+    - path: ../data/preprocessed
+      hash: md5
+      md5: 109c3f455b3f9cfcfef0ac4275a51c84.dir
+      size: 135076
+      nfiles: 1
