@@ -28,6 +28,11 @@ stages:
       hash: md5
       md5: a5f779f63dedab48dce3b104d966264d
       size: 6319
+    - path: ../data/raw
+      hash: md5
+      md5: d2a7d73789dc90808ac8d0d8d9f6bc1f.dir
+      size: 4556605
+      nfiles: 1
     - path: stages/preprocess_data.py
       hash: md5
       md5: 38b3374fb81ba565d312529b9532f29e
@@ -38,3 +43,21 @@ stages:
       md5: 84f4db4dc7ddeb4f9ced56d01f94e178.dir
       size: 125180
       nfiles: 1
+  split_data:
+    cmd: python stages/split_data.py
+    deps:
+    - path: ../data/preprocessed
+      hash: md5
+      md5: 84f4db4dc7ddeb4f9ced56d01f94e178.dir
+      size: 125180
+      nfiles: 1
+    - path: stages/split_data.py
+      hash: md5
+      md5: ea2f91eb1007c9bca3d8743adbe97cf5
+      size: 813
+    outs:
+    - path: ../data/final
+      hash: md5
+      md5: b67c8f44d9bfcd66cd3ae64caeecdbb1.dir
+      size: 135042
+      nfiles: 2
