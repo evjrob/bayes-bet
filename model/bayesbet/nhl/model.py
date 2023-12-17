@@ -4,16 +4,16 @@ import pymc as pm
 from scipy.integrate import quad, dblquad
 from scipy.stats import norm
 
-from bayesbet.logger import get_logger
 from bayesbet.nhl.data_utils import (
     get_teams_int_maps,
     model_ready_data,
+    model_vars_to_numeric,
+    model_vars_to_string,
     team_abbrevs,
     team_names,
 )
 
 
-logger = get_logger(__name__)
 t_before_shootout = 5.0/60.0    # 5 minute shootout, divided by regulation time
 
 
@@ -28,16 +28,16 @@ class IterativeUpdateModel:
         self.n_teams = len(self.teams)
 
         if priors is None:
-            self.priors = {
+            self.priors = model_vars_to_numeric({
                 "h": [0.15, 0.075],
                 "i": [1.0, 0.1],
                 "teams": {
                     team: {"d": [0.0, 0.05], "o": [0.0, 0.05]}
-                    for team in team_names
+                    for team in self.teams
                 }
-            }
+            }, self.teams_to_int)
         else:
-            self.priors = priors
+            self.priors = model_vars_to_numeric(priors, self.teams_to_int)
         
     def get_model_posteriors(self, trace):
         posteriors = {}
@@ -142,7 +142,7 @@ class IterativeUpdateModel:
         posteriors = self.model_iteration(obs_data)
         self.priors = posteriors
 
-        return posteriors
+        return model_vars_to_string(posteriors, self.int_to_teams)
 
     def bayesian_poisson_pdf(self, μ, σ, max_y=10):
         def integrand(x, y, σ, μ):
@@ -200,7 +200,6 @@ class IterativeUpdateModel:
 
     def single_game_prediction(self, game, decimals=5):
         precision = f".{decimals}f"
-        logger.info(f'Generating predictions for game_pk {game["game_pk"]}')
         game_pred = {}
         game_pred["game_pk"] = game["game_pk"]
         game_pred["home_team"] = game["home_team"]
@@ -214,18 +213,18 @@ class IterativeUpdateModel:
             game_pred["score"]["away"] = "-"
         idₕ = self.teams_to_int[game["home_team"]]
         idₐ = self.teams_to_int[game["away_team"]]
-        i_μ = self.posteriors["i"][0]
-        i_σ = self.posteriors["i"][1]
-        h_μ = self.posteriors["h"][0]
-        h_σ = self.posteriors["h"][1]
-        oₕ_μ = self.posteriors["o"][0][idₕ]
-        oₕ_σ = self.posteriors["o"][1][idₕ]
-        oₐ_μ = self.posteriors["o"][0][idₐ]
-        oₐ_σ = self.posteriors["o"][1][idₐ]
-        dₕ_μ = self.posteriors["d"][0][idₕ]
-        dₕ_σ = self.posteriors["d"][1][idₕ]
-        dₐ_μ = self.posteriors["d"][0][idₐ]
-        dₐ_σ = self.posteriors["d"][1][idₐ]
+        i_μ = self.priors["i"][0]
+        i_σ = self.priors["i"][1]
+        h_μ = self.priors["h"][0]
+        h_σ = self.priors["h"][1]
+        oₕ_μ = self.priors["o"][0][idₕ]
+        oₕ_σ = self.priors["o"][1][idₕ]
+        oₐ_μ = self.priors["o"][0][idₐ]
+        oₐ_σ = self.priors["o"][1][idₐ]
+        dₕ_μ = self.priors["d"][0][idₕ]
+        dₕ_σ = self.priors["d"][1][idₕ]
+        dₐ_μ = self.priors["d"][0][idₐ]
+        dₐ_σ = self.priors["d"][1][idₐ]
         # Normal(μ₁,σ₁²) + Normal(μ₂,σ₂²) = Normal(μ₁ + μ₂, σ₁² + σ₂²)
         log_λₕ_μ = i_μ + h_μ + oₕ_μ - dₐ_μ
         log_λₕ_σ = np.sqrt(i_σ ** 2 + h_σ ** 2 + oₕ_σ ** 2 + dₐ_σ ** 2)
