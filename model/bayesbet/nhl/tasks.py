@@ -1,31 +1,24 @@
-import boto3
 import simplejson as json
-import logging
 import os
-import numpy as np
 import pandas as pd
 import datetime as dt
 import s3fs
-
-from requests.api import get
 
 from bayesbet.logger import get_logger
 from bayesbet.nhl.data_utils import (
     model_ready_data,
     model_vars_to_numeric,
-    model_vars_to_string,
+    team_abbrevs,
 )
-from bayesbet.nhl.data_utils import get_teams_int_maps, get_unique_teams
+from bayesbet.nhl.data_utils import get_teams_int_maps, extract_game_data
 from bayesbet.nhl.db import query_dynamodb, create_dynamodb_item, put_dynamodb_item
 from bayesbet.nhl.db import most_recent_dynamodb_item
 from bayesbet.nhl.evaluate import update_scores, prediction_performance
 from bayesbet.nhl.model import model_update
 from bayesbet.nhl.predict import single_game_prediction
 from bayesbet.nhl.stats_api import (
-    check_for_games,
-    fetch_nhl_data_by_date,
+    request_games_json,
     get_season_start_date,
-    team_abbrevs,
 )
 
 
@@ -45,6 +38,22 @@ metadata = {
     "window_size": str(window_size),
     "delta_sigma": str(delta_sigma),
 }
+
+
+def fetch_nhl_data_by_date(date):
+    """ 
+    Retrieves data from the NHL stats API and loads it into a dataframe.
+    """
+    logger.info(f'Retrieving NHL data for {date}')
+
+    games_json = request_games_json(date)
+
+    # Convert JSON to pandas for ingestion by model
+    game_data, date_metadata = extract_game_data(games_json)
+
+    logger.info('NHL game data successfully retrieved from API')
+
+    return game_data, date_metadata
 
 
 def create_record(

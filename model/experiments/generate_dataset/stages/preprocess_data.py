@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from bayesbet.nhl.stats_api import extract_game_data
+from bayesbet.nhl.data_utils import extract_game_data
 
 
 def main():
@@ -17,10 +17,10 @@ def main():
         games_data_frames.append(game_data_frame)
 
     # Drop pre-season, all-star, and other game types
+    games = pd.concat(games_data_frames, ignore_index=True)
     games = games[~games["game_type"].isin(["Pr", "A", "Other"])]
     games = games.reset_index(drop=True)
     
-    games = pd.concat(games_data_frames, ignore_index=True)
     os.makedirs("../data/preprocessed", exist_ok=True)
     games.to_parquet("../data/preprocessed/games.parquet")
     
