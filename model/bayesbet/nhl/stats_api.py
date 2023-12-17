@@ -18,6 +18,10 @@ game_type_mapping = {
     2: 'R',
     3: 'P',
     4: 'A',
+    6: 'Other',
+    7: 'Other',
+    8: 'Other',
+    12: 'Other',
 }
 
 game_state_mapping = {
@@ -140,6 +144,11 @@ def extract_game_data(games_json):
     games["game_state"] = games["game_state"].map(game_state_mapping)
     games["home_team"] = games["home_team"].map(team_names)
     games["away_team"] = games["away_team"].map(team_names)
+
+    assert not (
+        games["game_type"].isin(["R", "P"]) 
+        & (games["home_team"].isnull() | games["away_team"].isnull())
+    ).any()
 
     date_metadata = {
         "previous_game_date": previous_game_date,
