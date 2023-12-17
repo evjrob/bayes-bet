@@ -1,0 +1,14 @@
+stages:
+  train_model:
+    cmd: python stages/train_model.py
+    deps:
+    - ../../bayesbet/nhl/model.py
+    - ../data/final
+    - stages/train_model.py
+    params:
+    - model.delta_sigma
+    - model.f_thresh
+    - model.fattening_factor
+    outs:
+    - results/train
+    - ../../artifacts
