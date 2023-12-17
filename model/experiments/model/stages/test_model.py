@@ -48,3 +48,7 @@ def main():
     model_states_json = json.dumps(model_states, indent=2).encode('utf-8')
     with gzip.open('results/test/model_states.json.gz', 'wb') as f:
         f.write(model_states_json)
+
+
+if __name__ == "__main__":
+    main()

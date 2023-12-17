@@ -44,4 +44,6 @@ def main():
     with gzip.open('results/train/model_states.json.gz', 'wb') as f:
         f.write(model_states_json)
 
-    
+
+if __name__ == "__main__":
+    main()
