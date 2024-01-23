@@ -15,7 +15,6 @@ from bayesbet.nhl.db import query_dynamodb, create_dynamodb_item, put_dynamodb_i
 from bayesbet.nhl.db import most_recent_dynamodb_item
 from bayesbet.nhl.evaluate import update_scores, prediction_performance
 from bayesbet.nhl.model import model_update
-from bayesbet.nhl.predict import single_game_prediction
 from bayesbet.nhl.stats_api import (
     request_games_json,
     get_season_start_date,
@@ -126,10 +125,6 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     current_pred_season = games['season'].max()
     if current_pred_season:
         season_start = get_season_start_date(current_pred_season)
-
-    teams = sorted(list(team_abbrevs.keys()))
-    teams_to_int, int_to_teams = get_teams_int_maps(teams)
-    n_teams = len(teams)
 
     # Drop games with non-nhl teams (usually preseason exhibition games)
     valid_rows = games["home_team"].isin(teams) & games["away_team"].isin(teams)
