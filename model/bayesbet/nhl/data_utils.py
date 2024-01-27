@@ -175,7 +175,7 @@ class GamePrediction(BaseModel):
     away_team: str
     score: dict[str, int | str]
     score_probabilities: dict[str, list[float]]
-    win_percentages: list[float]
+    win_percentages: dict[str, dict[str, float]]
 
     @field_serializer("score_probabilities")
     def serialize_score_probabilities(self, score_probabilities: dict[str, list[float]], _info):
@@ -187,4 +187,8 @@ class GamePrediction(BaseModel):
 
     @field_serializer("win_percentages")
     def serialize_win_percentages(self, win_percentages: list[float], _info):
-        return [f"{v:{precision}}" for v in win_percentages]
+        serialized = {
+            k1: {k2: f"{v2:{precision}}" for k2, v2 in v1.items()}
+            for k1, v1 in win_percentages.items()
+        }
+        return serialized

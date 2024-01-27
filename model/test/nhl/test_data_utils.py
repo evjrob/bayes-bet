@@ -41,7 +41,18 @@ def game_prediction():
             "home": [0.1] * 10,
             "away": [0.1] * 10,
         },
-        win_percentages=[0.4, 0.5, 0.5, 0.5, 0.5, 0.4],
+        win_percentages={
+            "home": {
+                "regulation": 0.4,
+                "overtime": 0.05,
+                "shootout": 0.05,
+            },
+            "away": {
+                "regulation": 0.4,
+                "overtime": 0.05,
+                "shootout": 0.05,
+            },
+        },
     )
 
 @pytest.fixture
@@ -58,9 +69,18 @@ def serialized_game_prediction():
             "home": ["0.10000"] * 10,
             "away": ["0.10000"] * 10,
         },
-        "win_percentages": [
-            "0.40000", "0.50000", "0.50000", "0.50000", "0.50000", "0.40000"
-        ],
+        "win_percentages": {
+            "home": {
+                "regulation": "0.40000",
+                "overtime": "0.05000",
+                "shootout": "0.05000", 
+            },
+            "away": {
+                "regulation": "0.40000", 
+                "overtime": "0.05000", 
+                "shootout": "0.05000",
+            },
+        },
     }
 
 

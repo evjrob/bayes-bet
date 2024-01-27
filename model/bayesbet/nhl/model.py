@@ -201,10 +201,12 @@ class IterativeUpdateModel:
             
             return posteriors
 
-    def fit(self, games):
+    def fit(self, games, samples=5000, tune=2000, cores=1):
         self.fatten_priors()
         obs_data = self.model_ready_data(games)
-        posteriors = self.model_iteration(obs_data)
+        posteriors = self.model_iteration(
+            obs_data, samples=samples, tune=tune, cores=cores
+        )
         self.priors = posteriors
         
         return posteriors
@@ -332,14 +334,18 @@ class IterativeUpdateModel:
                     home_so_win_p += pₕ_ot * p_so_win * p
                     away_ot_win_p += pₐ_ot * p_ot_win * p
                     away_so_win_p += pₐ_ot * p_so_win * p
-        win_percentages = [
-            home_reg_win_p,
-            home_ot_win_p,
-            home_so_win_p,
-            away_reg_win_p,
-            away_ot_win_p,
-            away_so_win_p,
-        ]
+        win_percentages = {
+            "home": {
+                "regulation": home_reg_win_p,
+                "overtime": home_ot_win_p,
+                "shootout": home_so_win_p,
+            },
+            "away": {
+                "regulation": away_reg_win_p,
+                "overtime": away_ot_win_p,
+                "shootout": away_so_win_p,
+            }
+        }
         game_pred["win_percentages"] = win_percentages
         return GamePrediction(**game_pred)
 
