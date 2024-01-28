@@ -7,7 +7,7 @@ from scipy.stats import norm
 
 from pydantic import BaseModel
 
-from bayesbet.nhl.data_utils import (
+from bayesbet.nhl.data_model import (
     GamePrediction,
     LeagueState,
     TeamState,

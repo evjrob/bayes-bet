@@ -1,6 +1,6 @@
 import pytest
 
-from bayesbet.nhl.data_utils import GamePrediction, LeagueState, TeamState
+from bayesbet.nhl.data_model import GamePrediction, LeagueState, TeamState
 
 
 @pytest.fixture
