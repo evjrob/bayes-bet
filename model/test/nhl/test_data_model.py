@@ -33,7 +33,7 @@ def game_prediction():
         game_pk=1,
         home_team="A",
         away_team="B",
-        score={
+        outcome={
             "home": 3,
             "away": 2,
         },
@@ -61,7 +61,7 @@ def serialized_game_prediction():
         "game_pk": 1,
         "home_team": "A",
         "away_team": "B",
-        "score": {
+        "outcome": {
             "home": 3,
             "away": 2,
         },
@@ -114,17 +114,17 @@ class TestGamePrediction:
         assert parsed_game_prediction == game_prediction
 
     def test_serialization_dict_no_score(self, game_prediction, serialized_game_prediction):
-        game_prediction.score["home"] = "-"
-        game_prediction.score["away"] = "-"
+        game_prediction.outcome.home = "-"
+        game_prediction.outcome.away = "-"
         game_prediction_dict = game_prediction.model_dump()
-        serialized_game_prediction["score"]["home"] = "-"
-        serialized_game_prediction["score"]["away"] = "-"
+        serialized_game_prediction["outcome"]["home"] = "-"
+        serialized_game_prediction["outcome"]["away"] = "-"
         assert game_prediction_dict == serialized_game_prediction
 
     def test_from_dictionary_no_score(self, game_prediction, serialized_game_prediction):
-        serialized_game_prediction["score"]["home"] = "-"
-        serialized_game_prediction["score"]["away"] = "-"
+        serialized_game_prediction["outcome"]["home"] = "-"
+        serialized_game_prediction["outcome"]["away"] = "-"
         parsed_game_prediction = GamePrediction.model_validate(serialized_game_prediction)
-        game_prediction.score["home"] = "-"
-        game_prediction.score["away"] = "-"
+        game_prediction.outcome.home = "-"
+        game_prediction.outcome.away = "-"
         assert parsed_game_prediction == game_prediction

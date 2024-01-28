@@ -1,4 +1,5 @@
-from pydantic import BaseModel, field_serializer
+from datetime import date
+from pydantic import BaseModel, field_serializer, model_validator
 
 
 precision = ".5f"
@@ -30,26 +31,78 @@ class LeagueState(BaseModel):
         return tuple(f"{v:{precision}}" for v in h)
 
 
+class GameOutcome(BaseModel):
+    home: int | str
+    away: int | str
+
+
+class ScoreProbabilities(BaseModel):
+    home: list[float]
+    away: list[float]
+
+    @model_validator(mode='after')
+    def total_goal_probability(self) -> 'ScoreProbabilities':
+        if abs(sum(self.home) - 1.0) > 1e-4:
+            raise ValueError('Home goal probabilities do not sum to one!')
+        if abs(sum(self.away) - 1.0) > 1e-4:
+            raise ValueError('Away goal probabilities do not sum to one!')
+        return self
+
+    @field_serializer("home", "away")
+    def serialize_score_probabilities(self, score_probabilities: list[float], _info):
+        return [f"{s:{precision}}" for s in score_probabilities]
+
+
+class TeamWinPercentage(BaseModel):
+    regulation: float
+    overtime: float
+    shootout: float
+
+    def total_win_probability(self):
+        return self.regulation + self.overtime + self.shootout
+
+    @field_serializer("regulation", "overtime", "shootout")
+    def serialize_score_probabilities(self, value: float, _info):
+        return f"{value:{precision}}"
+
+
+class WinPercentages(BaseModel):
+    home: TeamWinPercentage
+    away: TeamWinPercentage
+
+    @model_validator(mode='after')
+    def check_probability_sums_to_one(self) -> 'WinPercentages':
+        probability_sum = (
+            self.home.total_win_probability() 
+            + self.away.total_win_probability()
+        )
+        if abs(probability_sum - 1.0) > 1e-4:
+            raise ValueError('Probabilities do not sum to one!')
+        return self
+
+
 class GamePrediction(BaseModel):
     game_pk: int
     home_team: str
     away_team: str
-    score: dict[str, int | str]
-    score_probabilities: dict[str, list[float]]
-    win_percentages: dict[str, dict[str, float]]
+    outcome: GameOutcome
+    score_probabilities: ScoreProbabilities
+    win_percentages: WinPercentages
 
-    @field_serializer("score_probabilities")
-    def serialize_score_probabilities(self, score_probabilities: dict[str, list[float]], _info):
-        serialized = {
-            k: [f"{v_i:{precision}}" for v_i in v]
-            for k, v in score_probabilities.items()
-        }
-        return serialized
 
-    @field_serializer("win_percentages")
-    def serialize_win_percentages(self, win_percentages: list[float], _info):
-        serialized = {
-            k1: {k2: f"{v2:{precision}}" for k2, v2 in v1.items()}
-            for k1, v1 in win_percentages.items()
-        }
-        return serialized
+class PredictivePerformance(BaseModel):
+    prediction_date: date
+    total_games: int
+    cumulative_accuracy: float
+    cumulative_log_loss: float
+    rolling_accuracy: float
+    rolling_log_loss: float
+
+
+class DatabaseRecord(BaseModel):
+    league: str
+    prediction_date: date
+    deployment_version: str
+    league_state: LeagueState
+    predictions: list[GamePrediction]
+    prediction_performance: list[PredictivePerformance]

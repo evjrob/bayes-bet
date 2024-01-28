@@ -270,13 +270,13 @@ class IterativeUpdateModel:
         game_pred["game_pk"] = game["game_pk"]
         game_pred["home_team"] = game["home_team"]
         game_pred["away_team"] = game["away_team"]
-        game_pred["score"] = {}
+        game_pred["outcome"] = {}
         if game["game_state"] == "Final":
-            game_pred["score"]["home"] = game["home_fin_score"]
-            game_pred["score"]["away"] = game["away_fin_score"]
+            game_pred["outcome"]["home"] = game["home_fin_score"]
+            game_pred["outcome"]["away"] = game["away_fin_score"]
         else:
-            game_pred["score"]["home"] = "-"
-            game_pred["score"]["away"] = "-"
+            game_pred["outcome"]["home"] = "-"
+            game_pred["outcome"]["away"] = "-"
 
         teams_to_int = {v: i for i, v in enumerate(self.priors.teams)}
         idₕ = teams_to_int[game["home_team"]]
