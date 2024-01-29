@@ -7,9 +7,39 @@ import pandas as pd
 import datetime as dt
 
 from bayesbet.logger import get_logger
+from bayesbet.nhl.data_model import GamePrediction, DatabaseRecord
 
 
 logger = get_logger(__name__)
+
+
+def single_prediction_log_loss(game_prediction: GamePrediction) -> float:
+    home_win_probability = game_prediction.win_percentages.home.total_win_probability()
+    home_win_occurred = game_prediction.outcome.home_win()
+    log_loss = (
+        home_win_occurred * np.log(home_win_probability) 
+        + (1 - home_win_occurred) * np.log(1 - home_win_probability)
+    )
+    return log_loss
+
+
+def single_prediction_correct(game_prediction: GamePrediction) -> bool:
+    home_win_predicted = (
+        game_prediction.win_percentages.home.total_win_probability() >= 0.5
+    )
+    home_win_occurred = game_prediction.outcome.home_win()
+    return home_win_predicted == home_win_occurred
+
+
+def log_loss(game_predictions: list[GamePrediction]) -> float:
+    log_losses = [single_prediction_log_loss(gp) for gp in game_predictions]
+    return (-1 / len(log_losses)) * sum(log_losses)
+
+
+def accuracy(game_predictions: list[GamePrediction]) -> float:
+    prediction_correct = [single_prediction_correct(gp) for gp in game_predictions]
+    return sum(prediction_correct) / len(prediction_correct)
+
 
 def update_scores(last_pred, games):
     updated_last_pred = last_pred.copy()
