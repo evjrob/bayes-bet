@@ -2,6 +2,7 @@ stages:
   train_model:
     cmd: python stages/train_model.py
     deps:
+    - ../../bayesbet/nhl/data_model.py
     - ../../bayesbet/nhl/model.py
     - ../data/final
     - stages/train_model.py
@@ -11,4 +12,38 @@ stages:
     - model.fattening_factor
     outs:
     - results/train
-    - ../../artifacts
+  test_model:
+    cmd: python stages/test_model.py
+    deps:
+    - ../../bayesbet/nhl/data_model.py
+    - ../../bayesbet/nhl/model.py
+    - ../data/final
+    - results/train
+    - stages/test_model.py
+    params:
+    - model.delta_sigma
+    - model.f_thresh
+    - model.fattening_factor
+    outs:
+    - results/test
+  evaluate:
+    cmd: python stages/evaluate_model.py
+    deps:
+    - ../../bayesbet/nhl/data_model.py
+    - ../../bayesbet/nhl/evaluate.py
+    - results/train
+    - results/test
+    - stages/evaluate_model.py
+    params:
+    - model.delta_sigma
+    - model.f_thresh
+    - model.fattening_factor
+    outs:
+    - results/evaluate
+params:
+- results/evaluate/params.yaml
+metrics:
+- results/evaluate/metrics.json
+plots:
+- results/evaluate/plots/metrics:
+    x: step
