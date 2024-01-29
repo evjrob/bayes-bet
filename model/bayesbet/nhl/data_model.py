@@ -32,9 +32,13 @@ class LeagueState(BaseModel):
 
 
 class GameOutcome(BaseModel):
-    home: int | str
-    away: int | str
+    home_score: int | str
+    away_score: int | str
 
+    def home_win(self) -> bool:
+        if self.home_score == "-" or self.away_score == "-":
+            raise ValueError("Game has not concluded yet! Can't determine a winner!")
+        return self.home_score > self.away_score
 
 class ScoreProbabilities(BaseModel):
     home: list[float]
