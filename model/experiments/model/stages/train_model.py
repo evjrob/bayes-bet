@@ -31,7 +31,7 @@ def main():
     games = pd.read_parquet("../data/final/train/games.parquet")
     game_dates = games["game_date"].sort_values().unique()
 
-    predictions = []
+    predictions = {}
     model_states = [model.priors]
     
     for game_date in tqdm(game_dates):
@@ -39,13 +39,13 @@ def main():
         date_idx = (games["game_date"] == game_date) & (
             games["game_state"] != "Postponed"
         )
-        games = games[date_idx].reset_index(drop=True)
-        date_predictions = model.predict(games)
-        date_predictions = [p.model_dump_json() for p in date_predictions]
-        predictions += date_predictions
+        current_games = games[date_idx].reset_index(drop=True)
+        date_predictions = model.predict(current_games)
+        date_predictions = [p.model_dump() for p in date_predictions]
+        predictions[game_date] = date_predictions
 
         # Get games from the most recent game date played
-        posteriors = model.fit(games, cores=3)
+        posteriors = model.fit(current_games, cores=3)
         model_states.append(posteriors)
 
     predictions_json = json.dumps(predictions, indent=2).encode('utf-8')
