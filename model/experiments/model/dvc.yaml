@@ -47,3 +47,6 @@ metrics:
 plots:
 - results/evaluate/plots/metrics:
     x: step
+artifacts:
+  performance:
+    path: results/evaluate/bayesbet_performance.png
