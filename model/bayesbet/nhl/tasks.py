@@ -111,12 +111,13 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     next_game_date = date_metadata["next_game_date"]
     
     games, previous_game_date = fetch_nhl_data_by_date(next_game_date)
-    games = games[games['game_type'] != 'A'] # No All Star games
 
     # Get the first date of the season
     current_pred_season = games['season'].max()
     if current_pred_season:
         season_start = get_season_start_date(current_pred_season)
+
+    games = games[games['game_type'] != 'A'] # No All Star games
 
     teams = sorted(list(team_abbrevs.keys()))
     teams_to_int, int_to_teams = get_teams_int_maps(teams)
