@@ -175,7 +175,7 @@ def model_inference(
             "use_ssl": use_ssl,
         }
     )
-    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/games.csv", "rb") as f:
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_pred_games.csv", "rb") as f:
         games = pd.read_csv(f)
 
     # Get the last record JSON from S3
