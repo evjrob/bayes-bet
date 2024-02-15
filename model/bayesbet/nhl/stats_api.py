@@ -18,6 +18,10 @@ game_type_mapping = {
     2: 'R',
     3: 'P',
     4: 'A',
+    6: 'Other',
+    7: 'Other',
+    8: 'Other',
+    12: 'Other',
 }
 
 game_state_mapping = {
