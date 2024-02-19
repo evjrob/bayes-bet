@@ -104,31 +104,50 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
         json.dump(last_pred, f)
 
-    last_pred_games, date_metadata = fetch_nhl_data_by_date(last_pred_date)
-
-    # Update scores in the last prediction
-    updated_last_pred = update_scores(last_pred, last_pred_games)
-    next_game_date = date_metadata["next_game_date"]
-    
-    games, previous_game_date = fetch_nhl_data_by_date(next_game_date)
-
-    # Get the first date of the season
-    current_pred_season = games['season'].max()
-    if current_pred_season:
-        season_start = get_season_start_date(current_pred_season)
-
-    games = games[games['game_type'] != 'A'] # No All Star games
-
     teams = sorted(list(team_abbrevs.keys()))
     teams_to_int, int_to_teams = get_teams_int_maps(teams)
     n_teams = len(teams)
 
-    # Drop games with non-nhl teams (usually preseason exhibition games)
-    valid_rows = games["home_team"].isin(teams) & games["away_team"].isin(teams)
-    games = games[valid_rows]
+    last_pred_games, date_metadata = fetch_nhl_data_by_date(last_pred_date)
+    next_game_date = date_metadata["next_game_date"]
+    
+    def get_next_regular_or_playoff_games(next_game_date):
+        games, date_metadata = fetch_nhl_data_by_date(next_game_date)
 
-    # Drop postponed games
-    games = games[games["game_state"] != "Postponed"]  # No Postponed games
+        # Get the first date of the season
+        season_start = None
+        current_pred_season = games['season'].max()
+        if current_pred_season:
+            season_start = get_season_start_date(current_pred_season)
+        season_metadata = {
+            "current_pred_season": current_pred_season,
+            "season_start": season_start,
+        }
+
+        games = games[games['game_type'] != 'A'] # No All Star games
+
+        # Drop games with non-nhl teams (usually preseason exhibition games)
+        valid_rows = games["home_team"].isin(teams) & games["away_team"].isin(teams)
+        games = games[valid_rows]
+
+        # Drop postponed games
+        games = games[games["game_state"] != "Postponed"]  # No Postponed games
+
+        return games, date_metadata, season_metadata
+    
+    games, date_metadata, season_metadata = get_next_regular_or_playoff_games(
+        next_game_date
+    )
+
+    # If games are empty, we need to keep searching for the next valid game date
+    while games.shape[0]:
+        next_game_date = date_metadata["next_game_date"]
+        games, date_metadata, season_metadata = get_next_regular_or_playoff_games(
+            next_game_date
+        )
+
+    current_pred_season = season_metadata["current_pred_season"]
+    season_start = season_metadata["season_start"]
 
     # Save games to S3
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_pred_games.csv", "wb") as f:
