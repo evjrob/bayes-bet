@@ -16,7 +16,7 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
     variables = {
       WEB_S3_BUCKET       = "${aws_s3_bucket.bayesbet_web_bucket.id}"
       PIPELINE_S3_BUCKET  = "${aws_s3_bucket.bayesbet_pipeline_bucket.id}"
-      DYNAMODB_TABLE_NAME = "${aws_dynamodb_table.bayesbet_games.id}"
+      DYNAMODB_TABLE_NAME = "${aws_dynamodb_table.bayesbet_predictions.id}"
     }
   }
 

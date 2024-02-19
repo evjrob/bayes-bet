@@ -82,7 +82,7 @@ resource "aws_iam_policy" "bayesbet_model_lambda_policy" {
         "dynamodb:PutItem"
       ],
       "Effect": "Allow",
-      "Resource": "${aws_dynamodb_table.bayesbet_games.arn}"
+      "Resource": "${aws_dynamodb_table.bayesbet_predictions.arn}"
     }
   ]
 }
