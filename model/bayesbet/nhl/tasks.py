@@ -124,7 +124,8 @@ def ingest_data(bucket_name, pipeline_name, job_id):
             "season_start": season_start,
         }
 
-        games = games[games['game_type'] != 'A'] # No All Star games
+        # No All Star or other exhibition games
+        games = games[games['game_type'].isin(("Pr", "R", "P"))] 
 
         # Drop games with non-nhl teams (usually preseason exhibition games)
         valid_rows = games["home_team"].isin(teams) & games["away_team"].isin(teams)
