@@ -41,3 +41,7 @@ resource "aws_s3_bucket_cors_configuration" "bayesbet_web_bucket" {
 resource "aws_s3_bucket" "bayesbet_pipeline_bucket" {
   bucket = "${var.project}-pipeline-${var.env}"
 }
+
+resource "aws_s3_bucket" "bayesbet_dvc_bucket" {
+  bucket = "${var.project}-dvc-${var.env}"
+}
