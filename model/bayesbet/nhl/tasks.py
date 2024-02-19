@@ -141,7 +141,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     )
 
     # If games are empty, we need to keep searching for the next valid game date
-    while games.shape[0]:
+    while games.shape[0] == 0:
         next_game_date = date_metadata["next_game_date"]
         games, date_metadata, season_metadata = get_next_regular_or_playoff_games(
             next_game_date
