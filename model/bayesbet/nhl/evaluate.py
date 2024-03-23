@@ -7,7 +7,7 @@ import pandas as pd
 import datetime as dt
 
 from bayesbet.logger import get_logger
-from bayesbet.nhl.data_model import GamePrediction, DatabaseRecord
+from bayesbet.nhl.data_model import GamePrediction, PredictionRecord
 
 
 logger = get_logger(__name__)
@@ -98,6 +98,7 @@ def prediction_performance(db_records, games, ws=14):
             lwr = game_dates[0]
         
         cum_preds = model_preds[model_preds['date'] <= upr]
+        total_games = cum_preds.shape[0]
         cum_acc = (cum_preds['home_win'] == (cum_preds['home_win_pred'] >= 0.5)).mean()
         cum_ll = -1 * (cum_preds['home_win'] * np.log(cum_preds['home_win_pred']) + \
             (1 - cum_preds['home_win']) * np.log(1 - cum_preds['home_win_pred'])).mean()
@@ -107,9 +108,19 @@ def prediction_performance(db_records, games, ws=14):
         rolling_acc = (rolling_preds['home_win'] == (rolling_preds['home_win_pred'] >= 0.5)).mean()
         rolling_ll = -1 * (rolling_preds['home_win'] * np.log(rolling_preds['home_win_pred']) + \
             (1 - rolling_preds['home_win']) * np.log(1 - rolling_preds['home_win_pred'])).mean()
-        model_perf.append([upr, cum_acc, rolling_acc, cum_ll, rolling_ll])
+        model_perf.append([upr, total_games, cum_acc, rolling_acc, cum_ll, rolling_ll])
 
-    model_perf = pd.DataFrame(data=model_perf, columns=['date', 'cum_acc', 'rolling_acc', 'cum_ll', 'rolling_ll'])
+    model_perf = pd.DataFrame(
+        data=model_perf,
+        columns=[
+            'prediction_date',
+            'total_games',
+            'cumulative_accuracy',
+            'rolling_accuracy',
+            'cumulative_log_loss',
+            'rolling_log_loss',
+        ],
+    )
     model_perf = model_perf.reset_index(drop=True)
 
     return model_perf

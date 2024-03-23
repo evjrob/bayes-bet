@@ -94,7 +94,7 @@ class GamePrediction(BaseModel):
     win_percentages: WinPercentages
 
 
-class PredictivePerformance(BaseModel):
+class PredictionPerformance(BaseModel):
     prediction_date: date
     total_games: int
     cumulative_accuracy: float
@@ -102,11 +102,21 @@ class PredictivePerformance(BaseModel):
     rolling_accuracy: float
     rolling_log_loss: float
 
+    @field_serializer("cumulative_accuracy", "cumulative_log_loss", "rolling_accuracy", "rolling_log_loss")
+    def serialize_score_probabilities(self, value: float, _info):
+        return f"{value:{precision}}"
 
-class DatabaseRecord(BaseModel):
+
+class PredictionRecord(BaseModel):
     league: str
     prediction_date: date
     deployment_version: str
     league_state: LeagueState
     predictions: list[GamePrediction]
-    prediction_performance: list[PredictivePerformance]
+    prediction_performance: list[PredictionPerformance]
+
+
+class ModelStateRecord(BaseModel):
+    league: str
+    prediction_date: date
+    state: BaseModel
