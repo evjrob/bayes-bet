@@ -21,31 +21,31 @@ def get_record(date):
             ScanIndexForward = False,
             ReturnConsumedCapacity='TOTAL',
             KeyConditionExpression=
-                Key('League').eq('nhl') & Key('PredictionDate').lte(date)
+                Key('league').eq('nhl') & Key('prediction_date').lte(date)
         )
     else:
         response = table.query(
             Limit = 1,
             ReturnConsumedCapacity='TOTAL',
             KeyConditionExpression=
-                Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+                Key('league').eq('nhl') & Key('prediction_date').eq(date)
         )
     return response
 
 def game_outcome_prediction(game):
-    wp = game['WinPercentages']
+    wp = game['win_percentages']
     game_outcome = {
         'score':{
-            'home': game['score']['home'],
-            'away': game['score']['away']
+            'home': game['outcome']['home_score'],
+            'away': game['outcome']['away_score']
         },
         'predictions': {
-            'home': [{'type': 'REG', 'value': float(wp[0])},
-                        {'type': 'OT', 'value': float(wp[1])},
-                        {'type': 'SO', 'value': float(wp[2])}],
-            'away': [{'type': 'REG', 'value': float(wp[3])},
-                        {'type': 'OT', 'value': float(wp[4])},
-                        {'type': 'SO', 'value': float(wp[5])}]
+            'home': [{'type': 'REG', 'value': float(wp['home']['regulation'])},
+                        {'type': 'OT', 'value': float(wp['home']['overtime'])},
+                        {'type': 'SO', 'value': float(wp['home']['shootout'])}],
+            'away': [{'type': 'REG', 'value': float(wp['away']['regulation'])},
+                        {'type': 'OT', 'value': float(wp['away']['overtime'])},
+                        {'type': 'SO', 'value': float(wp['away']['shootout'])}]
         }
     }
     return game_outcome
@@ -53,8 +53,8 @@ def game_outcome_prediction(game):
 def index(request, date=None):
     try:
         response = get_record(date)
-        date = response['Items'][0]['PredictionDate']
-        games = response['Items'][0]['GamePredictions']
+        date = response['Items'][0]['prediction_date']
+        games = response['Items'][0]['predictions']
         predicted_games = [{'game_pk':g['game_pk'], 'game_date': date, 
                             'home_team':g['home_team'], 'home_abb':team_abbrevs[g['home_team']],
                             'home_color': team_colors[g['home_team']],
@@ -69,8 +69,8 @@ def index(request, date=None):
 
 def game_detail(request, game_pk, date=None):
     response = get_record(date)
-    date = response['Items'][0]['PredictionDate']
-    games = response['Items'][0]['GamePredictions']
+    date = response['Items'][0]['prediction_date']
+    games = response['Items'][0]['predictions']
     game = [g for g in games if str(g['game_pk']) == game_pk][0]
     context= {
         'prediction_date': date, 
@@ -86,7 +86,7 @@ def game_detail(request, game_pk, date=None):
 
 def teams(request, date=None):
     response = get_record(date)
-    date = response['Items'][0]['PredictionDate']
+    date = response['Items'][0]['prediction_date']
     context= {
         'prediction_date': date
     }
@@ -94,7 +94,7 @@ def teams(request, date=None):
 
 def performance(request, date=None):
     response = get_record(date)
-    if len(response['Items']) == 0 or 'ModelPerformance' not in response['Items'][0]:
+    if len(response['Items']) == 0 or 'prediction_performance'not in response['Items'][0]:
         context= {
             'has_perf': False,
             'prediction_date': date,
@@ -102,21 +102,21 @@ def performance(request, date=None):
         return render(request, 'performance.html', context)
     else:
         item = response['Items'][0]
-        date = item['PredictionDate']
-        cum_acc = float(item['ModelPerformance'][-1]['cum_acc']) * 100
-        cum_acc = f'{cum_acc:.2f}'
-        rolling_acc = float(item['ModelPerformance'][-1]['rolling_acc']) * 100
-        rolling_acc = f'{rolling_acc:.2f}'
-        cum_ll = float(item['ModelPerformance'][-1]['cum_ll'])
-        rolling_ll = float(item['ModelPerformance'][-1]['rolling_ll'])
-        chart_data = item['ModelPerformance']
+        date = item['prediction_date']
+        cumulative_accuracy = float(item['prediction_performance'][-1]['cumulative_accuracy']) * 100
+        cumulative_accuracy = f'{cumulative_accuracy:.2f}'
+        rolling_accuracy = float(item['prediction_performance'][-1]['rolling_accuracy']) * 100
+        rolling_accuracy = f'{rolling_accuracy:.2f}'
+        cumulative_log_loss = float(item['prediction_performance'][-1]['cumulative_log_loss'])
+        rolling_log_loss = float(item['prediction_performance'][-1]['rolling_log_loss'])
+        chart_data = item['prediction_performance']
         context= {
             'has_perf': True,
             'prediction_date': date,
-            'cum_acc': cum_acc,
-            'cum_ll': cum_ll,
-            'rolling_acc': rolling_acc,
-            'rolling_ll': rolling_ll,
+            'cumulative_accuracy': cumulative_accuracy,
+            'cumulative_log_loss': cumulative_log_loss,
+            'rolling_accuracy': rolling_accuracy,
+            'rolling_log_loss': rolling_log_loss,
             'chart_data': chart_data
         }
         return render(request, 'performance.html', context)
