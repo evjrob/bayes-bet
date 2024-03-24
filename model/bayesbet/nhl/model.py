@@ -5,68 +5,14 @@ import pymc as pm
 from scipy.integrate import quad, dblquad
 from scipy.stats import norm
 
-from pydantic import BaseModel
-
 from bayesbet.nhl.data_model import (
     GamePrediction,
-    LeagueState,
-    TeamState,
+    ModelState,
+    ModelVariables,
 )
 
 
 t_before_shootout = 5.0/60.0    # 5 minute shootout, divided by regulation time
-
-
-class ModelVariables(BaseModel):
-    i: tuple[float, float]
-    h: tuple[float, float]
-    o: tuple[list[float], list[float]]
-    d: tuple[list[float], list[float]]
-
-
-class ModelState(BaseModel):
-    teams: list[str]
-    variables: ModelVariables
-
-    def to_league_state(self) -> LeagueState:
-        teams = {}
-        for i, t in enumerate(self.teams):
-            teams[t] = TeamState(
-                o=(
-                    self.variables.o[0][i],
-                    self.variables.o[1][i],
-                ),
-                d=(
-                    self.variables.d[0][i],
-                    self.variables.d[1][i],
-                ),
-            )
-        return LeagueState(
-            i=self.variables.i,
-            h=self.variables.h,
-            teams=teams,
-        )
-    
-    def from_league_state(self, league_state: LeagueState):
-        self.teams = list(league_state.teams.keys())
-        i = league_state.i
-        h = league_state.h
-        o_μ = []
-        o_σ = []
-        d_μ = []
-        d_σ = []
-        for t in self.teams:
-            o_μ.append(league_state.teams[t].o[0])
-            o_σ.append(league_state.teams[t].o[1])
-            d_μ.append(league_state.teams[t].d[0])
-            d_σ.append(league_state.teams[t].d[1])
-        self.variables = ModelVariables(
-            i=i,
-            h=h,
-            o=(o_μ, o_σ),
-            d=(d_μ, d_σ),
-        )
-
         
 class IterativeUpdateModel:
     def __init__(

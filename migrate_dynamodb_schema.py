@@ -125,6 +125,6 @@ last_model_state.from_league_state(last_league_state)
 model_state_record = ModelStateRecord(
     league="nhl",
     prediction_date=migrated_item["prediction_date"],
-    state=last_model_state,
+    state=last_model_state.model_dump(),
 )
-model_table.put_item(Item=model_state_record)
+model_table.put_item(Item=model_state_record.model_dump())
