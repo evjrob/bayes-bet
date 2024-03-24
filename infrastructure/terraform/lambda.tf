@@ -18,7 +18,7 @@ resource "aws_lambda_function" "bayesbet_model_lambda" {
       PIPELINE_S3_BUCKET        = "${aws_s3_bucket.bayesbet_pipeline_bucket.id}"
       DYNAMODB_PRED_TABLE_NAME  = "${aws_dynamodb_table.bayesbet_predictions.id}"
       DYNAMODB_MODEL_TABLE_NAME = "${aws_dynamodb_table.bayesbet_model_state.id}"
-      DEPLOYMENT_VERSION        = var.twitter_bearer_token
+      DEPLOYMENT_VERSION        = var.deployment_version
     }
   }
 
