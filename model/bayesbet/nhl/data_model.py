@@ -106,6 +106,10 @@ class PredictionPerformance(BaseModel):
     def serialize_score_probabilities(self, value: float, _info):
         return f"{value:{precision}}"
 
+    @field_serializer("prediction_date")
+    def serialize_prediction_date(self, value: float, _info):
+        return value.strftime("%Y-%m-%d")
+
 
 class PredictionRecord(BaseModel):
     league: str
@@ -115,8 +119,83 @@ class PredictionRecord(BaseModel):
     predictions: list[GamePrediction]
     prediction_performance: list[PredictionPerformance]
 
+    @field_serializer("prediction_date")
+    def serialize_prediction_date(self, value: float, _info):
+        return value.strftime("%Y-%m-%d")
+
+
+class ModelVariables(BaseModel):
+    i: tuple[float, float]
+    h: tuple[float, float]
+    o: tuple[list[float], list[float]]
+    d: tuple[list[float], list[float]]
+
+    @field_serializer("i")
+    def serialize_i(self, i: tuple[float, float], _info):
+        return tuple(f"{v:{precision}}" for v in i)
+
+    @field_serializer("h")
+    def serialize_h(self, h: tuple[float, float], _info):
+        return tuple(f"{v:{precision}}" for v in h)
+
+    @field_serializer("o")
+    def serialize_o(self, o: tuple[float, float], _info):
+        return tuple([f"{v:{precision}}" for v in o_i] for o_i in o)
+
+    @field_serializer("d")
+    def serialize_d(self, d: tuple[float, float], _info):
+        return tuple([f"{v:{precision}}" for v in d_i] for d_i in d)
+
+
+class ModelState(BaseModel):
+    teams: list[str]
+    variables: ModelVariables
+
+    def to_league_state(self) -> LeagueState:
+        teams = {}
+        for i, t in enumerate(self.teams):
+            teams[t] = TeamState(
+                o=(
+                    self.variables.o[0][i],
+                    self.variables.o[1][i],
+                ),
+                d=(
+                    self.variables.d[0][i],
+                    self.variables.d[1][i],
+                ),
+            )
+        return LeagueState(
+            i=self.variables.i,
+            h=self.variables.h,
+            teams=teams,
+        )
+    
+    def from_league_state(self, league_state: LeagueState):
+        self.teams = list(league_state.teams.keys())
+        i = league_state.i
+        h = league_state.h
+        o_μ = []
+        o_σ = []
+        d_μ = []
+        d_σ = []
+        for t in self.teams:
+            o_μ.append(league_state.teams[t].o[0])
+            o_σ.append(league_state.teams[t].o[1])
+            d_μ.append(league_state.teams[t].d[0])
+            d_σ.append(league_state.teams[t].d[1])
+        self.variables = ModelVariables(
+            i=i,
+            h=h,
+            o=(o_μ, o_σ),
+            d=(d_μ, d_σ),
+        )
+
 
 class ModelStateRecord(BaseModel):
     league: str
     prediction_date: date
-    state: BaseModel
+    state: ModelState
+
+    @field_serializer("prediction_date")
+    def serialize_prediction_date(self, value: float, _info):
+        return value.strftime("%Y-%m-%d")
