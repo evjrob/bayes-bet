@@ -221,7 +221,7 @@ def model_inference(
     # Get the last record JSON from S3
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_model_record.json", "r") as f:
         last_model_state_record = ModelStateRecord.model_validate_json(f.read())
-        last_model_state = last_model_state_record.model_state
+        last_model_state = last_model_state_record.state
 
     model = IterativeUpdateModel(
         last_model_state,
