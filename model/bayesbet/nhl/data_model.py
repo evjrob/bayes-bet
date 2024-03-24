@@ -32,13 +32,17 @@ class LeagueState(BaseModel):
 
 
 class GameOutcome(BaseModel):
-    home_score: int | str
-    away_score: int | str
+    home_score: str
+    away_score: str
 
     def home_win(self) -> bool:
         if self.home_score == "-" or self.away_score == "-":
             raise ValueError("Game has not concluded yet! Can't determine a winner!")
-        return self.home_score > self.away_score
+        return int(self.home_score) > int(self.away_score)
+
+    @field_serializer("home_score", "away_score")
+    def serialize_score(self, value: str, _info):
+        return str(value)
 
 class ScoreProbabilities(BaseModel):
     home: list[float]
