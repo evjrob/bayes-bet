@@ -113,6 +113,10 @@ class PredictionPerformance(BaseModel):
     @field_serializer("prediction_date")
     def serialize_prediction_date(self, value: float, _info):
         return value.strftime("%Y-%m-%d")
+    
+    @field_serializer("total_games")
+    def serialize_total_games(self, value: float, _info):
+        return str(value)
 
 
 class PredictionRecord(BaseModel):
