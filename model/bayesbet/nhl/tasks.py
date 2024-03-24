@@ -293,8 +293,8 @@ def update_previous_record(
         perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws - 1)).strftime(
             "%Y-%m-%d"
         )
-        perf_idx = (model_perf["date"] >= perf_start_date) & (
-            model_perf["date"] <= last_pred_date
+        perf_idx = (model_perf["prediction_date"] >= perf_start_date) & (
+            model_perf["prediction_date"] <= last_pred_date
         )
         model_perf_items = model_perf[perf_idx].to_dict(orient="records")
         model_perf_items = [
