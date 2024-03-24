@@ -44,7 +44,7 @@ def accuracy(game_predictions: list[GamePrediction]) -> float:
 def update_scores(last_pred, games):
     updated_last_pred = last_pred.copy()
     last_pred_date = last_pred.prediction_date
-    for g in updated_last_pred.prediction_date:
+    for g in updated_last_pred.predictions:
         gpk = g.game_pk
         game_row = games[games['game_pk'] == gpk]
         if game_row.shape[0] == 0:
