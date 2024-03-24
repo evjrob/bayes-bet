@@ -290,11 +290,9 @@ def update_previous_record(
         season_db_records[-1] = updated_last_pred
         season_db_records = [PredictionRecord.model_validate(r) for r in season_db_records]
         model_perf = prediction_performance(season_db_records, games, ws=perf_ws)
-        perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws - 1)).strftime(
-            "%Y-%m-%d"
-        )
+        perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws - 1))
         perf_idx = (model_perf["prediction_date"] >= perf_start_date) & (
-            model_perf["prediction_date"] <= last_pred_date
+            model_perf["prediction_date"] <= last_pred_dt
         )
         model_perf_items = model_perf[perf_idx].to_dict(orient="records")
         model_perf_items = [
