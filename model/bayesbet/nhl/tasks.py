@@ -126,7 +126,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     # Get last_pred
     last_pred = most_recent_dynamodb_item(pred_table_name, 'nhl', today)
     last_model_state = most_recent_dynamodb_item(model_table_name, 'nhl', today)
-    last_pred_date = last_pred['PredictionDate']
+    last_pred_date = last_pred['prediction_date']
     logger.info(f'Most recent prediction is from {last_pred_date}')
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
         json.dump(last_pred, f)

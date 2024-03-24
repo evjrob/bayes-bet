@@ -43,22 +43,20 @@ def accuracy(game_predictions: list[GamePrediction]) -> float:
 
 def update_scores(last_pred, games):
     updated_last_pred = last_pred.copy()
-    # Nothing to update unless there are existing game predictions
-    if 'GamePredictions' in updated_last_pred.keys():
-        last_pred_date = last_pred['PredictionDate']
-        for g in updated_last_pred['GamePredictions']:
-            gpk = g['game_pk']
-            game_row = games[games['game_pk'] == gpk]
-            if game_row.shape[0] == 0:
-                logger.info(f'Failed to update game scores on {last_pred_date} with game_pk {gpk}.')
-                continue
-            # Only update the score if the game wasn't postponed
-            if game_row['game_state'].values[0] != 'Postponed':
-                home_fin_score = str(game_row['home_fin_score'].values[0])
-                away_fin_score = str(game_row['away_fin_score'].values[0])
-                if home_fin_score != '0' or away_fin_score != '0':
-                    g['score']['home'] = home_fin_score
-                    g['score']['away'] = away_fin_score
+    last_pred_date = last_pred.prediction_date
+    for g in updated_last_pred.prediction_date:
+        gpk = g.game_pk
+        game_row = games[games['game_pk'] == gpk]
+        if game_row.shape[0] == 0:
+            logger.info(f'Failed to update game scores on {last_pred_date} with game_pk {gpk}.')
+            continue
+        # Only update the score if the game wasn't postponed
+        if game_row['game_state'].values[0] != 'Postponed':
+            home_fin_score = str(game_row['home_fin_score'].values[0])
+            away_fin_score = str(game_row['away_fin_score'].values[0])
+            if home_fin_score != '0' or away_fin_score != '0':
+                g.outcome.home_score = home_fin_score
+                g.outcome.away_score = away_fin_score
 
     return updated_last_pred
 
@@ -66,20 +64,17 @@ def prediction_performance(db_records, games, ws=14):
     # Make the db_records into a pandas dataframe
     model_pred_perf = []
     for r in db_records:
-        if 'GamePredictions' in r.keys():
-            date = r['PredictionDate']
-            game_preds = r['GamePredictions']
+            date = r.prediction_date
+            game_preds = r.predictions
             for g in game_preds:
-                game_pk = g['game_pk']
-                hg = g['score']['home']
-                ag = g['score']['away']
+                game_pk = g.game_pk
+                hg = g.outcome.home_score
+                ag = g.outcome.away_score
                 if hg != '-' and ag != '-':
                     hg = int(hg)
                     ag = int(ag)
                     hw = hg > ag
-                    wp = g['WinPercentages']
-                    wp = [float(s) for s in wp]
-                    pred_hw = sum(wp[:3])
+                    pred_hw = g.win_percentages.home.total_win_probability()
                     model_pred_perf.append([date, game_pk, hg, ag, hw, pred_hw])
 
     model_preds = pd.DataFrame(
