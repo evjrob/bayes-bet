@@ -1,0 +1,105 @@
+schema: '2.0'
+stages:
+  train_model:
+    cmd: python stages/train_model.py
+    deps:
+    - path: ../../bayesbet/nhl/data_model.py
+      hash: md5
+      md5: f64c9aabad9ffed01363b8518e53cdfc
+      size: 3321
+    - path: ../../bayesbet/nhl/model.py
+      hash: md5
+      md5: 4301cf8dea1c0d8673afdb5b29457a81
+      size: 13266
+    - path: ../data/final
+      hash: md5
+      md5: d12cf316d1c01e16fddaf999c44af526.dir
+      size: 53131
+      nfiles: 2
+    - path: stages/train_model.py
+      hash: md5
+      md5: 3694838845dd7ede7bd14c0347501356
+      size: 2438
+    params:
+      params.yaml:
+        model.delta_sigma: 0.001
+        model.f_thresh: 0.075
+        model.fattening_factor: 1.05
+    outs:
+    - path: results/train
+      hash: md5
+      md5: 71ce88030a7b1c79864a45dfff46308b.dir
+      size: 374190
+      nfiles: 3
+  test_model:
+    cmd: python stages/test_model.py
+    deps:
+    - path: ../../bayesbet/nhl/data_model.py
+      hash: md5
+      md5: f64c9aabad9ffed01363b8518e53cdfc
+      size: 3321
+    - path: ../../bayesbet/nhl/model.py
+      hash: md5
+      md5: 4301cf8dea1c0d8673afdb5b29457a81
+      size: 13266
+    - path: ../data/final
+      hash: md5
+      md5: d12cf316d1c01e16fddaf999c44af526.dir
+      size: 53131
+      nfiles: 2
+    - path: results/train
+      hash: md5
+      md5: 71ce88030a7b1c79864a45dfff46308b.dir
+      size: 374190
+      nfiles: 3
+    - path: stages/test_model.py
+      hash: md5
+      md5: c9c3dafc3d8f71bc189f2d19e2cd7ec1
+      size: 2290
+    params:
+      params.yaml:
+        model.delta_sigma: 0.001
+        model.f_thresh: 0.075
+        model.fattening_factor: 1.05
+    outs:
+    - path: results/test
+      hash: md5
+      md5: c566e304c9ccd9cbad9898aff7a2cad7.dir
+      size: 456111
+      nfiles: 3
+  evaluate:
+    cmd: python stages/evaluate_model.py
+    deps:
+    - path: ../../bayesbet/nhl/data_model.py
+      hash: md5
+      md5: f64c9aabad9ffed01363b8518e53cdfc
+      size: 3321
+    - path: ../../bayesbet/nhl/evaluate.py
+      hash: md5
+      md5: 732c14b209c2fc6d2778cd408dee1e90
+      size: 4816
+    - path: results/test
+      hash: md5
+      md5: c566e304c9ccd9cbad9898aff7a2cad7.dir
+      size: 456111
+      nfiles: 3
+    - path: results/train
+      hash: md5
+      md5: 71ce88030a7b1c79864a45dfff46308b.dir
+      size: 374190
+      nfiles: 3
+    - path: stages/evaluate_model.py
+      hash: md5
+      md5: 8ef2f1bbcd6b34f67ff98f4ac48e05b9
+      size: 4377
+    params:
+      params.yaml:
+        model.delta_sigma: 0.001
+        model.f_thresh: 0.075
+        model.fattening_factor: 1.05
+    outs:
+    - path: results/evaluate
+      hash: md5
+      md5: eb34755fbe5a592c5084d7be74d94054.dir
+      size: 75748
+      nfiles: 7

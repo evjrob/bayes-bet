@@ -1,0 +1,63 @@
+schema: '2.0'
+stages:
+  fetch_data:
+    cmd: python stages/fetch_data.py
+    deps:
+    - path: ../../bayesbet/nhl/stats_api.py
+      hash: md5
+      md5: 6118685afb780d0985089acd18678491
+      size: 1418
+    - path: stages/fetch_data.py
+      hash: md5
+      md5: c493c92b98421a66b9898b46dc084983
+      size: 1349
+    params:
+      params.yaml:
+        fetch_data.end_date: '2023-12-01'
+        fetch_data.start_date: '2021-08-01'
+    outs:
+    - path: ../data/raw
+      hash: md5
+      md5: 7480f34923b242f2d9a9dbdf09045e46.dir
+      size: 1493325
+      nfiles: 1
+  preprocess_data:
+    cmd: python stages/preprocess_data.py
+    deps:
+    - path: ../../bayesbet/nhl/data_utils.py
+      hash: md5
+      md5: 6a20ef213a4986d5ac5f03990881ad93
+      size: 3831
+    - path: ../data/raw
+      hash: md5
+      md5: 7480f34923b242f2d9a9dbdf09045e46.dir
+      size: 1493325
+      nfiles: 1
+    - path: stages/preprocess_data.py
+      hash: md5
+      md5: 38b3374fb81ba565d312529b9532f29e
+      size: 823
+    outs:
+    - path: ../data/preprocessed
+      hash: md5
+      md5: 50c3f446df32ac28b08aa9ddef6978be.dir
+      size: 43238
+      nfiles: 1
+  split_data:
+    cmd: python stages/split_data.py
+    deps:
+    - path: ../data/preprocessed
+      hash: md5
+      md5: 50c3f446df32ac28b08aa9ddef6978be.dir
+      size: 43238
+      nfiles: 1
+    - path: stages/split_data.py
+      hash: md5
+      md5: ea2f91eb1007c9bca3d8743adbe97cf5
+      size: 813
+    outs:
+    - path: ../data/final
+      hash: md5
+      md5: d12cf316d1c01e16fddaf999c44af526.dir
+      size: 53131
+      nfiles: 2

@@ -1,0 +1,4 @@
+model:
+  delta_sigma: 0.001
+  f_thresh: 0.075
+  fattening_factor: 1.05

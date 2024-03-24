@@ -11,16 +11,20 @@ from bayesbet.nhl.data_utils import model_vars_to_string
 
 
 logger = get_logger(__name__)
-table_name = os.getenv('DYNAMODB_TABLE_NAME')
 region = os.getenv('AWS_REGION')
 endpoint_url = os.getenv('AWS_ENDPOINT_URL')
 use_ssl = os.getenv('AWS_USE_SSL')
-dynamodb = boto3.resource('dynamodb', region_name=region, endpoint_url=endpoint_url, use_ssl=use_ssl)
-table = dynamodb.Table(table_name)
-logger.info(f'Connected to table={table_name} in region {region} of endpoint {endpoint_url}')
 
 
-def most_recent_dynamodb_item(hash_key, date):
+def get_table(table_name):
+    dynamodb = boto3.resource('dynamodb', region_name=region, endpoint_url=endpoint_url, use_ssl=use_ssl)
+    table = dynamodb.Table(table_name)
+    logger.info(f'Connected to table={table_name} in region {region} of endpoint {endpoint_url}')
+
+    return table
+
+def most_recent_dynamodb_item(table_name, hash_key, date):
+    table = get_table(table_name)
     logger.info(f'Get most recent item from {table_name} with League={hash_key} and date={date}')
     response = table.query(
         Limit = 1,
@@ -39,7 +43,8 @@ def most_recent_dynamodb_item(hash_key, date):
     
     return most_recent_item
 
-def query_dynamodb(start_date, league='nhl'):
+def query_dynamodb(table_name, start_date, league='nhl'):
+    table = get_table(table_name)
     logger.info(f'Get all items from {table_name} with League={league} and start_date={start_date}')
     response = table.query(
         ScanIndexForward = True,
@@ -63,9 +68,10 @@ def create_dynamodb_item(pred_date, posteriors, int_to_teams, metadata, game_pre
 
     return item
 
-def put_dynamodb_item(item):
+def put_dynamodb_item(table_name, item):
+    table = get_table(table_name)
     league = item['League']
     pred_date = item['PredictionDate']
     response = table.put_item(Item=item)
-    logger.info(f'Put item into table {table_name} with League=nhl and date={pred_date}')
+    logger.info(f'Put item into table {table_name} with League={league} and date={pred_date}')
     return response
