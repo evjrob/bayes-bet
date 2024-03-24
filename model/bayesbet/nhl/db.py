@@ -24,13 +24,13 @@ def get_table(table_name):
 
 def most_recent_dynamodb_item(table_name, hash_key, date):
     table = get_table(table_name)
-    logger.info(f'Get most recent item from {table_name} with League={hash_key} and date={date}')
+    logger.info(f'Get most recent item from {table_name} with league={hash_key} and date={date}')
     response = table.query(
         Limit = 1,
         ScanIndexForward = False,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
-            Key('League').eq(hash_key) & Key('PredictionDate').lte(date)
+            Key('league').eq(hash_key) & Key('prediction_date').lte(date)
     )
     item_count = len(response['Items'])
     capacity_units = response['ConsumedCapacity']['CapacityUnits']
@@ -44,12 +44,12 @@ def most_recent_dynamodb_item(table_name, hash_key, date):
 
 def query_dynamodb(table_name, start_date, league='nhl'):
     table = get_table(table_name)
-    logger.info(f'Get all items from {table_name} with League={league} and start_date={start_date}')
+    logger.info(f'Get all items from {table_name} with league={league} and start_date={start_date}')
     response = table.query(
         ScanIndexForward = True,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
-            Key('League').eq(league) & Key('PredictionDate').gte(start_date)
+            Key('league').eq(league) & Key('prediction_date').gte(start_date)
     )
     item_count = len(response['Items'])
     capacity_units = response['ConsumedCapacity']['CapacityUnits']
@@ -59,8 +59,8 @@ def query_dynamodb(table_name, start_date, league='nhl'):
 
 def put_dynamodb_item(table_name, item):
     table = get_table(table_name)
-    league = item['League']
-    pred_date = item['PredictionDate']
+    league = item['league']
+    pred_date = item['prediction_date']
     response = table.put_item(Item=item)
-    logger.info(f'Put item into table {table_name} with League={league} and date={pred_date}')
+    logger.info(f'Put item into table {table_name} with league={league} and date={pred_date}')
     return response
