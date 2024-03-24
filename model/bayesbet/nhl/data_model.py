@@ -32,8 +32,8 @@ class LeagueState(BaseModel):
 
 
 class GameOutcome(BaseModel):
-    home_score: str
-    away_score: str
+    home_score: int | str
+    away_score: int | str
 
     def home_win(self) -> bool:
         if self.home_score == "-" or self.away_score == "-":
@@ -41,7 +41,7 @@ class GameOutcome(BaseModel):
         return int(self.home_score) > int(self.away_score)
 
     @field_serializer("home_score", "away_score")
-    def serialize_score(self, value: str, _info):
+    def serialize_score(self, value: int | str, _info):
         return str(value)
 
 class ScoreProbabilities(BaseModel):
