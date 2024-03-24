@@ -231,7 +231,7 @@ def model_inference(
     )
 
     # Get games from the most recent game date played
-    updated_model_state = model.fit(games, cores=3)
+    updated_model_state = model.fit(games, cores=1)
 
     # Update the model state in S3 for later reference if necessary
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/updated_model_state.json", "w") as f:
