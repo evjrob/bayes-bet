@@ -83,7 +83,7 @@ def create_record(
         deployment_version=deployment_version,
         league_state=model_state.to_league_state(),
         predictions=predictions,
-        predictive_performance=[],
+        prediction_performance=[],
     )
     put_dynamodb_item(pred_table_name, prediction_record.model_dump())
     logger.info(f"Generated new prediction record for League=nhl and date={game_date}")
