@@ -39,8 +39,8 @@ def mock_games_postponed():
 @pytest.fixture
 def mock_scores():
     blank = {
-        'PredictionDate': '1990-05-20',
-        'GamePredictions': [{
+        'prediction_date': '1990-05-20',
+        'predictions': [{
             'game_pk': game_pks[i],
             'score':{
                 'home': '-',
@@ -49,8 +49,8 @@ def mock_scores():
         } for i in range(3)]
     }
     expected = {
-        'PredictionDate': '1990-05-20',
-        'GamePredictions': [{
+        'prediction_date': '1990-05-20',
+        'predictions': [{
             'game_pk': game_pks[i],
             'score':{
                 'home': home_scores[i],
@@ -68,12 +68,12 @@ class TestUpdateScores:
 
     def test_update_scores_postponed(self, mock_scores, mock_games_postponed):
         blank_scores, expected_scores = mock_scores
-        expected_scores['GamePredictions'][2]['score'] = {'home':'-', 'away':'-'}
+        expected_scores['predictions'][2]['score'] = {'home':'-', 'away':'-'}
         updated_scores = update_scores(blank_scores, mock_games_postponed)
         assert updated_scores == expected_scores, "Updated postponed scores do not match expected!"
 
     def test_update_scores_missing(self, mock_scores, mock_games_missing):
         blank_scores, expected_scores = mock_scores
-        expected_scores['GamePredictions'][2]['score'] = {'home':'-', 'away':'-'}
+        expected_scores['predictions'][2]['score'] = {'home':'-', 'away':'-'}
         updated_scores = update_scores(blank_scores, mock_games_missing)
         assert updated_scores == expected_scores, "Updated missing scores do not match expected!"
