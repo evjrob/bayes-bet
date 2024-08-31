@@ -45,4 +45,4 @@ jobs:
 
       - name: Run model tests
         run: |
-          pipenv run python -m pytest --runslow
+          pipenv run python -m pytest tests --runslow
