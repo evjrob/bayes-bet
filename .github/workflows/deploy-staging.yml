@@ -97,7 +97,7 @@ jobs:
         uses: restackio/update-json-file-action@v2.0
         with:
           file: front_end/app/zappa_settings.json
-          fields: "{\"staging.s3_bucket\": \"${{ secrets.ZAPPA_S3_BUCKET }}\", \"staging.aws_environment_variables.DJANGO_TABLE_NAME\": \"${{ secrets.DJANGO_DYNAMODB_TABLE_NAME }}\", \"staging.aws_environment_variables.S3_BUCKET_NAME\": \"${{ secrets.DJANGO_S3_BUCKET_NAME }}\", \"staging.aws_environment_variables.DJANGO_SECRET_KEY\": \"${{ secrets.DJANGO_SECRET_KEY }}\"}"
+          fields: "{\"staging.s3_bucket\": \"${{ secrets.ZAPPA_S3_BUCKET }}\", \"staging.aws_environment_variables.DYNAMODB_TABLE_NAME\": \"${{ secrets.DJANGO_DYNAMODB_TABLE_NAME }}\", \"staging.aws_environment_variables.S3_BUCKET_NAME\": \"${{ secrets.DJANGO_S3_BUCKET_NAME }}\", \"staging.aws_environment_variables.DJANGO_SECRET_KEY\": \"${{ secrets.DJANGO_SECRET_KEY }}\"}"
 
       - name: Zappa Deploy
         run: cd app && pipenv run zappa update staging
