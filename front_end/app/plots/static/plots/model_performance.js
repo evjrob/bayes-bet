@@ -8,11 +8,12 @@ function plot_model_performance(data, target_div) {
     var parseDate = d3.timeParse("%Y-%m-%d")
 
     data.forEach(function(d) {
-      d.date = parseDate(d.date);
-      d.cum_acc = +d.cum_acc * 100;
-      d.rolling_acc = +d.rolling_acc * 100;
-      d.cum_ll = +d.cum_ll;
-      d.rolling_ll = +d.rolling_ll;
+      console.log(d.date)
+      d.prediction_date = parseDate(d.prediction_date);
+      d.cumulative_accuracy = +d.cumulative_accuracy * 100;
+      d.rolling_accuracy = +d.rolling_accuracy * 100;
+      d.cumulative_log_loss = +d.cumulative_log_loss;
+      d.rolling_log_loss = +d.rolling_log_loss;
     });
     var margin = {top: 10, right: 60, bottom: 60, left: 60, between: 50};
     var full_width = div_width;
@@ -21,10 +22,10 @@ function plot_model_performance(data, target_div) {
     var height = full_height - margin.top - margin.bottom;
     var radius = 5;
   
-    var yAccMin = d3.min(data, function(d){return d3.min([d.cum_acc, d.rolling_acc])}) * 0.95;
-    var yAccMax = d3.max(data, function(d){return d3.max([d.cum_acc, d.rolling_acc])}) * 1.05;
-    var yLossMin = d3.min(data, function(d){return d3.min([d.cum_ll, d.rolling_ll])}) * 0.95;
-    var yLossMax = d3.max(data, function(d){return d3.max([d.cum_ll, d.rolling_ll])}) * 1.05;
+    var yAccMin = d3.min(data, function(d){return d3.min([d.cumulative_accuracy, d.rolling_accuracy])}) * 0.95;
+    var yAccMax = d3.max(data, function(d){return d3.max([d.cumulative_accuracy, d.rolling_accuracy])}) * 1.05;
+    var yLossMin = d3.min(data, function(d){return d3.min([d.cumulative_log_loss, d.rolling_log_loss])}) * 0.95;
+    var yLossMax = d3.max(data, function(d){return d3.max([d.cumulative_log_loss, d.rolling_log_loss])}) * 1.05;
   
     var svg = d3.select(target_div)
     .append("svg")
@@ -37,7 +38,7 @@ function plot_model_performance(data, target_div) {
     // Add X axis
     var xAccScale = d3.scaleTime()
       .range([ 0, width ])
-      .domain(d3.extent(data, function(d) { return d.date; }));
+      .domain(d3.extent(data, function(d) { return d.prediction_date; }));
     svg.append("g")
       .attr("transform", "translate(0," + (height/2 - margin.between/2 + margin.top) + ")")
       .call(d3.axisBottom(xAccScale)
@@ -54,7 +55,7 @@ function plot_model_performance(data, target_div) {
 
     var xLossScale = d3.scaleTime()
       .range([ 0, width ])
-      .domain(d3.extent(data, function(d) { return d.date; }));
+      .domain(d3.extent(data, function(d) { return d.prediction_date; }));
     svg.append("g")
       .attr("transform", "translate(0," + (height) + ")")
       .call(d3.axisBottom(xLossScale)
@@ -121,22 +122,22 @@ function plot_model_performance(data, target_div) {
       var chart_pos = svg.node().getBoundingClientRect();
       var plot_pos = d3.select('#perf-plot').node().getBoundingClientRect();
       var tooltipText = ";"
-      if (metric == 'cum_acc') {
+      if (metric == 'cumulative_accuracy') {
         f = d3.format('.2f')
         tooltipText = "<strong>Since Season Start</strong><br>Date: " 
-          + dateFormat(d.date) + "<br>Accuracy: " + f(d.cum_acc) + "%";
-      } else if (metric == 'rolling_acc') {
+          + dateFormat(d.prediction_date) + "<br>Accuracy: " + f(d.cumulative_accuracy) + "%";
+      } else if (metric == 'rolling_accuracy') {
         f = d3.format('.2f')
         tooltipText = "<strong>Rolling (14 days)</strong><br>Date: " 
-          + dateFormat(d.date) + "<br>Accuracy: " + f(d.rolling_acc) + "%";
-      } else if (metric == 'cum_ll') {
+          + dateFormat(d.prediction_date) + "<br>Accuracy: " + f(d.rolling_accuracy) + "%";
+      } else if (metric == 'cumulative_log_loss') {
         f = d3.format('.5f')
         tooltipText = "<strong>Since Season Start</strong><br>Date: " 
-          + dateFormat(d.date) + "<br>Log Loss: " + f(d.cum_ll);
-      } else if (metric == 'rolling_ll') {
+          + dateFormat(d.prediction_date) + "<br>Log Loss: " + f(d.cumulative_log_loss);
+      } else if (metric == 'rolling_log_loss') {
         f = d3.format('.5f')
         tooltipText = "<strong>Rolling (14 days)</strong><br>Date: " 
-          + dateFormat(d.date) + "<br>Log Loss: " + f(d.rolling_ll);
+          + dateFormat(d.prediction_date) + "<br>Log Loss: " + f(d.rolling_log_loss);
       }
       tooltip
         .html(tooltipText)
@@ -149,8 +150,8 @@ function plot_model_performance(data, target_div) {
   
     // Cumulative accuracy line
     var cumAccLine = d3.line()
-      .x(d => xAccScale(d.date))
-      .y(d => yAccScale(d.cum_acc))
+      .x(d => xAccScale(d.prediction_date))
+      .y(d => yAccScale(d.cumulative_accuracy))
     
     svg.append("path")
       .attr("class", "line")
@@ -165,17 +166,17 @@ function plot_model_performance(data, target_div) {
       .append("circle")
       .attr("class", "color-secondary-dark")
       .attr("stroke", "none")
-      .attr("cx", function(d) { return xAccScale(d.date) })
-      .attr("cy", function(d) { return yAccScale(d.cum_acc) })
+      .attr("cx", function(d) { return xAccScale(d.prediction_date) })
+      .attr("cy", function(d) { return yAccScale(d.cumulative_accuracy) })
       .attr("r", radius)
       .on("mouseover", mouseover)
-      .on("mousemove", d => mousemove(d, "cum_acc"))
+      .on("mousemove", d => mousemove(d, "cumulative_accuracy"))
       .on("mouseleave", mouseleave);
 
     // Rolling accuracy line
     var rollingAccLine = d3.line()
-      .x(d => xAccScale(d.date))
-      .y(d => yAccScale(d.rolling_acc))
+      .x(d => xAccScale(d.prediction_date))
+      .y(d => yAccScale(d.rolling_accuracy))
 
     svg.append("path")
       .attr("class", "line")
@@ -190,17 +191,17 @@ function plot_model_performance(data, target_div) {
       .append("circle")
       .attr("class", "color-secondary")
       .attr("stroke", "none")
-      .attr("cx", function(d) { return xAccScale(d.date) })
-      .attr("cy", function(d) { return yAccScale(d.rolling_acc) })
+      .attr("cx", function(d) { return xAccScale(d.prediction_date) })
+      .attr("cy", function(d) { return yAccScale(d.rolling_accuracy) })
       .attr("r", radius)
       .on("mouseover", mouseover)
-      .on("mousemove", d => mousemove(d, "rolling_acc"))
+      .on("mousemove", d => mousemove(d, "rolling_accuracy"))
       .on("mouseleave", mouseleave);
 
     // Cumulative Loss line
     var cumLossLine = d3.line()
-      .x(d => xLossScale(d.date))
-      .y(d => yLossScale(d.cum_ll))
+      .x(d => xLossScale(d.prediction_date))
+      .y(d => yLossScale(d.cumulative_log_loss))
     
     svg.append("path")
       .attr("class", "line")
@@ -215,17 +216,17 @@ function plot_model_performance(data, target_div) {
       .append("circle")
       .attr("class", "color-primary-dark")
       .attr("stroke", "none")
-      .attr("cx", function(d) { return xLossScale(d.date) })
-      .attr("cy", function(d) { return yLossScale(d.cum_ll) })
+      .attr("cx", function(d) { return xLossScale(d.prediction_date) })
+      .attr("cy", function(d) { return yLossScale(d.cumulative_log_loss) })
       .attr("r", radius)
       .on("mouseover", mouseover)
-      .on("mousemove", d => mousemove(d, "cum_ll"))
+      .on("mousemove", d => mousemove(d, "cumulative_log_loss"))
       .on("mouseleave", mouseleave);
 
     // Rolling Loss line
     var rollingLossLine = d3.line()
-      .x(d => xLossScale(d.date))
-      .y(d => yLossScale(d.rolling_ll))
+      .x(d => xLossScale(d.prediction_date))
+      .y(d => yLossScale(d.rolling_log_loss))
 
     svg.append("path")
       .attr("class", "line")
@@ -240,11 +241,11 @@ function plot_model_performance(data, target_div) {
       .append("circle")
       .attr("class", "color-primary")
       .attr("stroke", "none")
-      .attr("cx", function(d) { return xLossScale(d.date) })
-      .attr("cy", function(d) { return yLossScale(d.rolling_ll) })
+      .attr("cx", function(d) { return xLossScale(d.prediction_date) })
+      .attr("cy", function(d) { return yLossScale(d.rolling_log_loss) })
       .attr("r", radius)
       .on("mouseover", mouseover)
-      .on("mousemove", d => mousemove(d, "rolling_ll"))
+      .on("mousemove", d => mousemove(d, "rolling_log_loss"))
       .on("mouseleave", mouseleave);
 
   };

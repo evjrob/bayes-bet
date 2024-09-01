@@ -7,27 +7,30 @@ from boto3.dynamodb.conditions import Key
 import numpy as np
 
 from bayesbet.logger import get_logger
-from bayesbet.nhl.data_utils import model_vars_to_string
 
 
 logger = get_logger(__name__)
-table_name = os.getenv('DYNAMODB_TABLE_NAME')
 region = os.getenv('AWS_REGION')
 endpoint_url = os.getenv('AWS_ENDPOINT_URL')
 use_ssl = os.getenv('AWS_USE_SSL')
-dynamodb = boto3.resource('dynamodb', region_name=region, endpoint_url=endpoint_url, use_ssl=use_ssl)
-table = dynamodb.Table(table_name)
-logger.info(f'Connected to table={table_name} in region {region} of endpoint {endpoint_url}')
 
 
-def most_recent_dynamodb_item(hash_key, date):
-    logger.info(f'Get most recent item from {table_name} with League={hash_key} and date={date}')
+def get_table(table_name):
+    dynamodb = boto3.resource('dynamodb', region_name=region, endpoint_url=endpoint_url, use_ssl=use_ssl)
+    table = dynamodb.Table(table_name)
+    logger.info(f'Connected to table={table_name} in region {region} of endpoint {endpoint_url}')
+
+    return table
+
+def most_recent_dynamodb_item(table_name, hash_key, date):
+    table = get_table(table_name)
+    logger.info(f'Get most recent item from {table_name} with league={hash_key} and date={date}')
     response = table.query(
         Limit = 1,
         ScanIndexForward = False,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
-            Key('League').eq(hash_key) & Key('PredictionDate').lte(date)
+            Key('league').eq(hash_key) & Key('prediction_date').lte(date)
     )
     item_count = len(response['Items'])
     capacity_units = response['ConsumedCapacity']['CapacityUnits']
@@ -39,13 +42,14 @@ def most_recent_dynamodb_item(hash_key, date):
     
     return most_recent_item
 
-def query_dynamodb(start_date, league='nhl'):
-    logger.info(f'Get all items from {table_name} with League={league} and start_date={start_date}')
+def query_dynamodb(table_name, start_date, league='nhl'):
+    table = get_table(table_name)
+    logger.info(f'Get all items from {table_name} with league={league} and start_date={start_date}')
     response = table.query(
         ScanIndexForward = True,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
-            Key('League').eq(league) & Key('PredictionDate').gte(start_date)
+            Key('league').eq(league) & Key('prediction_date').gte(start_date)
     )
     item_count = len(response['Items'])
     capacity_units = response['ConsumedCapacity']['CapacityUnits']
@@ -53,19 +57,10 @@ def query_dynamodb(start_date, league='nhl'):
 
     return response['Items']
 
-def create_dynamodb_item(pred_date, posteriors, int_to_teams, metadata, game_preds=None):
-    item = {'League':'nhl', 'PredictionDate':pred_date}
-    if game_preds is not None:
-        item['GamePredictions'] = game_preds
-    model_vars = model_vars_to_string(posteriors, int_to_teams)
-    item['ModelVariables'] = model_vars
-    item['ModelMetadata'] = metadata
-
-    return item
-
-def put_dynamodb_item(item):
-    league = item['League']
-    pred_date = item['PredictionDate']
+def put_dynamodb_item(table_name, item):
+    table = get_table(table_name)
+    league = item['league']
+    pred_date = item['prediction_date']
     response = table.put_item(Item=item)
-    logger.info(f'Put item into table {table_name} with League=nhl and date={pred_date}')
+    logger.info(f'Put item into table {table_name} with league={league} and date={pred_date}')
     return response

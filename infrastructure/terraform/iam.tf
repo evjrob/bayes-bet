@@ -82,7 +82,24 @@ resource "aws_iam_policy" "bayesbet_model_lambda_policy" {
         "dynamodb:PutItem"
       ],
       "Effect": "Allow",
-      "Resource": "${aws_dynamodb_table.bayesbet_games.arn}"
+      "Resource": "${aws_dynamodb_table.bayesbet_predictions.arn}"
+    },
+    {
+      "Action": [
+        "dynamodb:BatchGet*",
+        "dynamodb:DescribeStream",
+        "dynamodb:DescribeTable",
+        "dynamodb:Get*",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchWrite*",
+        "dynamodb:CreateTable",
+        "dynamodb:Delete*",
+        "dynamodb:Update*",
+        "dynamodb:PutItem"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_dynamodb_table.bayesbet_model_state.arn}"
     }
   ]
 }

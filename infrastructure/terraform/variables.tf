@@ -47,3 +47,9 @@ variable "twitter_access_token_secret" {
   type      = string
   sensitive = true
 }
+
+variable "deployment_version" {
+  default   = ""
+  type      = string
+  sensitive = true
+}

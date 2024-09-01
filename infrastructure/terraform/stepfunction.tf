@@ -77,17 +77,14 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
             "ModelInference": {
               "Type": "Task",
               "Resource": "${aws_lambda_function.bayesbet_model_lambda.arn}",
-              "ResultPath": "$.posteriors",
+              "ResultPath": "$.updated_model_state",
               "Parameters": {
                 "league": "nhl",
                 "task": "model_inference",
                 "task_parameters": {
                   "bucket_name": "${aws_s3_bucket.bayesbet_pipeline_bucket.id}",
                   "pipeline_name": "${var.project}-main-${var.env}",
-                  "job_id.$": "$$.Execution.Name",
-                  "last_pred_date.$": "$.last_pred_date",
-                  "teams_to_int.$": "$.teams_to_int",
-                  "n_teams.$": "$.n_teams"
+                  "job_id.$": "$$.Execution.Name"
                 }
               },
               "Next": "PredictGames"
@@ -97,8 +94,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
               "MaxConcurrency": 6,
               "Parameters": {
                 "game.$": "$$.Map.Item.Value",
-                "posteriors.$": "$.posteriors",
-                "teams_to_int.$": "$.teams_to_int"
+                "updated_model_state.$": "$.updated_model_state"
               },
               "ItemsPath": "$.games_to_predict",
               "ResultPath": "$.game_preds",
@@ -114,9 +110,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
                       "task": "predict_game",
                       "task_parameters": {
                         "game.$": "$.game",
-                        "posteriors.$": "$.posteriors",
-                        "teams_to_int.$": "$.teams_to_int"
-                      }
+                        "updated_model_state.$": "$.updated_model_state"                      }
                     },
                     "End": true
                   }
@@ -133,8 +127,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
                 "task_parameters": {
                   "bucket_name": "${aws_s3_bucket.bayesbet_web_bucket.id}",
                   "game_date.$": "$.next_game_date",
-                  "posteriors.$": "$.posteriors",
-                  "int_to_teams.$": "$.int_to_teams",
+                  "updated_model_state.$": "$.updated_model_state",
                   "game_preds.$": "$.game_preds"
                 }
               },

@@ -19,9 +19,9 @@ def games(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
         Limit = 1,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
-            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+            Key('league').eq('nhl') & Key('prediction_date').eq(date)
     )
-    games = response['Items'][0]['GamePredictions']
+    games = response['Items'][0]['predictions']
     rows = [{'game_pk':g.game_pk, 'home_team':g.home_team, 'away_team':g.away_team} for g in games]
     return JsonResponse({"data" : rows})
 
@@ -32,12 +32,12 @@ def goal_distribution(request, game_pk, version='v1', date=dt.date.today().strft
         Limit = 1,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
-            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+            Key('league').eq('nhl') & Key('prediction_date').eq(date)
     )
-    games = response['Items'][0]['GamePredictions']
+    games = response['Items'][0]['predictions']
     game = [g for g in games if str(g['game_pk']) == game_pk][0]
-    home_dist = game['ScoreProbabilities']['home']
-    away_dist = game['ScoreProbabilities']['away']
+    home_dist = game['score_probabilities']['home']
+    away_dist = game['score_probabilities']['away']
     goals_dist = []
     for hg, hp in enumerate(home_dist):
         for ag, ap in enumerate(away_dist):
@@ -54,9 +54,9 @@ def teams(request, version='v1', date=dt.date.today().strftime("%Y-%m-%d")):
         Limit = 1,
         ReturnConsumedCapacity='TOTAL',
         KeyConditionExpression=
-            Key('League').eq('nhl') & Key('PredictionDate').eq(date)
+            Key('league').eq('nhl') & Key('prediction_date').eq(date)
     )
-    team_data = response['Items'][0]['ModelVariables']['teams']
+    team_data = response['Items'][0]['league_state']['teams']
     teams = []
     for team, mvars in team_data.items():
         row = {'team_name':team, 'team_abb':team_abbrevs[team],

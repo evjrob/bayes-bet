@@ -1,31 +1,23 @@
-import boto3
 import simplejson as json
-import logging
 import os
-import numpy as np
 import pandas as pd
 import datetime as dt
 import s3fs
 
-from requests.api import get
-
 from bayesbet.logger import get_logger
-from bayesbet.nhl.data_utils import (
-    model_ready_data,
-    model_vars_to_numeric,
-    model_vars_to_string,
+from bayesbet.nhl.data_model import (
+    PredictionRecord,
+    ModelStateRecord,
+    GamePrediction,
+    PredictionPerformance,
 )
-from bayesbet.nhl.data_utils import get_teams_int_maps, get_unique_teams
-from bayesbet.nhl.db import query_dynamodb, create_dynamodb_item, put_dynamodb_item
-from bayesbet.nhl.db import most_recent_dynamodb_item
+from bayesbet.nhl.data_utils import extract_game_data, team_abbrevs
+from bayesbet.nhl.db import query_dynamodb, put_dynamodb_item, most_recent_dynamodb_item
 from bayesbet.nhl.evaluate import update_scores, prediction_performance
-from bayesbet.nhl.model import model_update
-from bayesbet.nhl.predict import single_game_prediction
+from bayesbet.nhl.model import IterativeUpdateModel, ModelState
 from bayesbet.nhl.stats_api import (
-    check_for_games,
-    fetch_nhl_data_by_date,
+    request_games_json,
     get_season_start_date,
-    team_abbrevs,
 )
 
 
@@ -47,22 +39,54 @@ metadata = {
 }
 
 
+def fetch_nhl_data_by_date(date):
+    """ 
+    Retrieves data from the NHL stats API and loads it into a dataframe.
+    """
+    logger.info(f'Retrieving NHL data for {date}')
+
+    games_json = request_games_json(date)
+
+    # Convert JSON to pandas for ingestion by model
+    game_data, date_metadata = extract_game_data(games_json)
+
+    logger.info('NHL game data successfully retrieved from API')
+
+    return game_data, date_metadata
+
+
 def create_record(
     bucket_name,
     game_date,
-    posteriors,
-    int_to_teams,
-    game_preds=None,
+    updated_model_state,
+    game_preds,
 ):
-    record = create_dynamodb_item(
-        game_date,
-        posteriors,
-        int_to_teams,
-        metadata,
-        game_preds=game_preds,
+    pred_table_name = os.getenv('DYNAMODB_PRED_TABLE_NAME')
+    model_table_name = os.getenv('DYNAMODB_MODEL_TABLE_NAME')
+    deployment_version = os.getenv('DEPLOYMENT_VERSION')
+
+    # Update Model State
+    model_state = ModelState.model_validate(updated_model_state)
+    model_state_record = ModelStateRecord(
+        league="nhl",
+        prediction_date=game_date,
+        state=model_state,
     )
-    logger.info(f"Generated new record for League=nhl and date={game_date}")
-    put_dynamodb_item(record)
+    put_dynamodb_item(model_table_name, model_state_record.model_dump())
+    logger.info(f"Generated new model state record for League=nhl and date={game_date}")
+
+    # Update Prediction Record
+    predictions = [GamePrediction.model_validate(pred) for pred in game_preds]
+    prediction_record = PredictionRecord(
+        league="nhl",
+        prediction_date=game_date,
+        deployment_version=deployment_version,
+        league_state=model_state.to_league_state(),
+        predictions=predictions,
+        prediction_performance=[],
+    )
+    put_dynamodb_item(pred_table_name, prediction_record.model_dump())
+    logger.info(f"Generated new prediction record for League=nhl and date={game_date}")
 
     # Get the pred_dates from s3 and update
     endpoint_url = os.getenv("AWS_ENDPOINT_URL")
@@ -95,18 +119,21 @@ def ingest_data(bucket_name, pipeline_name, job_id):
             "use_ssl": use_ssl,
         }
     )
+
+    pred_table_name = os.getenv('DYNAMODB_PRED_TABLE_NAME')
+    model_table_name = os.getenv('DYNAMODB_MODEL_TABLE_NAME')
     
     # Get last_pred
-    last_pred = most_recent_dynamodb_item('nhl', today)
-    last_pred_date = last_pred['PredictionDate']
-    last_pred_dt = dt.date.fromisoformat(last_pred_date)
+    last_pred = most_recent_dynamodb_item(pred_table_name, 'nhl', today)
+    last_model_state = most_recent_dynamodb_item(model_table_name, 'nhl', today)
+    last_pred_date = last_pred['prediction_date']
     logger.info(f'Most recent prediction is from {last_pred_date}')
     with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "w") as f:
         json.dump(last_pred, f)
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_model_record.json", "w") as f:
+        json.dump(last_model_state, f)
 
     teams = sorted(list(team_abbrevs.keys()))
-    teams_to_int, int_to_teams = get_teams_int_maps(teams)
-    n_teams = len(teams)
 
     last_pred_games, date_metadata = fetch_nhl_data_by_date(last_pred_date)
     next_game_date = date_metadata["next_game_date"]
@@ -171,10 +198,6 @@ def ingest_data(bucket_name, pipeline_name, job_id):
         "today": today,
         "games_to_predict": games_to_predict,
         "season_start": season_start,
-        "teams": teams,
-        "teams_to_int": teams_to_int,
-        "int_to_teams": int_to_teams,
-        "n_teams": n_teams,
     }
 
 
@@ -182,9 +205,6 @@ def model_inference(
     bucket_name,
     pipeline_name,
     job_id,
-    last_pred_date,
-    teams_to_int,
-    n_teams,
 ):
     # Get the games CSV from s3
     endpoint_url = os.getenv("AWS_ENDPOINT_URL")
@@ -199,31 +219,37 @@ def model_inference(
         games = pd.read_csv(f)
 
     # Get the last record JSON from S3
-    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "rb") as f:
-        last_pred = json.load(f)
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/last_model_record.json", "r") as f:
+        last_model_state_record = ModelStateRecord.model_validate_json(f.read())
+        last_model_state = last_model_state_record.state
 
-    # Get last_pred posteriors to use as priors
-    priors = last_pred["ModelVariables"]
-    priors = model_vars_to_numeric(priors, teams_to_int)
-
-    logger.info(f"Generating new NHL model predictions for {last_pred_date}")
+    model = IterativeUpdateModel(
+        last_model_state,
+        delta_sigma=delta_sigma,
+        f_thresh=f_thresh,
+        fattening_factor=fattening_factor
+    )
 
     # Get games from the most recent game date played
-    obs_idx = (games["game_date"] == last_pred_date) & (
-        games["game_state"] != "Postponed"
+    updated_model_state = model.fit(games, cores=1)
+
+    # Update the model state in S3 for later reference if necessary
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/updated_model_state.json", "w") as f:
+        f.write(updated_model_state.model_dump_json())
+
+    return updated_model_state.model_dump()
+
+
+def predict_game(game, updated_model_state):
+    model_state = ModelState.model_validate(updated_model_state)
+    model = IterativeUpdateModel(
+        model_state,
+        delta_sigma=delta_sigma,
+        f_thresh=f_thresh,
+        fattening_factor=fattening_factor
     )
-    obs_data = games[obs_idx].reset_index(drop=True)
-    obs_data = model_ready_data(obs_data, teams_to_int)
-    posteriors = model_update(
-        obs_data, priors, n_teams, fattening_factor, f_thresh, delta_sigma
-    )
-
-    return posteriors
-
-
-def predict_game(game, posteriors, teams_to_int):
-    prediction = single_game_prediction(game, posteriors, teams_to_int)
-    return prediction
+    prediction = model.single_game_prediction(game)
+    return prediction.model_dump()
 
 
 def update_previous_record(
@@ -242,39 +268,42 @@ def update_previous_record(
         games = pd.read_csv(f)
 
     # Get the last record JSON from S3
-    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "rb") as f:
-        last_pred = json.load(f)
+    with s3.open(f"{bucket_name}/{pipeline_name}/{job_id}/lastpred.json", "r") as f:
+        last_pred = PredictionRecord.model_validate_json(f.read())
 
     # Update the scores for the previous record
     updated_last_pred = update_scores(last_pred, games)
 
+    pred_table_name = os.getenv('DYNAMODB_PRED_TABLE_NAME')
+
     # Update the model performance if it does not exist
-    if "ModelPerformance" not in last_pred:
+    if len(last_pred.prediction_performance) == 0:
         # Get model performance for the last prediction
         last_pred_dt = dt.date.fromisoformat(last_pred_date)
         if last_pred_date < season_start:
             performance_start_date = (
                 last_pred_dt - dt.timedelta(days=perf_ws + 1)
             ).strftime("%Y-%m-%d")
-            season_db_records = query_dynamodb(performance_start_date)
+            season_db_records = query_dynamodb(pred_table_name, performance_start_date)
         else:
-            season_db_records = query_dynamodb(season_start)
+            season_db_records = query_dynamodb(pred_table_name, season_start)
         season_db_records[-1] = updated_last_pred
+        season_db_records = [PredictionRecord.model_validate(r) for r in season_db_records]
         model_perf = prediction_performance(season_db_records, games, ws=perf_ws)
-        number_cols = ["cum_acc", "rolling_acc", "cum_ll", "rolling_ll"]
-        model_perf[number_cols] = model_perf[number_cols].applymap("{:,.5f}".format)
-        perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws - 1)).strftime(
-            "%Y-%m-%d"
+        perf_start_date = (last_pred_dt - dt.timedelta(days=perf_ws - 1))
+        perf_idx = (model_perf["prediction_date"] >= perf_start_date) & (
+            model_perf["prediction_date"] <= last_pred_dt
         )
-        perf_idx = (model_perf["date"] >= perf_start_date) & (
-            model_perf["date"] <= last_pred_date
-        )
-        model_perf_json = model_perf[perf_idx].to_dict(orient="records")
-        updated_last_pred["ModelPerformance"] = model_perf_json
+        model_perf_items = model_perf[perf_idx].to_dict(orient="records")
+        model_perf_items = [
+            PredictionPerformance.model_validate(item)
+            for item in model_perf_items
+        ]
+        updated_last_pred.prediction_performance = model_perf_items
         logger.info(
             "Updated scores and performance for item with "
             f"League=nhl and date={last_pred_date}"
         )
 
-    put_dynamodb_item(updated_last_pred)
+    put_dynamodb_item(pred_table_name, updated_last_pred.model_dump())
     return
