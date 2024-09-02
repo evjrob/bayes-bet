@@ -19,6 +19,7 @@
 <!-- Icons -->
 <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
 <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+{% load static %}
 <script>
     $(function () {
         function getSelectedDateAndPath() {
@@ -60,7 +61,7 @@
         });
         $.ajax({
             type: 'GET',
-            url:"https://bayes-bet-web-prod.s3.amazonaws.com/pred_dates.json",
+            url:"{% static 'pred_dates.json' %}",
             dataType: 'json',
             crossDomain: true,
             success: function(data) {
