@@ -10,6 +10,7 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
     web_bucket = aws_s3_bucket.bayesbet_web_bucket.id,
     project = var.project,
     environment = var.env,
+    max_concurrency = var.sfn_max_concurrency,
     account_id = data.aws_caller_identity.current.account_id
     }
   )

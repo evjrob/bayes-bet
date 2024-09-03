@@ -53,3 +53,8 @@ variable "deployment_version" {
   type      = string
   sensitive = true
 }
+
+variable "sfn_max_concurrency" {
+  default   = 1
+  type      = number
+}
