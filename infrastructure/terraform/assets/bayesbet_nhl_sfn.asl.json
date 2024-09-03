@@ -1,0 +1,157 @@
+{
+  "Comment": "The main BayesBet NHL model pipeline for daily game predictions",
+  "StartAt": "IngestData",
+  "States": {
+    "IngestData": {
+      "Type": "Task",
+      "Resource": "${task_lambda}",
+      "Parameters": {
+        "league": "nhl",
+        "task": "ingest_data",
+        "task_parameters": {
+          "bucket_name": "${pipeline_bucket}",
+          "pipeline_name": "${project}-main-${environment}",
+          "job_id.$": "$$.Execution.Name"
+        }
+      },
+      "Next": "DailyUpdate"
+    },
+    "DailyUpdate": {
+      "Type": "Parallel",
+      "End": true,
+      "Branches": [
+        {
+          "StartAt": "UpdatePreviousRecord",
+          "States": {
+            "UpdatePreviousRecord": {
+              "Type": "Task",
+              "Resource": "${task_lambda}",
+              "Parameters": {
+                "league": "nhl",
+                "task": "update_previous_record",
+                "task_parameters": {
+                  "bucket_name": "${pipeline_bucket}",
+                  "pipeline_name": "${project}-main-${environment}",
+                  "job_id.$": "$$.Execution.Name",
+                  "last_pred_date.$": "$.last_pred_date",
+                  "season_start.$": "$.season_start"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "NewGamesChoice",
+          "States": {
+            "NewGamesChoice":{
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "And": [
+                    {
+                      "Variable": "$.next_game_date",
+                      "IsNull": false
+                    },
+                    {
+                      "Variable": "$.next_game_date",
+                      "StringGreaterThanPath": "$.last_pred_date"
+                    },
+                    {
+                      "Variable": "$.next_game_date",
+                      "StringLessThanEqualsPath": "$.today"
+                    }
+                  ],
+                  "Next": "ModelInference"
+                }
+              ],
+              "Default": "Finish"
+            },
+            "ModelInference": {
+              "Type": "Task",
+              "Resource": "${task_lambda}",
+              "ResultPath": "$.updated_model_state",
+              "Parameters": {
+                "league": "nhl",
+                "task": "model_inference",
+                "task_parameters": {
+                  "bucket_name": "${pipeline_bucket}",
+                  "pipeline_name": "${project}-main-${environment}",
+                  "job_id.$": "$$.Execution.Name"
+                }
+              },
+              "Next": "PredictGames"
+            },
+            "PredictGames": {
+              "Type": "Map",
+              "MaxConcurrency": 6,
+              "Parameters": {
+                "game.$": "$$.Map.Item.Value",
+                "updated_model_state.$": "$.updated_model_state"
+              },
+              "ItemsPath": "$.games_to_predict",
+              "ResultPath": "$.game_preds",
+              "Next": "CreateNewRecord",
+              "Iterator": {
+                "StartAt": "PredictGame",
+                "States": {
+                  "PredictGame": {
+                    "Type": "Task",
+                    "Resource": "${task_lambda}",
+                    "Parameters": {
+                      "league": "nhl",
+                      "task": "predict_game",
+                      "task_parameters": {
+                        "game.$": "$.game",
+                        "updated_model_state.$": "$.updated_model_state"                      }
+                    },
+                    "End": true
+                  }
+                }
+              }
+            },
+            "CreateNewRecord": {
+              "Type": "Task",
+              "Resource": "${task_lambda}",
+              "ResultPath": "$.new_record_output",
+              "Parameters": {
+                "league": "nhl",
+                "task": "create_record",
+                "task_parameters": {
+                  "bucket_name": "${web_bucket}",
+                  "game_date.$": "$.next_game_date",
+                  "updated_model_state.$": "$.updated_model_state",
+                  "game_preds.$": "$.game_preds"
+                }
+              },
+              "Next": "BackfillChoice"
+            },
+            "BackfillChoice":{
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.next_game_date",
+                  "StringLessThanPath": "$.today",
+                  "Next": "NewBackfillExecution"
+                }
+              ],
+              "Default": "Finish"
+            },
+            "NewBackfillExecution": {
+              "Type":"Task",
+              "Resource":"arn:aws:states:::states:startExecution",
+              "Parameters":{  
+                  "Input":{},
+                  "StateMachineArn":"arn:aws:states:us-east-1:${account_id}:stateMachine:${project}-nhl-main-${environment}"
+              },
+              "Next": "Finish"
+            },
+            "Finish": {
+              "Type": "Succeed"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
