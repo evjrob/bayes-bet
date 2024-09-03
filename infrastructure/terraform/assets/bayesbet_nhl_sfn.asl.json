@@ -84,7 +84,7 @@
             },
             "PredictGames": {
               "Type": "Map",
-              "MaxConcurrency": "States.StringToJson(${max_concurrency})",
+              "MaxConcurrencyPath": "States.StringToJson(${max_concurrency})",
               "Parameters": {
                 "game.$": "$$.Map.Item.Value",
                 "updated_model_state.$": "$.updated_model_state"
