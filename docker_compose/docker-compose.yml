@@ -1,0 +1,98 @@
+services:
+  minio:
+    image: minio/minio
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - s3_data:/data
+    networks:
+      - bayes-bet
+    command: server --address ":9000" -console-address ":9001" /data
+    
+  dynamodb:
+    image: amazon/dynamodb-local
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - "db_data:/data"
+    networks:
+      - bayes-bet
+    user: root
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/data"]
+
+  model:
+    build:
+      context: ../model
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - bayes-bet
+    environment:
+      DEPLOYMENT_VERSION: local
+      DYNAMODB_MODEL_TABLE_NAME: bayes-bet-model-state-local
+      DYNAMODB_PRED_TABLE_NAME: bayes-bet-predictions-local
+      PIPELINE_S3_BUCKET: bayes-bet-pipeline-local
+      WEB_S3_BUCKET: bayes-bet-web-local
+      AWS_REGION: us-east-1
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_DYNAMODB_ENDPOINT_URL: http://dynamodb:8000
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+    working_dir: /workspaces/bayes-bet/model
+    entrypoint: [ "/usr/bin/aws-lambda-rie", "/usr/local/bin/python", "-m", "awslambdaric" ]
+    command: [ "app.lambda_handler" ]
+
+  stepfunctions:
+    image: amazon/aws-stepfunctions-local
+    ports:
+      - "127.0.0.1:8083:8083"
+    networks:
+      - bayes-bet
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+      LAMBDA_ENDPOINT: http://model:8080
+      STEPFUNCTIONS_PORT: 8083
+      STEP_FUNCTIONS_ENDPOINT: http://0.0.0.0:8083/
+    command: ["-jar", "StepFunctionsLocal.jar"]
+
+  frontend:
+    build:
+      context: ../front_end
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:5000:5000"
+    networks:
+      - bayes-bet
+    volumes:
+      - ../front_end/app:/app
+    environment:
+      DJANGO_DEBUG: True
+      DJANGO_SECRET_KEY: local
+      DYNAMODB_TABLE_NAME: bayes-bet-predictions-local
+      S3_BUCKET_NAME: bayes-bet-web-local
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      S3_ENDPOINT: http://127.0.0.1:9000
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+      LAMBDA_ENDPOINT: http://model:8080
+    working_dir: /app
+    command: ["python", "manage.py", "runserver", "0.0.0.0:5000"]
+
+volumes:
+  db_data:
+  s3_data:
+
+networks:
+  bayes-bet:
+    driver: bridge

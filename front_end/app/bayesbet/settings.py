@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'django_s3_storage',
     'data.apps.DataConfig',
     'plots.apps.PlotsConfig',
 ]
@@ -115,16 +114,14 @@ STATICFILES_DIRS = [
    "bayesbet/static"
 ]
 
-YOUR_S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
-
-STATICFILES_STORAGE = "django_s3_storage.storage.StaticS3Storage"
-AWS_S3_BUCKET_NAME_STATIC = YOUR_S3_BUCKET
-AWS_S3_BUCKET_NAME = YOUR_S3_BUCKET
-AWS_S3_FILE_OVERWRITE = True
+S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 # Serve the static files directly from the s3 bucket
-AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % YOUR_S3_BUCKET
-STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
+S3_ENDPOINT = os.environ.get('S3_ENDPOINT')
+if S3_ENDPOINT:
+    STATIC_URL = f"{S3_ENDPOINT}/{S3_BUCKET_NAME}/"
+else:
+    STATIC_URL = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/"
 
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
@@ -138,4 +135,10 @@ CORS_ORIGIN_WHITELIST = [
     ]
 if DEBUG is True:
     CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + \
-    ["http://localhost:8000", "http://127.0.0.1:8000", "file://*"]
+    [
+        "http://localhost:9000",
+        "http://127.0.0.1:9000",
+        "http://minio:9000",
+        "http://0.0.0.0:9000",
+        "file://*"
+    ]

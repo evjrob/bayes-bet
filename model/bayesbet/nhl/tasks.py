@@ -89,7 +89,7 @@ def create_record(
     logger.info(f"Generated new prediction record for League=nhl and date={game_date}")
 
     # Get the pred_dates from s3 and update
-    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    endpoint_url = os.getenv("AWS_S3_ENDPOINT_URL")
     use_ssl = os.getenv("AWS_USE_SSL")
     s3 = s3fs.S3FileSystem(
         client_kwargs={
@@ -111,7 +111,7 @@ def ingest_data(bucket_name, pipeline_name, job_id):
     today_dt = dt.date.today()
     today = today_dt.strftime("%Y-%m-%d")
 
-    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    endpoint_url = os.getenv("AWS_S3_ENDPOINT_URL")
     use_ssl = os.getenv("AWS_USE_SSL")
     s3 = s3fs.S3FileSystem(
         client_kwargs={
@@ -207,7 +207,7 @@ def model_inference(
     job_id,
 ):
     # Get the games CSV from s3
-    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    endpoint_url = os.getenv("AWS_S3_ENDPOINT_URL")
     use_ssl = os.getenv("AWS_USE_SSL")
     s3 = s3fs.S3FileSystem(
         client_kwargs={
@@ -256,7 +256,7 @@ def update_previous_record(
     bucket_name, pipeline_name, job_id, last_pred_date, season_start
 ):
     # Get the games CSV from s3
-    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
+    endpoint_url = os.getenv("AWS_S3_ENDPOINT_URL")
     use_ssl = os.getenv("AWS_USE_SSL")
     s3 = s3fs.S3FileSystem(
         client_kwargs={
@@ -306,4 +306,4 @@ def update_previous_record(
         )
 
     put_dynamodb_item(pred_table_name, updated_last_pred.model_dump())
-    return
+    return last_pred_date

@@ -8,8 +8,8 @@ from model.bayesbet.nhl.data_model import PredictionRecord, ModelStateRecord, Le
 
 
 REGION = 'us-east-1'
-AWS_PROFILE = 'bayes-bet-staging'
-ENVIRONMENT = 'staging'
+AWS_PROFILE = 'bayes-bet-admin'
+ENVIRONMENT = 'prod'
 SOURCE_TABLE_NAME = f'bayes-bet-main-{ENVIRONMENT}'
 PRED_TABLE_NAME = f'bayes-bet-predictions-{ENVIRONMENT}'
 MODEL_TABLE_NAME = f'bayes-bet-model-state-{ENVIRONMENT}'

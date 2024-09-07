@@ -9,7 +9,8 @@ import os
 from collections import defaultdict
 import boto3
 from boto3.dynamodb.conditions import Key
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+endpoint_url = os.getenv('DYNAMODB_ENDPOINT')
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1', endpoint_url=endpoint_url)
 table_name = os.getenv('DYNAMODB_TABLE_NAME')
 table = dynamodb.Table(table_name)
 
