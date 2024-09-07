@@ -11,7 +11,7 @@ from bayesbet.logger import get_logger
 
 logger = get_logger(__name__)
 region = os.getenv('AWS_REGION')
-endpoint_url = os.getenv('AWS_ENDPOINT_URL')
+endpoint_url = os.getenv('AWS_DYNAMODB_ENDPOINT_URL')
 use_ssl = os.getenv('AWS_USE_SSL')
 
 

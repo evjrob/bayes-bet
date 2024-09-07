@@ -24,8 +24,8 @@ services:
       - bayes-bet
     user: root
     environment:
-      AWS_ACCESS_KEY_ID: rnUkeryIWgKEmHDiXG6u
-      AWS_SECRET_ACCESS_KEY: nXN1TTcSaCQeO9TwPVK0XfDyfJmsup24AKzQar5q
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
     command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/data"]
 
   model:
@@ -42,21 +42,28 @@ services:
       DYNAMODB_PRED_TABLE_NAME: bayes-bet-predictions-local
       PIPELINE_S3_BUCKET: bayes-bet-pipeline-local
       WEB_S3_BUCKET: bayes-bet-web-local
+      AWS_REGION: us-east-1
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_DYNAMODB_ENDPOINT_URL: http://dynamodb:8000
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
     working_dir: /workspaces/bayes-bet/model
     entrypoint: [ "/usr/bin/aws-lambda-rie", "/usr/local/bin/python", "-m", "awslambdaric" ]
-    command: [ "app.handler" ]
+    command: [ "app.lambda_handler" ]
 
   stepfunctions:
     image: amazon/aws-stepfunctions-local
     ports:
-      - "8083:8083"
+      - "127.0.0.1:8083:8083"
     networks:
       - bayes-bet
     environment:
-      AWS_ACCESS_KEY_ID: rnUkeryIWgKEmHDiXG6u
-      AWS_SECRET_ACCESS_KEY: nXN1TTcSaCQeO9TwPVK0XfDyfJmsup24AKzQar5q1
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
       DYNAMODB_ENDPOINT: http://dynamodb:8000
       LAMBDA_ENDPOINT: http://model:8080
+      STEPFUNCTIONS_PORT: 8083
+      STEP_FUNCTIONS_ENDPOINT: http://0.0.0.0:8083/
     command: ["-jar", "StepFunctionsLocal.jar"]
 
   frontend:
@@ -74,8 +81,8 @@ services:
       DJANGO_SECRET_KEY: local
       DYNAMODB_TABLE_NAME: bayes-bet-predictions-local
       S3_BUCKET_NAME: bayes-bet-web-local
-      AWS_ACCESS_KEY_ID: rnUkeryIWgKEmHDiXG6u
-      AWS_SECRET_ACCESS_KEY: nXN1TTcSaCQeO9TwPVK0XfDyfJmsup24AKzQar5q1
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
       S3_ENDPOINT: http://127.0.0.1:9000
       DYNAMODB_ENDPOINT: http://dynamodb:8000
       LAMBDA_ENDPOINT: http://model:8080
