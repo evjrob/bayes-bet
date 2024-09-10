@@ -23,5 +23,7 @@ stages:
     deps:
     - ../data/preprocessed
     - stages/split_data.py
+    params:
+    - splits
     outs:
     - ../data/final
