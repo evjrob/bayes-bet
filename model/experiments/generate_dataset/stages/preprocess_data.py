@@ -2,13 +2,14 @@ import gzip
 import json
 import os
 import pandas as pd
+import sys
 from tqdm import tqdm
 
 from bayesbet.nhl.data_utils import extract_game_data
 
 
-def main():
-    with gzip.open('../data/raw/games.json.gz', 'rb') as f:
+def main(season):
+    with gzip.open(f'../data/raw/{season}/games.json.gz', 'rb') as f:
         games_json = json.loads(f.read().decode('utf-8'))
 
     games_data_frames = []
@@ -21,9 +22,10 @@ def main():
     games = games[~games["game_type"].isin(["Pr", "A", "Other"])]
     games = games.reset_index(drop=True)
     
-    os.makedirs("../data/preprocessed", exist_ok=True)
-    games.to_parquet("../data/preprocessed/games.parquet")
+    os.makedirs(f"../data/preprocessed/{season}", exist_ok=True)
+    games.to_parquet(f"../data/preprocessed/{season}/games.parquet")
     
 
 if __name__ == "__main__":
-    main()
+    season = sys.argv[1]
+    main(season)
