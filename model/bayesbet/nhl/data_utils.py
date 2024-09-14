@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from bayesbet.logger import get_logger
@@ -135,6 +136,24 @@ def extract_game_data(games_json):
     return games, date_metadata
 
 
+def infer_home_team_side(home_team_id, plays):
+    if "homeTeamDefendingSide" in plays[0]:
+        home_team_start_side = plays[0]["homeTeamDefendingSide"]
+        return home_team_start_side
+    
+    for play in plays:
+        if "details" in play and "zoneCode" in play["details"]:
+            zone = play["details"]["zoneCode"]
+            if zone == "N":
+                continue
+            event_x = play["details"]["xCoord"]
+            event_team_id = play["details"]["eventOwnerTeamId"]
+
+            side = (-1 ** (event_team_id == home_team_id)) * (-1 ** (event_x < 0)) * (-1 ** (zone == "D"))
+            
+            return "left" if side == 1 else "right"
+    
+
 def extract_shot_data(play_by_play_json):
     home_team_id = play_by_play_json["homeTeam"]["id"]
     goal_x_distance = 89
@@ -143,10 +162,17 @@ def extract_shot_data(play_by_play_json):
     shot_data = []
 
     plays = play_by_play_json["plays"]
+    home_team_start_side = infer_home_team_side(home_team_id, plays)
+    def get_home_team_defending_side(period):
+        if period % 2 == 1:
+            return home_team_start_side
+        else:
+            return "left" if home_team_start_side == "right" else "right"
+        
     for previous_play, current_play in zip(plays[:-1], plays[1:]):
-        if current_play["typeDescKey"] not in ["shot-on-goal", "goal"]:
+        if current_play["typeDescKey"] not in ["shot-on-goal", "goal", "missed-shot", "penalty"]:
             continue
-        elif current_play["typeDescKey"] == "penalty":
+        if current_play["typeDescKey"] == "penalty":
             last_penalty_period = current_play["periodDescriptor"]["number"]
             last_penalty_time = current_play["timeInPeriod"]
             last_penalty_time_seconds = (last_penalty_period - 1) * 20 * 60 + int(last_penalty_time.split(":")[0]) * 60 + int(last_penalty_time.split(":")[1])
@@ -158,7 +184,8 @@ def extract_shot_data(play_by_play_json):
         shot_time_seconds = (shot_period - 1) * 20 * 60 + int(shot_time.split(":")[0]) * 60 + int(shot_time.split(":")[1])
         shot_detail = current_play["details"]
         is_home_team = shot_detail["eventOwnerTeamId"] == home_team_id
-        home_team_defending_side = current_play["homeTeamDefendingSide"]
+        
+        home_team_defending_side = get_home_team_defending_side(shot_period)
         if home_team_defending_side == "left":
             if is_home_team:
                 goal_x = goal_x_distance
@@ -169,18 +196,23 @@ def extract_shot_data(play_by_play_json):
                 goal_x = -goal_x_distance
             else:
                 goal_x = goal_x_distance
+        
+        # Some goals are not the result of shots, filter these out
+        if "shotType" not in shot_detail:
+            continue
+        
         shot_type = shot_detail["shotType"]
         shot_x = shot_detail["xCoord"]
         shot_y = shot_detail["yCoord"]
         shot_distance = ((shot_x - goal_x) ** 2 + (shot_y - goal_y) ** 2) ** 0.5
-        shot_angle = (shot_y - goal_y) / max(abs(shot_x - goal_x), 0.1)
+        shot_angle = np.arctan2((shot_y - goal_y), max(abs(shot_x - goal_x), 0.1))
         if goal_x < 0:
             shot_angle = -shot_angle
         last_event = previous_play["typeDescKey"]
-        last_event_detail = previous_play["details"]
-        if "xCoord" in last_event_detail and "yCoord" in last_event_detail:
-            last_event_x = last_event_detail["xCoord"]
-            last_event_y = last_event_detail["yCoord"]
+        
+        if "details" in last_event and "xCoord" in last_event["details"] and "yCoord" in last_event["details"]:
+            last_event_x = last_event["details"]["xCoord"]
+            last_event_y = last_event["details"]["yCoord"]
         else:
             last_event_x = 0
             last_event_y = 0
