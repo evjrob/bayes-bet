@@ -1,4 +1,22 @@
 seasons:
+  - season: 20142015
+    start_date: "2014-08-01"
+    end_date: "2015-06-15"
+  - season: 20152016
+    start_date: "2015-08-01"
+    end_date: "2016-06-12"
+  - season: 20162017
+    start_date: "2016-08-01"
+    end_date: "2017-06-11"
+  - season: 20172018
+    start_date: "2017-08-01"
+    end_date: "2018-06-07"
+  - season: 20182019
+    start_date: "2018-08-01"
+    end_date: "2019-06-12"
+  - season: 20192020
+    start_date: "2019-08-01"
+    end_date: "2020-09-28"
   - season: 20202021
     start_date: "2021-01-01"
     end_date: "2021-07-13"
@@ -13,8 +31,14 @@ seasons:
     end_date: "2024-06-24"
 splits:
   train:
+    - 20142015
+    - 20152016
+    - 20162017
+    - 20172018
+    - 20182019
+    - 20192020
     - 20202021
     - 20212022
-    - 20222023
   test:
+    - 20222023
     - 20232024
