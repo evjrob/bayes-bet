@@ -29,6 +29,7 @@ def main(season):
     for game_id in games["game_pk"]:
         game_play_by_play_json = play_by_play_json[str(game_id)]
         shot_data_frame = extract_shot_data(game_play_by_play_json)
+        shot_data_frame["game_id"] = game_id
         shots_data_frames.append(shot_data_frame)
 
     shots = pd.concat(shots_data_frames, ignore_index=True)

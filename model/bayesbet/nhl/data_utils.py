@@ -144,14 +144,11 @@ def infer_home_team_side(home_team_id, plays):
     for play in plays:
         if "details" in play and "zoneCode" in play["details"]:
             zone = play["details"]["zoneCode"]
-            if zone == "N":
+            event_team_id = play["details"]["eventOwnerTeamId"]
+            if zone != "D" or event_team_id != home_team_id or play["typeDescKey"] == "blocked-shot":
                 continue
             event_x = play["details"]["xCoord"]
-            event_team_id = play["details"]["eventOwnerTeamId"]
-
-            side = (-1 ** (event_team_id == home_team_id)) * (-1 ** (event_x < 0)) * (-1 ** (zone == "D"))
-            
-            return "left" if side == 1 else "right"
+            return "left" if event_x < 0 else "right"
     
 
 def extract_shot_data(play_by_play_json):
@@ -169,7 +166,7 @@ def extract_shot_data(play_by_play_json):
         else:
             return "left" if home_team_start_side == "right" else "right"
         
-    for previous_play, current_play in zip(plays[:-1], plays[1:]):
+    for i, (previous_play, current_play) in enumerate(zip(plays[:-1], plays[1:])):
         if current_play["typeDescKey"] not in ["missed-shot", "shot-on-goal", "goal", "penalty"]:
             continue
         if current_play["typeDescKey"] == "penalty":
@@ -212,6 +209,10 @@ def extract_shot_data(play_by_play_json):
         shot_angle = np.arctan2((shot_y - goal_y), max(abs(shot_x - goal_x), 0.1))
         if goal_x < 0:
             shot_angle = -shot_angle
+        if "shootingPlayerId" in shot_detail:
+            shooting_player_id = shot_detail["shootingPlayerId"]
+        else:
+            shooting_player_id = -1
         last_event = previous_play["typeDescKey"]
         
         if "details" in last_event and "xCoord" in last_event["details"] and "yCoord" in last_event["details"]:
@@ -273,6 +274,8 @@ def extract_shot_data(play_by_play_json):
             "powerplay_duration": powerplay_duration,
             "empty_net": empty_net,
             "goal": goal,
+            "play_number": i + 1,
+            "player_id": shooting_player_id,
         }
 
         shot_data.append(row)
