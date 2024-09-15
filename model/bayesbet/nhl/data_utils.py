@@ -225,6 +225,15 @@ def extract_shot_data(play_by_play_json):
         last_event_time = previous_play["timeInPeriod"]
         last_event_time_seconds = (last_event_period - 1) * 20 * 60 + int(last_event_time.split(":")[0]) * 60 + int(last_event_time.split(":")[1])
         time_since_last_event = shot_time_seconds - last_event_time_seconds
+        if "details" in previous_play and "eventOwnerTeamId" in previous_play["details"]:
+            last_event_same_team = previous_play["details"]["eventOwnerTeamId"] == shot_detail["eventOwnerTeamId"]
+        else:
+            last_event_same_team = False
+        is_rebound = last_event == "shot-on-goal" and time_since_last_event < 2
+        last_event_angle = np.arctan2((last_event_y - shot_y), max(abs(last_event_x - shot_x), 0.1))
+        if goal_x < 0:
+            last_event_angle = -last_event_angle
+        rebound_angle = (shot_angle - last_event_angle) * is_rebound
         situation_code = [int(d) for d in str(current_play["situationCode"])]
         away_goalie = situation_code[0]
         away_skaters = situation_code[1]
@@ -237,18 +246,28 @@ def extract_shot_data(play_by_play_json):
         opposing_skaters = away_skaters if is_home_team else home_skaters
         current_skaters = home_skaters if is_home_team else away_skaters
         empty_net = (is_home_team and away_goalie == 0) or (not is_home_team and home_goalie == 0)
+
+        # Adjust shot coordinates for the side of the ice
+        coordinate_adjustment = np.sign(goal_x)
         
         row = {
+            "shot_is_home_team": is_home_team,
+            "home_team_defending_side": home_team_defending_side,
             "shot_type": shot_type,
-            "shot_x": shot_x,
-            "shot_y": shot_y,
+            "shot_x": shot_x * coordinate_adjustment,
+            "shot_y": shot_y * coordinate_adjustment,
+            "goal_x": goal_x * coordinate_adjustment,
+            "goal_y": goal_y * coordinate_adjustment,
             "shot_distance": shot_distance,
             "shot_angle": shot_angle,
             "last_event": last_event,
-            "last_event_x": last_event_x,
-            "last_event_y": last_event_y,
+            "last_event_x": last_event_x * coordinate_adjustment,
+            "last_event_y": last_event_y * coordinate_adjustment,
             "last_event_distance": last_event_distance,
             "time_since_last_event": time_since_last_event,
+            "last_event_same_team": last_event_same_team,
+            "is_rebound": is_rebound,
+            "rebound_angle": rebound_angle,
             "opposing_skaters": opposing_skaters,
             "current_skaters": current_skaters,
             "powerplay_duration": powerplay_duration,
