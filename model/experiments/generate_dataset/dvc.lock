@@ -48,8 +48,8 @@ stages:
     deps:
     - path: ../data/preprocessed
       hash: md5
-      md5: a5767d8ae55a073db1d8568830e1544a.dir
-      size: 13044749
+      md5: c5b2e3c71b803710256a451466a54073.dir
+      size: 15699886
       nfiles: 20
     - path: stages/split_data.py
       hash: md5
@@ -67,14 +67,14 @@ stages:
           - 20192020
           - 20202021
           - 20212022
-          test:
           - 20222023
+          test:
           - 20232024
     outs:
     - path: ../data/final
       hash: md5
-      md5: 5ad5ca00fe9a345ff8b8da3ec2052a88.dir
-      size: 160119
+      md5: c7fe6ee8ff6b5f716b79d323f9438f41.dir
+      size: 160056
       nfiles: 2
   fetch_data@0:
     cmd: python stages/fetch_data.py 20142015 2014-08-01 2015-06-15
@@ -149,8 +149,8 @@ stages:
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20142015
       hash: md5
       md5: 71fc079649523b646b18db82223cc2ad.dir
@@ -158,21 +158,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20142015
       hash: md5
-      md5: e819f1d3835f54552e32bbfcd0c3ad36.dir
-      size: 1315023
+      md5: d9592501514e2834d39a9927c879ddba.dir
+      size: 1563383
       nfiles: 2
   preprocess_data@1:
     cmd: python stages/preprocess_data.py 20152016
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20152016
       hash: md5
       md5: 8b74d0faa0d1230fa20f07fa49b21721.dir
@@ -180,21 +180,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20152016
       hash: md5
-      md5: 416db17f3b4859338e304c4fe928e88f.dir
-      size: 1306688
+      md5: a2b82fb2f31aa6b798dda661696b5618.dir
+      size: 1539865
       nfiles: 2
   preprocess_data@2:
     cmd: python stages/preprocess_data.py 20162017
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20162017
       hash: md5
       md5: d3fa50527957f8a7aa85767649ab7309.dir
@@ -202,21 +202,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20162017
       hash: md5
-      md5: aae78c49b5ba7bf3bea75ad03cbdfa6b.dir
-      size: 1328186
+      md5: 936d92568975b648d131d0e1fae70754.dir
+      size: 1550151
       nfiles: 2
   preprocess_data@3:
     cmd: python stages/preprocess_data.py 20172018
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20172018
       hash: md5
       md5: 39c6913eae60ec0f7a27233713c897f8.dir
@@ -224,13 +224,13 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20172018
       hash: md5
-      md5: 2440953f8f638f904deebdc9e89e42de.dir
-      size: 1415617
+      md5: 8b570bbbf8495270bfcc70f8cb0f1ee8.dir
+      size: 1669582
       nfiles: 2
   fetch_data@4:
     cmd: python stages/fetch_data.py 20182019 2018-08-01 2019-06-12
@@ -339,8 +339,8 @@ stages:
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20182019
       hash: md5
       md5: 1315b1c848c2feaa0818ee9c186291a2.dir
@@ -348,21 +348,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20182019
       hash: md5
-      md5: 5421aaadbf0fab4f93ba63f6c2dc7f47.dir
-      size: 1416072
+      md5: 36ae08a5363e07cf07eb8d00ed4ffc84.dir
+      size: 1666558
       nfiles: 2
   preprocess_data@5:
     cmd: python stages/preprocess_data.py 20192020
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20192020
       hash: md5
       md5: df0aaefcb2e13a40d8a5a55f388528a3.dir
@@ -370,21 +370,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20192020
       hash: md5
-      md5: 976b76eebd9f3563ea8a3ba86f85b40c.dir
-      size: 1197438
+      md5: f02195cbdcaf95747fdb29ac127ec852.dir
+      size: 1477071
       nfiles: 2
   preprocess_data@6:
     cmd: python stages/preprocess_data.py 20202021
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20202021
       hash: md5
       md5: ddcb38ee0f240f4db5bf0b6391a163da.dir
@@ -392,21 +392,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20202021
       hash: md5
-      md5: cbceb5d41294762f611a9b2e6f9fb29d.dir
-      size: 920819
+      md5: 0642201ef596dfc610e8bed168242007.dir
+      size: 1124343
       nfiles: 2
   preprocess_data@7:
     cmd: python stages/preprocess_data.py 20212022
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20212022
       hash: md5
       md5: f535fd218d93e38fd9d97d3fab8d69ea.dir
@@ -414,21 +414,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20212022
       hash: md5
-      md5: e038bd1bec3014b56824817f04355e41.dir
-      size: 1370925
+      md5: 585bd2ac987e70c31fdc6848ba95b40c.dir
+      size: 1696663
       nfiles: 2
   preprocess_data@8:
     cmd: python stages/preprocess_data.py 20222023
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20222023
       hash: md5
       md5: 8f0993b67467fd781624205d506cdd17.dir
@@ -436,21 +436,21 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20222023
       hash: md5
-      md5: c112e563d564e4bbac693f1a42b82c46.dir
-      size: 1383887
+      md5: bb759947fa0401f046c108fc11ca31b5.dir
+      size: 1710453
       nfiles: 2
   preprocess_data@9:
     cmd: python stages/preprocess_data.py 20232024
     deps:
     - path: ../../bayesbet/nhl/data_utils.py
       hash: md5
-      md5: 043beb1c3763e1bbd235ba9957bdb8b7
-      size: 10585
+      md5: 2519ea6857e237684a68f2ebb19b5e43
+      size: 10796
     - path: ../data/raw/20232024
       hash: md5
       md5: bc9ff006f68baf9500f641918ac5a8ac.dir
@@ -458,11 +458,11 @@ stages:
       nfiles: 3
     - path: stages/preprocess_data.py
       hash: md5
-      md5: 595916b114f89cc682d89614a36df256
-      size: 1441
+      md5: 8fc0cb9b420976a433e6b27116e6ff77
+      size: 1486
     outs:
     - path: ../data/preprocessed/20232024
       hash: md5
-      md5: 4572ba39b1e46bc3efc96828ee27fa43.dir
-      size: 1390094
+      md5: 6ddd6f0c45dd1aa8a14e625fdbb3089a.dir
+      size: 1701817
       nfiles: 2
