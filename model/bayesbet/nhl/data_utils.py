@@ -149,13 +149,17 @@ def infer_home_team_side(home_team_id, plays):
                 continue
             event_x = play["details"]["xCoord"]
             return "left" if event_x < 0 else "right"
-    
+
+
+def get_time_since_game_start(period, time):
+    return (period - 1) * 20 * 60 + int(time.split(":")[0]) * 60 + int(time.split(":")[1])
+
 
 def extract_shot_data(play_by_play_json):
     home_team_id = play_by_play_json["homeTeam"]["id"]
     goal_x_distance = 89
     goal_y = 0
-    last_penalty_time_seconds = 0
+    last_even_strength_time_seconds = 0
     shot_data = []
 
     plays = play_by_play_json["plays"]
@@ -167,12 +171,20 @@ def extract_shot_data(play_by_play_json):
             return "left" if home_team_start_side == "right" else "right"
         
     for i, (previous_play, current_play) in enumerate(zip(plays[:-1], plays[1:])):
+        # Get the current play's situation code
+        situation_code = [int(d) for d in str(current_play["situationCode"])]
+        away_goalie = situation_code[0]
+        away_skaters = situation_code[1]
+        home_skaters = situation_code[2]
+        home_goalie = situation_code[3]
+
+        # constantly check when team strengths were last even
+        if home_skaters == away_skaters:
+            current_play_period = current_play["periodDescriptor"]["number"]
+            current_play_time = current_play["timeInPeriod"]
+            last_even_strength_time_seconds = get_time_since_game_start(current_play_period, current_play_time)
+
         if current_play["typeDescKey"] not in ["missed-shot", "shot-on-goal", "goal", "penalty"]:
-            continue
-        if current_play["typeDescKey"] == "penalty":
-            last_penalty_period = current_play["periodDescriptor"]["number"]
-            last_penalty_time = current_play["timeInPeriod"]
-            last_penalty_time_seconds = (last_penalty_period - 1) * 20 * 60 + int(last_penalty_time.split(":")[0]) * 60 + int(last_penalty_time.split(":")[1])
             continue
 
         goal = current_play["typeDescKey"] == "goal"
@@ -224,7 +236,7 @@ def extract_shot_data(play_by_play_json):
         last_event_distance = ((last_event_x - shot_x) ** 2 + (last_event_y - shot_y) ** 2) ** 0.5
         last_event_period = previous_play["periodDescriptor"]["number"]
         last_event_time = previous_play["timeInPeriod"]
-        last_event_time_seconds = (last_event_period - 1) * 20 * 60 + int(last_event_time.split(":")[0]) * 60 + int(last_event_time.split(":")[1])
+        last_event_time_seconds = get_time_since_game_start(last_event_period, last_event_time)
         time_since_last_event = shot_time_seconds - last_event_time_seconds
         if "details" in previous_play and "eventOwnerTeamId" in previous_play["details"]:
             last_event_same_team = previous_play["details"]["eventOwnerTeamId"] == shot_detail["eventOwnerTeamId"]
@@ -235,15 +247,10 @@ def extract_shot_data(play_by_play_json):
         if goal_x < 0:
             last_event_angle = -last_event_angle
         rebound_angle = (shot_angle - last_event_angle) * is_rebound
-        situation_code = [int(d) for d in str(current_play["situationCode"])]
-        away_goalie = situation_code[0]
-        away_skaters = situation_code[1]
-        home_skaters = situation_code[2]
-        home_goalie = situation_code[3]
-        if home_skaters != away_skaters and (home_skaters < 5 or away_skaters < 5):
-            powerplay_duration = shot_time_seconds - last_penalty_time_seconds
+        if home_skaters != away_skaters:
+            time_since_even_strength = shot_time_seconds - last_even_strength_time_seconds
         else:
-            powerplay_duration = 0
+            time_since_even_strength = 0
         opposing_skaters = away_skaters if is_home_team else home_skaters
         current_skaters = home_skaters if is_home_team else away_skaters
         empty_net = (is_home_team and away_goalie == 0) or (not is_home_team and home_goalie == 0)
@@ -271,7 +278,7 @@ def extract_shot_data(play_by_play_json):
             "rebound_angle": rebound_angle,
             "opposing_skaters": opposing_skaters,
             "current_skaters": current_skaters,
-            "powerplay_duration": powerplay_duration,
+            "time_since_even_strength": time_since_even_strength,
             "empty_net": empty_net,
             "goal": goal,
             "play_number": i + 1,
