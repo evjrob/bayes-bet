@@ -170,7 +170,7 @@ def extract_shot_data(play_by_play_json):
             return "left" if home_team_start_side == "right" else "right"
         
     for previous_play, current_play in zip(plays[:-1], plays[1:]):
-        if current_play["typeDescKey"] not in ["shot-on-goal", "goal", "missed-shot", "penalty"]:
+        if current_play["typeDescKey"] not in ["missed-shot", "shot-on-goal", "goal", "penalty"]:
             continue
         if current_play["typeDescKey"] == "penalty":
             last_penalty_period = current_play["periodDescriptor"]["number"]
@@ -197,8 +197,12 @@ def extract_shot_data(play_by_play_json):
             else:
                 goal_x = goal_x_distance
         
-        # Some goals are not the result of shots, filter these out
+        # Some goals seem to have junk data, note them and filter out
         if "shotType" not in shot_detail:
+            print(f"current_play has no shotType! {current_play}")
+            continue
+        if "xCoord" not in shot_detail or "yCoord" not in shot_detail:
+            print(f"current_play is missing cordinates! {current_play}")
             continue
         
         shot_type = shot_detail["shotType"]
@@ -253,5 +257,6 @@ def extract_shot_data(play_by_play_json):
         }
 
         shot_data.append(row)
-        shot_data = pd.DataFrame(shot_data)
-        return shot_data
+
+    shot_data = pd.DataFrame(shot_data)
+    return shot_data
