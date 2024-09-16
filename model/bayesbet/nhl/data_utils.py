@@ -155,6 +155,10 @@ def get_time_since_game_start(period, time):
     return (period - 1) * 20 * 60 + int(time.split(":")[0]) * 60 + int(time.split(":")[1])
 
 
+def sort_plays(plays):
+    return sorted(plays, key=lambda x: (x["periodDescriptor"]["number"], x["timeInPeriod"], x["sortOrder"]))
+
+
 def extract_shot_data(play_by_play_json):
     home_team_id = play_by_play_json["homeTeam"]["id"]
     goal_x_distance = 89
@@ -163,6 +167,7 @@ def extract_shot_data(play_by_play_json):
     shot_data = []
 
     plays = play_by_play_json["plays"]
+    plays = sort_plays(plays)
     home_team_start_side = infer_home_team_side(home_team_id, plays)
     def get_home_team_defending_side(period):
         if period % 2 == 1:
@@ -171,6 +176,9 @@ def extract_shot_data(play_by_play_json):
             return "left" if home_team_start_side == "right" else "right"
         
     for i, (previous_play, current_play) in enumerate(zip(plays[:-1], plays[1:])):
+        if "situationCode" not in current_play:
+            continue
+
         # Get the current play's situation code
         situation_code = [int(d) for d in str(current_play["situationCode"])]
         away_goalie = situation_code[0]
@@ -184,13 +192,13 @@ def extract_shot_data(play_by_play_json):
             current_play_time = current_play["timeInPeriod"]
             last_even_strength_time_seconds = get_time_since_game_start(current_play_period, current_play_time)
 
-        if current_play["typeDescKey"] not in ["missed-shot", "shot-on-goal", "goal", "penalty"]:
+        if current_play["typeDescKey"] not in ["missed-shot", "shot-on-goal", "goal"]:
             continue
 
         goal = current_play["typeDescKey"] == "goal"
         shot_period = current_play["periodDescriptor"]["number"]
         shot_time = current_play["timeInPeriod"]
-        shot_time_seconds = (shot_period - 1) * 20 * 60 + int(shot_time.split(":")[0]) * 60 + int(shot_time.split(":")[1])
+        shot_time_seconds = get_time_since_game_start(shot_period, shot_time)
         shot_detail = current_play["details"]
         is_home_team = shot_detail["eventOwnerTeamId"] == home_team_id
         
