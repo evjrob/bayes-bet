@@ -1,0 +1,15 @@
+stages:
+  evaluate_model:
+    cmd: python stages/evaluate_model.py
+    deps:
+    - ../data/final/train/shots.parquet
+    - ../data/final/test/shots.parquet
+    - stages/evaluate_model.py
+    outs:
+    - results/evaluate_model
+metrics:
+- results/evaluate_model/metrics.json
+plots:
+- results/evaluate_model/plots/metrics:
+    x: step
+- results/evaluate_model/plots/images
