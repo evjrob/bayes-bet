@@ -53,8 +53,8 @@ stages:
       nfiles: 20
     - path: stages/split_data.py
       hash: md5
-      md5: e8244bc69bc97a4ffe37b38ae6c187e1
-      size: 928
+      md5: 94b1258697ccfa256275866610360306
+      size: 1432
     params:
       params.yaml:
         splits:
@@ -73,9 +73,9 @@ stages:
     outs:
     - path: ../data/final
       hash: md5
-      md5: c7fe6ee8ff6b5f716b79d323f9438f41.dir
-      size: 160056
-      nfiles: 2
+      md5: 064320c91cee819fe602a052b593027a.dir
+      size: 15199058
+      nfiles: 4
   fetch_data@0:
     cmd: python stages/fetch_data.py 20142015 2014-08-01 2015-06-15
     deps:

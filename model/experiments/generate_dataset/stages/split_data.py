@@ -13,11 +13,23 @@ def main(train_seasons, test_seasons):
         [pd.read_parquet(f"../data/preprocessed/{season}/games.parquet") for season in test_seasons],
         ignore_index=True
     )
+
+    # Split shots data into training and test sets
+    train_shots = pd.concat(
+        [pd.read_parquet(f"../data/preprocessed/{season}/shots.parquet") for season in train_seasons],
+        ignore_index=True
+    )
+    test_shots = pd.concat(
+        [pd.read_parquet(f"../data/preprocessed/{season}/shots.parquet") for season in test_seasons],
+        ignore_index=True
+    )
     
     os.makedirs("../data/final/train", exist_ok=True)
     os.makedirs("../data/final/test", exist_ok=True)
     train_games.to_parquet("../data/final/train/games.parquet")
     test_games.to_parquet("../data/final/test/games.parquet")
+    train_shots.to_parquet("../data/final/train/shots.parquet")
+    test_shots.to_parquet("../data/final/test/shots.parquet")
     
 
 if __name__ == "__main__":
