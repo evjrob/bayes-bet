@@ -231,6 +231,8 @@ def extract_shot_data(play_by_play_json):
             shot_angle = -shot_angle
         if "shootingPlayerId" in shot_detail:
             shooting_player_id = shot_detail["shootingPlayerId"]
+        elif "scoringPlayerId" in shot_detail:
+            shooting_player_id = shot_detail["scoringPlayerId"]
         else:
             shooting_player_id = -1
         last_event = previous_play["typeDescKey"]
