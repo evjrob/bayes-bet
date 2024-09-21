@@ -21,7 +21,7 @@ from sklearn.metrics import log_loss, auc, roc_auc_score, roc_curve
 from sklearn.metrics import RocCurveDisplay
 from sklearn.calibration import calibration_curve
 from sklearn.inspection import permutation_importance
-
+from xgboost import XGBClassifier
 
 # expected goals plotting
 def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
@@ -135,6 +135,8 @@ def main(model_type):
             classifier = LogisticRegression(max_iter=1000)
         elif model_type == "GradientBoostingClassifier":
             classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
+        elif model_type == "XGBClassifier":
+            classifier = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
