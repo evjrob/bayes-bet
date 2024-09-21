@@ -26,7 +26,6 @@ game_state_mapping = {
 
 team_abbrevs = {
     'Anaheim Ducks':'ANA',
-    'Arizona Coyotes':'ARI',
     'Boston Bruins':'BOS',
     'Buffalo Sabres':'BUF',
     'Calgary Flames':'CGY',
@@ -53,6 +52,7 @@ team_abbrevs = {
     'St. Louis Blues':'STL',
     'Tampa Bay Lightning':'TBL',
     'Toronto Maple Leafs':'TOR',
+    'Utah Hockey Club':'UTA',
     'Vancouver Canucks':'VAN',
     'Vegas Golden Knights':'VGK',
     'Washington Capitals':'WSH',
