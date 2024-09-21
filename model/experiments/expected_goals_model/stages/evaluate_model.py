@@ -11,6 +11,8 @@ from dvclive import Live
 from scipy.interpolate import griddata
 from scipy.ndimage import gaussian_filter
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_validate
@@ -129,6 +131,12 @@ def main(model_type):
 
         if model_type == "MLPClassifier":
             classifier = MLPClassifier(hidden_layer_sizes=(20, 20, 20, 20), max_iter=1000, alpha=1e-4)
+        elif model_type == "LogisticRegression":
+            classifier = LogisticRegression(max_iter=1000)
+        elif model_type == "GradientBoostingClassifier":
+            classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
 
         pipe = Pipeline(
             [
