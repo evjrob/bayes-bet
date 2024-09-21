@@ -20,6 +20,8 @@ simplejson = "==3.19.2"
 pyarrow = "==14.0.1"
 pydantic = "==2.5.3"
 seaborn = "==0.13.2"
+scikit-learn = "*"
+xgboost = "*"
 
 [dev-packages]
 dvc = "==3.55.2"
