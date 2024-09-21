@@ -13,11 +13,15 @@ stages:
       size: 13356139
     - path: stages/evaluate_model.py
       hash: md5
-      md5: 66fbda29b92f2af7a669e0c686a06fbe
-      size: 9530
+      md5: d99ec74db96f6c911080488e409fe3b1
+      size: 9989
+    params:
+      params.yaml:
+        evaluate_model:
+          model_type: MLPClassifier
     outs:
     - path: results/evaluate_model
       hash: md5
-      md5: c0a4267f5745a9bd1e31c0bb17f2c6bc.dir
-      size: 335300
+      md5: b07cf457d1f6839d0158c4f9136b7d9c.dir
+      size: 333875
       nfiles: 14

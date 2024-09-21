@@ -5,6 +5,8 @@ stages:
     - ../data/final/train/shots.parquet
     - ../data/final/test/shots.parquet
     - stages/evaluate_model.py
+    params:
+    - evaluate_model
     outs:
     - results/evaluate_model
 metrics:
