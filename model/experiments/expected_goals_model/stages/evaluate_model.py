@@ -17,6 +17,9 @@ from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from sklearn.metrics import log_loss, auc, roc_auc_score, roc_curve
 from sklearn.metrics import RocCurveDisplay
+from sklearn.calibration import calibration_curve
+from sklearn.inspection import permutation_importance
+
 
 # expected goals plotting
 def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
@@ -173,6 +176,33 @@ def main(model_type):
         display.plot()
         plt.title("Test ROC")
         live.log_image("test_roc_curve.png", display.figure_)
+
+        # Calibration plot
+        prob_true, prob_pred = calibration_curve(y_test, y_pred_proba[:,1], n_bins=10)
+        plt.figure(figsize=(10, 6))
+        plt.plot(prob_pred, prob_true, marker='o')
+        plt.plot([0, 1], [0, 1], linestyle='--')
+        plt.xlabel('Predicted probability')
+        plt.ylabel('True probability')
+        plt.title('Calibration plot')
+        live.log_image("calibration_plot.png", plt.gcf())
+        plt.close()
+
+        # Feature importance
+        perm_importance = permutation_importance(pipe, X_test, y_test, n_repeats=10, random_state=42)
+        feature_importance = pd.DataFrame({
+            'feature': X_test.columns,
+            'importance': perm_importance.importances_mean
+        }).sort_values('importance', ascending=False)
+        plt.figure(figsize=(10, 6))
+        plt.barh(feature_importance['feature'][:10][::-1], feature_importance['importance'][:10][::-1])
+        plt.yticks(rotation=0)
+        plt.title('Top 10 Feature Importances')
+        plt.xlabel('Importance')
+        plt.ylabel('Feature')
+        plt.tight_layout()
+        live.log_image("feature_importance.png", plt.gcf())
+        plt.close()
 
         # Compute and plot expected goals
         y_train_proba = pipe.predict_proba(X_train)
