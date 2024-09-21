@@ -1,0 +1,23 @@
+schema: '2.0'
+stages:
+  evaluate_model:
+    cmd: python stages/evaluate_model.py
+    deps:
+    - path: ../data/final/test/shots.parquet
+      hash: md5
+      md5: b0c5891cdf9670cbe7e2c5835ccbe6e4
+      size: 1682878
+    - path: ../data/final/train/shots.parquet
+      hash: md5
+      md5: b830747e6b2eb29a053b0414c23f92c3
+      size: 13356139
+    - path: stages/evaluate_model.py
+      hash: md5
+      md5: 66fbda29b92f2af7a669e0c686a06fbe
+      size: 9530
+    outs:
+    - path: results/evaluate_model
+      hash: md5
+      md5: c0a4267f5745a9bd1e31c0bb17f2c6bc.dir
+      size: 335300
+      nfiles: 14
