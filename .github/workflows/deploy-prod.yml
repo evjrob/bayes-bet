@@ -91,7 +91,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-pipenv.outputs.cache-hit != 'true'
-        run: pipenv install
+        run: pipenv install && pipenv run pip install setuptools==74.1.2
 
       - name: Update Zappa Settings
         uses: restackio/update-json-file-action@v2.0
