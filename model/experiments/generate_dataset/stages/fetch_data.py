@@ -55,14 +55,14 @@ async def main(season, start_date, end_date):
                     play_by_play[game_id] = game_play_by_play
                     shifts[game_id] = game_shifts
 
-                # For each player in play_by_play["rosterSpots"] add to players
-                # if not already present and request their player json
-                for roster_spot in play_by_play["rosterSpots"]:
-                    player_id = roster_spot["playerId"]
-                    if player_id not in players:
-                        players[player_id] = await request_player_json(
-                            session, player_id
-                        )
+                    # For each player in play_by_play["rosterSpots"] add to players
+                    # if not already present and request their player json
+                    for roster_spot in game_play_by_play["rosterSpots"]:
+                        player_id = roster_spot["playerId"]
+                        if player_id not in players:
+                            players[player_id] = await request_player_json(
+                                session, player_id
+                            )
 
                 days_progress = (
                     date.fromisoformat(next_game_date)
