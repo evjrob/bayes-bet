@@ -30,7 +30,8 @@ async def main(season, start_date, end_date):
     play_by_play = {}
     shifts = {}
 
-    async with aiohttp.ClientSession() as session:
+    connector = aiohttp.TCPConnector(limit=100)
+    async with aiohttp.ClientSession(connector=connector) as session:
         print("Requesting teams data")
         teams_json = await request_teams_json(session)
 
