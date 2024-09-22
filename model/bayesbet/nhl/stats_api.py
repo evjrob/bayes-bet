@@ -16,6 +16,19 @@ base_url = 'https://api-web.nhle.com'
 stats_url = 'https://api.nhle.com/stats/rest/en'
 
 
+# Retrieves the JSON team data from the NHL stats API. Contains all teams,
+# current and historic.
+async def request_teams_json(session):
+    path = '/team'
+    async with session.get(stats_url + path) as response:
+        return await response.json()
+    
+# Retrieves the JSON player data from the NHL stats API.
+async def request_player_json(session, player_id):
+    path = f'/v1/player/{player_id}/landing'
+    async with session.get(base_url + path) as response:
+        return await response.json()
+
 # Retrieves the JSON game data from the NHL stats API for a 
 # selected date range.
 async def request_games_json(session, date):
