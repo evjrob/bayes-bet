@@ -11,6 +11,8 @@ from bayesbet.nhl.stats_api import (
     request_games_json,
     request_play_by_play_json,
     request_shifts_json,
+    request_teams_json,
+    request_player_json,
 )
 
 
@@ -24,10 +26,12 @@ async def main(season, start_date, end_date):
     total_days = (date.fromisoformat(end_date) - date.fromisoformat(start_date)).days
 
     games = []
+    players = {}
     play_by_play = {}
-    shifts = {}    
+    shifts = {}
 
     async with aiohttp.ClientSession() as session:
+        teams_json = await request_teams_json(session)
         game_json = await request_games_json(session, start_date)
         previous_game_date = start_date
         next_game_date = game_json["nextDate"]
@@ -48,6 +52,13 @@ async def main(season, start_date, end_date):
                 for game_id, game_play_by_play, game_shifts in results:
                     play_by_play[game_id] = game_play_by_play
                     shifts[game_id] = game_shifts
+
+                # For each player in play_by_play["rosterSpots"] add to players
+                # if not already present and request their player json
+                for roster_spot in play_by_play["rosterSpots"]:
+                    player_id = roster_spot["playerId"]
+                    if player_id not in players:
+                        players[player_id] = await request_player_json(session, player_id)
                 
                 days_progress = (date.fromisoformat(next_game_date) - date.fromisoformat(previous_game_date)).days
                 previous_game_date = next_game_date
@@ -57,7 +68,15 @@ async def main(season, start_date, end_date):
                 pbar.update(days_progress)
 
     os.makedirs(f"../data/raw/{season}", exist_ok=True)
+
+    # Duplicates data across seasons results folders
+    with gzip.open(f'../data/raw/{season}/teams.json.gz', 'wt', encoding='utf-8') as f:
+        json.dump(teams_json, f, indent=2)
     
+    # Duplicates some data across seasons results folders
+    with gzip.open(f'../data/raw/{season}/players.json.gz', 'wt', encoding='utf-8') as f:
+        json.dump(players, f, indent=2) 
+
     with gzip.open(f'../data/raw/{season}/games.json.gz', 'wt', encoding='utf-8') as f:
         json.dump(games, f, indent=2)
 
