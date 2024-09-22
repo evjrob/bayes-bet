@@ -41,13 +41,15 @@ async def main(season, start_date, end_date):
         with tqdm(total=total_days) as pbar:
             while next_game_date <= end_date:
                 game_json = await request_games_json(session, next_game_date)
-                
+
                 # Prepare concurrent requests for all games in this batch
-                tasks = [fetch_game_data(session, game["id"]) for game in game_json["games"]]
-                
+                tasks = [
+                    fetch_game_data(session, game["id"]) for game in game_json["games"]
+                ]
+
                 # Execute all requests concurrently
                 results = await asyncio.gather(*tasks)
-                
+
                 # Process results
                 for game_id, game_play_by_play, game_shifts in results:
                     play_by_play[game_id] = game_play_by_play
@@ -58,9 +60,14 @@ async def main(season, start_date, end_date):
                 for roster_spot in play_by_play["rosterSpots"]:
                     player_id = roster_spot["playerId"]
                     if player_id not in players:
-                        players[player_id] = await request_player_json(session, player_id)
-                
-                days_progress = (date.fromisoformat(next_game_date) - date.fromisoformat(previous_game_date)).days
+                        players[player_id] = await request_player_json(
+                            session, player_id
+                        )
+
+                days_progress = (
+                    date.fromisoformat(next_game_date)
+                    - date.fromisoformat(previous_game_date)
+                ).days
                 previous_game_date = next_game_date
                 next_game_date = game_json["nextDate"]
                 games.append(game_json)
@@ -70,21 +77,26 @@ async def main(season, start_date, end_date):
     os.makedirs(f"../data/raw/{season}", exist_ok=True)
 
     # Duplicates data across seasons results folders
-    with gzip.open(f'../data/raw/{season}/teams.json.gz', 'wt', encoding='utf-8') as f:
+    with gzip.open(f"../data/raw/{season}/teams.json.gz", "wt", encoding="utf-8") as f:
         json.dump(teams_json, f, indent=2)
-    
-    # Duplicates some data across seasons results folders
-    with gzip.open(f'../data/raw/{season}/players.json.gz', 'wt', encoding='utf-8') as f:
-        json.dump(players, f, indent=2) 
 
-    with gzip.open(f'../data/raw/{season}/games.json.gz', 'wt', encoding='utf-8') as f:
+    # Duplicates some data across seasons results folders
+    with gzip.open(
+        f"../data/raw/{season}/players.json.gz", "wt", encoding="utf-8"
+    ) as f:
+        json.dump(players, f, indent=2)
+
+    with gzip.open(f"../data/raw/{season}/games.json.gz", "wt", encoding="utf-8") as f:
         json.dump(games, f, indent=2)
 
-    with gzip.open(f'../data/raw/{season}/play_by_play.json.gz', 'wt', encoding='utf-8') as f:
+    with gzip.open(
+        f"../data/raw/{season}/play_by_play.json.gz", "wt", encoding="utf-8"
+    ) as f:
         json.dump(play_by_play, f, indent=2)
 
-    with gzip.open(f'../data/raw/{season}/shifts.json.gz', 'wt', encoding='utf-8') as f:
+    with gzip.open(f"../data/raw/{season}/shifts.json.gz", "wt", encoding="utf-8") as f:
         json.dump(shifts, f, indent=2)
+
 
 if __name__ == "__main__":
     season = sys.argv[1]
