@@ -26,12 +26,15 @@ async def main(season, start_date, end_date):
     total_days = (date.fromisoformat(end_date) - date.fromisoformat(start_date)).days
 
     games = []
-    players = {}
+    player_ids = set()
     play_by_play = {}
     shifts = {}
 
     async with aiohttp.ClientSession() as session:
+        print("Requesting teams data")
         teams_json = await request_teams_json(session)
+
+        print("Requesting game data")
         game_json = await request_games_json(session, start_date)
         previous_game_date = start_date
         next_game_date = game_json["nextDate"]
@@ -55,14 +58,10 @@ async def main(season, start_date, end_date):
                     play_by_play[game_id] = game_play_by_play
                     shifts[game_id] = game_shifts
 
-                    # For each player in play_by_play["rosterSpots"] add to players
-                    # if not already present and request their player json
+                    # Add each player_id in play_by_play["rosterSpots"] to player_ids
                     for roster_spot in game_play_by_play["rosterSpots"]:
                         player_id = roster_spot["playerId"]
-                        if player_id not in players:
-                            players[player_id] = await request_player_json(
-                                session, player_id
-                            )
+                        player_ids.add(player_id)
 
                 days_progress = (
                     date.fromisoformat(next_game_date)
@@ -73,6 +72,11 @@ async def main(season, start_date, end_date):
                 games.append(game_json)
 
                 pbar.update(days_progress)
+
+        # Asynchronously fetch player data for all player_ids
+        print("Requesting player data")
+        tasks = [request_player_json(session, player_id) for player_id in player_ids]
+        players = await asyncio.gather(*tasks) 
 
     os.makedirs(f"../data/raw/{season}", exist_ok=True)
 
