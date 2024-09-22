@@ -26,7 +26,7 @@ async def main(season, start_date, end_date):
     total_days = (date.fromisoformat(end_date) - date.fromisoformat(start_date)).days
 
     games = []
-    player_ids = set()
+    players = {}
     play_by_play = {}
     shifts = {}
 
@@ -61,7 +61,8 @@ async def main(season, start_date, end_date):
                     # Add each player_id in play_by_play["rosterSpots"] to player_ids
                     for roster_spot in game_play_by_play["rosterSpots"]:
                         player_id = roster_spot["playerId"]
-                        player_ids.add(player_id)
+                        player_name = roster_spot["firstName"]["default"] + " " + roster_spot["lastName"]["default"]
+                        players[player_id] = player_name
 
                 days_progress = (
                     date.fromisoformat(next_game_date)
@@ -73,10 +74,11 @@ async def main(season, start_date, end_date):
 
                 pbar.update(days_progress)
 
-        # Asynchronously fetch player data for all player_ids
+        # Asynchronously fetch player data for all player_ids, filtering out None values
         print("Requesting player data")
-        tasks = [request_player_json(session, player_id) for player_id in player_ids]
-        players = await asyncio.gather(*tasks) 
+        tasks = [request_player_json(session, player_id) for player_id in players.keys()]
+        player_details = await asyncio.gather(*tasks) 
+        player_details = [p for p in player_details if p is not None]
 
     os.makedirs(f"../data/raw/{season}", exist_ok=True)
 
@@ -89,6 +91,12 @@ async def main(season, start_date, end_date):
         f"../data/raw/{season}/players.json.gz", "wt", encoding="utf-8"
     ) as f:
         json.dump(players, f, indent=2)
+
+    # Duplicates some data across seasons results folders
+    with gzip.open(
+        f"../data/raw/{season}/player_details.json.gz", "wt", encoding="utf-8"
+    ) as f:
+        json.dump(player_details, f, indent=2)
 
     with gzip.open(f"../data/raw/{season}/games.json.gz", "wt", encoding="utf-8") as f:
         json.dump(games, f, indent=2)

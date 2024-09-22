@@ -27,7 +27,17 @@ async def request_teams_json(session):
 async def request_player_json(session, player_id):
     path = f'/v1/player/{player_id}/landing'
     async with session.get(base_url + path) as response:
-        return await response.json()
+        # Not all player_id have a landing page. Mostly this is for AHL players
+        # like Kevin Sundher, who played in some preseason games ut apparently
+        # lack the noteriety for a dedicated page.
+        try:
+            return await response.json()
+        except aiohttp.ClientResponseError as e:
+            if e.status == 404:
+                print(f"Player id {player_id} not found")
+                return None
+            else:
+                raise e
 
 # Retrieves the JSON game data from the NHL stats API for a 
 # selected date range.
