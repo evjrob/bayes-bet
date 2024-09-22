@@ -162,6 +162,8 @@ def sort_plays(plays):
 
 def extract_shot_data(play_by_play_json):
     home_team_id = play_by_play_json["homeTeam"]["id"]
+    venue_name = play_by_play_json["venue"]["default"]
+    venue_location = play_by_play_json["venueLocation"]["default"]
     goal_x_distance = 89
     goal_y = 0
     last_even_strength_time_seconds = 0
@@ -294,6 +296,8 @@ def extract_shot_data(play_by_play_json):
             "goal": goal,
             "play_number": i + 1,
             "player_id": shooting_player_id,
+            "venue_name": venue_name,
+            "venue_location": venue_location,
         }
 
         shot_data.append(row)
