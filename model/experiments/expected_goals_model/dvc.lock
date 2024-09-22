@@ -5,19 +5,19 @@ stages:
     deps:
     - path: ../data/final/test/shots.parquet
       hash: md5
-      md5: b0c5891cdf9670cbe7e2c5835ccbe6e4
-      size: 1682878
+      md5: ceb608e4ee50a057f9b6fd21453e7705
+      size: 954454
     - path: ../data/final/train/shots.parquet
       hash: md5
-      md5: b830747e6b2eb29a053b0414c23f92c3
-      size: 13356139
+      md5: 8d597782ac7ac32696b3617ae58dec9f
+      size: 7835869
     - path: stages/evaluate_model.py
       hash: md5
-      md5: 66fbda29b92f2af7a669e0c686a06fbe
-      size: 9530
+      md5: eb7e2989fade874e4b71fe28b7f1dcce
+      size: 10748
     outs:
     - path: results/evaluate_model
       hash: md5
-      md5: c0a4267f5745a9bd1e31c0bb17f2c6bc.dir
-      size: 335300
+      md5: 9d79d665873ad36efbe1b08b6e7c7659.dir
+      size: 338473
       nfiles: 14

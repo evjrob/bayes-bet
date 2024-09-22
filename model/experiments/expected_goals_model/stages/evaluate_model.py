@@ -104,19 +104,41 @@ def plot_xgoals(xgoals, title="Expected Goals"):
     return fig
 
 
+def add_features(shot_data):
+    # Add shot distance
+    shot_data["shot_distance"] = np.sqrt((shot_data["shot_x"] - shot_data["goal_x"])**2 + (shot_data["shot_y"] - shot_data["goal_y"])**2)
+    # Add shot angle
+    shot_data["shot_angle"] = np.arctan2(shot_data["shot_y"] - shot_data["goal_y"], np.maximum(abs(shot_data["shot_x"] - shot_data["goal_x"]), 0.1))
+    # Add last event distance
+    shot_data["last_event_distance"] = np.sqrt((shot_data["last_event_x"] - shot_data["shot_x"])**2 + (shot_data["last_event_y"] - shot_data["shot_y"])**2)
+    # Add last event angle
+    shot_data["last_event_angle"] = np.arctan2(shot_data["last_event_y"] - shot_data["goal_y"], np.maximum(abs(shot_data["last_event_x"] - shot_data["goal_x"]), 0.1))
+    # Add is rebound
+    shot_data["is_rebound"] = (shot_data["last_event"] == "shot-on-goal") & (shot_data["time_since_last_event"] < 2)
+    # Add rebound angle
+    shot_data["rebound_angle"] = (shot_data["shot_angle"] - shot_data["last_event_angle"]) * shot_data["is_rebound"]
+
+    return shot_data
+
+
 def main(model_type):
     with Live("results/evaluate_model") as live:
         train_shots = pd.read_parquet("../data/final/train/shots.parquet")
         test_shots = pd.read_parquet("../data/final/test/shots.parquet")
 
-        float_cols = ["shot_x", "shot_y", "last_event_x", "last_event_y", "time_since_last_event", "opposing_skaters", "current_skaters", "time_since_even_strength"]
-        categorical_cols = ["shot_type", "last_event"]
+        # Add useful features to the training and test data
+        train_shots = add_features(train_shots)
+        test_shots = add_features(test_shots)
 
-        X_train = train_shots.drop(columns=["goal", "home_team_defending_side", "play_number", "player_id", "game_id"])
+        float_cols = ["shot_x", "shot_y", "shot_distance", "shot_angle", "last_event_x", "last_event_y", "last_event_distance", "last_event_angle", "time_since_last_event", "opposing_skaters", "current_skaters", "time_since_even_strength", "rebound_angle"]
+        categorical_cols = ["shot_type", "last_event", "is_rebound"]
+        feature_cols = float_cols + categorical_cols
+
+        X_train = train_shots[feature_cols].copy()
         X_train[float_cols] = X_train[float_cols].astype(float)
         y_train = train_shots["goal"]
 
-        X_test = test_shots.drop(columns=["goal", "home_team_defending_side",  "play_number", "player_id", "game_id"])
+        X_test = test_shots[feature_cols].copy()
         X_test[float_cols] = X_test[float_cols].astype(float)
         y_test = test_shots["goal"]
 

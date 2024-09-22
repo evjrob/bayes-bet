@@ -228,10 +228,6 @@ def extract_shot_data(play_by_play_json):
         shot_type = shot_detail["shotType"]
         shot_x = shot_detail["xCoord"]
         shot_y = shot_detail["yCoord"]
-        shot_distance = ((shot_x - goal_x) ** 2 + (shot_y - goal_y) ** 2) ** 0.5
-        shot_angle = np.arctan2((shot_y - goal_y), max(abs(shot_x - goal_x), 0.1))
-        if goal_x < 0:
-            shot_angle = -shot_angle
         if "shootingPlayerId" in shot_detail:
             shooting_player_id = shot_detail["shootingPlayerId"]
         elif "scoringPlayerId" in shot_detail:
@@ -246,7 +242,6 @@ def extract_shot_data(play_by_play_json):
         else:
             last_event_x = 0
             last_event_y = 0
-        last_event_distance = ((last_event_x - shot_x) ** 2 + (last_event_y - shot_y) ** 2) ** 0.5
         last_event_period = previous_play["periodDescriptor"]["number"]
         last_event_time = previous_play["timeInPeriod"]
         last_event_time_seconds = get_time_since_game_start(last_event_period, last_event_time)
@@ -255,11 +250,6 @@ def extract_shot_data(play_by_play_json):
             last_event_same_team = previous_play["details"]["eventOwnerTeamId"] == shot_detail["eventOwnerTeamId"]
         else:
             last_event_same_team = False
-        is_rebound = last_event == "shot-on-goal" and time_since_last_event < 2
-        last_event_angle = np.arctan2((last_event_y - shot_y), max(abs(last_event_x - shot_x), 0.1))
-        if goal_x < 0:
-            last_event_angle = -last_event_angle
-        rebound_angle = (shot_angle - last_event_angle) * is_rebound
         if home_skaters != away_skaters:
             time_since_even_strength = shot_time_seconds - last_even_strength_time_seconds
         else:
@@ -279,16 +269,11 @@ def extract_shot_data(play_by_play_json):
             "shot_y": shot_y * coordinate_adjustment,
             "goal_x": goal_x * coordinate_adjustment,
             "goal_y": goal_y * coordinate_adjustment,
-            "shot_distance": shot_distance,
-            "shot_angle": shot_angle,
             "last_event": last_event,
             "last_event_x": last_event_x * coordinate_adjustment,
             "last_event_y": last_event_y * coordinate_adjustment,
-            "last_event_distance": last_event_distance,
             "time_since_last_event": time_since_last_event,
             "last_event_same_team": last_event_same_team,
-            "is_rebound": is_rebound,
-            "rebound_angle": rebound_angle,
             "opposing_skaters": opposing_skaters,
             "current_skaters": current_skaters,
             "time_since_even_strength": time_since_even_strength,
