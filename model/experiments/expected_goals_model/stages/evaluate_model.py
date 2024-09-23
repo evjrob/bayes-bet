@@ -92,10 +92,6 @@ def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
 
 
 def plot_xgoals(xgoals, title="Expected Goals"):
-    data_min = 0
-    data_max = xgoals.max()
-    mid_val = xgoals.mean()
-
     fig, ax = plt.subplots(1, 1, figsize=(11, 12), facecolor='w', edgecolor='k')
     xgoal_heatmap = ax.imshow(xgoals, alpha=0.5, cmap='jet', extent=[0, 100, -42.5, 42.5])
     plot_rink(ax, plot_half=True, board_radius=25, alpha=0.9)
