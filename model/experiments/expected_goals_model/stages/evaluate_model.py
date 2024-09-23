@@ -22,6 +22,9 @@ from sklearn.metrics import RocCurveDisplay
 from sklearn.calibration import calibration_curve
 from sklearn.inspection import permutation_importance
 from xgboost import XGBClassifier
+from sklearn.base import BaseEstimator, TransformerMixin
+from statsmodels.distributions.empirical_distribution import ECDF, monotone_fn_inverter
+
 
 # expected goals plotting
 def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
@@ -101,22 +104,161 @@ def plot_xgoals(xgoals, title="Expected Goals"):
 
     return fig
 
+class CoordinateAdjustmentTransformer(BaseEstimator, TransformerMixin):
+    """
+    Method from Appendix I: Shot Coordinate Adjustments, Total Hockey Rating 
+    (THoR): A comprehensive statistical rating of National Hockey League 
+    forwards and defensemen based upon all on-ice events
 
-def add_features(shot_data):
-    # Add shot distance
-    shot_data["shot_distance"] = np.sqrt((shot_data["shot_x"] - shot_data["goal_x"])**2 + (shot_data["shot_y"] - shot_data["goal_y"])**2)
-    # Add shot angle
-    shot_data["shot_angle"] = np.arctan2(shot_data["shot_y"] - shot_data["goal_y"], np.maximum(abs(shot_data["shot_x"] - shot_data["goal_x"]), 0.1))
-    # Add last event distance
-    shot_data["last_event_distance"] = np.sqrt((shot_data["last_event_x"] - shot_data["shot_x"])**2 + (shot_data["last_event_y"] - shot_data["shot_y"])**2)
-    # Add last event angle
-    shot_data["last_event_angle"] = np.arctan2(shot_data["last_event_y"] - shot_data["goal_y"], np.maximum(abs(shot_data["last_event_x"] - shot_data["goal_x"]), 0.1))
-    # Add is rebound
-    shot_data["is_rebound"] = (shot_data["last_event"] == "shot-on-goal") & (shot_data["time_since_last_event"] < 2)
-    # Add rebound angle
-    shot_data["rebound_angle"] = (shot_data["shot_angle"] - shot_data["last_event_angle"]) * shot_data["is_rebound"]
+    Adjusts the coordinates of shots and events based on known rink specific 
+    biases. Only venues with > 1000 shots are adjusted.
 
-    return shot_data
+    x' = Fx^{-1}(Fr(x) - (Fra(x) - Fa(x)))
+    y' = Gy^{-1}(Gr(y) - (Gra(y) - Ga(y)))
+
+    Where:
+    * Fx^{-1} is the inverse CDF of the x coordinates for all shots
+    * Fr(x) is the CDF of the x coordinates for all shots at rink r
+    * Fra(x) is the CDF of the x coordinates at rink r for all away team shots
+    * Fa(x) is the league wide CDF of x coordinates for all shots by away teams
+
+    The exact same logic applies to the y coordinates for the G CDFs
+    """
+
+    def fit(self, shot_data, y=None):
+        # Find all venues with > 1000 shots
+        venue_shot_counts = shot_data["venue_location"].value_counts()
+        self.venues = venue_shot_counts[venue_shot_counts > 1000].index.tolist()
+
+        # Find the empirical CDF of the x and y coordinates for all shots
+        self.x_cdf = ECDF(shot_data["shot_x"])
+        self.x = shot_data["shot_x"]
+        self.y_cdf = ECDF(shot_data["shot_y"])
+        self.y = shot_data["shot_y"]
+
+        # Find the empirical CDF of the x and y coordinates for all shots at each venue
+        self.x_cdf_by_venue = {}
+        self.y_cdf_by_venue = {}
+        for venue in self.venues:
+            venue_shots = shot_data[shot_data["venue_location"] == venue]
+            self.x_cdf_by_venue[venue] = ECDF(venue_shots["shot_x"])
+            self.y_cdf_by_venue[venue] = ECDF(venue_shots["shot_y"])
+
+        # Find the empirical CDF of the x and y coordinates for all shots by away teams
+        # at each venue
+        self.x_away_cdf_by_venue = {}
+        self.y_away_cdf_by_venue = {}
+        for venue in self.venues:
+            venue_shots = shot_data[
+                (shot_data["venue_location"] == venue) & (~shot_data["shot_is_home_team"])
+            ]
+            self.x_away_cdf_by_venue[venue] = ECDF(venue_shots["shot_x"])
+            self.y_away_cdf_by_venue[venue] = ECDF(venue_shots["shot_y"])
+
+        # Find the league wide empirical CDF of the x and y coordinates for all shots by
+        # away teams
+        self.x_away_cdf = ECDF(shot_data[~shot_data["shot_is_home_team"]]["shot_x"])
+        self.y_away_cdf = ECDF(shot_data[~shot_data["shot_is_home_team"]]["shot_y"])
+
+        return self
+
+    def transform(self, shot_data):
+        # Keep track of the original coordinates
+        shot_data["shot_x_original"] = shot_data["shot_x"]
+        shot_data["shot_y_original"] = shot_data["shot_y"]
+        shot_data["last_event_x_original"] = shot_data["last_event_x"]
+        shot_data["last_event_y_original"] = shot_data["last_event_y"]
+
+        # Adjust the coordinates of the shots
+        for venue in self.venues:
+            venue_mask = shot_data["venue_location"] == venue
+            x_cdf_by_venue = self.x_cdf_by_venue[venue]
+            x_away_cdf_by_venue = self.x_away_cdf_by_venue[venue]
+            y_cdf_by_venue = self.y_cdf_by_venue[venue]
+            y_away_cdf_by_venue = self.y_away_cdf_by_venue[venue]
+
+            shot_data.loc[venue_mask, "shot_x"] = monotone_fn_inverter(self.x_cdf, self.x)(
+                x_cdf_by_venue(shot_data["shot_x"])
+                - (
+                    x_away_cdf_by_venue(shot_data["shot_x"])
+                    - self.x_away_cdf(shot_data["shot_x"])
+                )
+            )
+            shot_data.loc[venue_mask, "shot_y"] = monotone_fn_inverter(self.y_cdf, self.y)(
+                y_cdf_by_venue(shot_data["shot_y"])
+                - (
+                    y_away_cdf_by_venue(shot_data["shot_y"])
+                    - self.y_away_cdf(shot_data["shot_y"])
+                )
+            )
+
+            # Adjust the coordinates of the last events
+            shot_data.loc[venue_mask, "last_event_x"] = monotone_fn_inverter(self.x_cdf, self.x)(
+                x_cdf_by_venue(shot_data["last_event_x"])
+                - (
+                    x_away_cdf_by_venue(shot_data["last_event_x"])
+                    - self.x_away_cdf(shot_data["last_event_x"])
+                )
+            )
+            shot_data.loc[venue_mask, "last_event_y"] = monotone_fn_inverter(self.y_cdf, self.y)(
+                y_cdf_by_venue(shot_data["last_event_y"])
+                - (
+                    y_away_cdf_by_venue(shot_data["last_event_y"])
+                    - self.y_away_cdf(shot_data["last_event_y"])
+                )
+            )
+        return shot_data
+
+
+class ShotFeatureTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, shot_data, y=None):
+        return self
+
+    def transform(self, shot_data):
+        shot_data = shot_data.copy()
+
+        # Add shot distance
+        shot_data["shot_distance"] = np.sqrt(
+            (shot_data["shot_x"] - shot_data["goal_x"]) ** 2
+            + (shot_data["shot_y"] - shot_data["goal_y"]) ** 2
+        )
+        shot_data["shot_angle"] = np.arctan2(
+            shot_data["shot_y"] - shot_data["goal_y"],
+            np.maximum(abs(shot_data["shot_x"] - shot_data["goal_x"]), 0.1),
+        )
+        shot_data["last_event_distance"] = np.sqrt(
+            (shot_data["last_event_x"] - shot_data["shot_x"]) ** 2
+            + (shot_data["last_event_y"] - shot_data["shot_y"]) ** 2
+        )
+        shot_data["last_event_angle"] = np.arctan2(
+            shot_data["last_event_y"] - shot_data["goal_y"],
+            np.maximum(abs(shot_data["last_event_x"] - shot_data["goal_x"]), 0.1),
+        )
+        shot_data["is_rebound"] = (shot_data["last_event"] == "shot-on-goal") & (
+            shot_data["time_since_last_event"] < 2
+        )
+        shot_data["rebound_angle"] = (
+            shot_data["shot_angle"] - shot_data["last_event_angle"]
+        ) * shot_data["is_rebound"]
+
+        return shot_data
+    
+class FeatureSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, float_cols, categorical_cols):
+        self.feature_cols = float_cols + categorical_cols
+        self.float_cols = float_cols
+        self.categorical_cols = categorical_cols
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X_subset = X[self.feature_cols].copy()
+        X_subset[self.float_cols] = X_subset[self.float_cols].astype(float)
+        return X_subset
 
 
 def main(model_type):
@@ -124,21 +266,14 @@ def main(model_type):
         train_shots = pd.read_parquet("../data/final/train/shots.parquet")
         test_shots = pd.read_parquet("../data/final/test/shots.parquet")
 
-        # Add useful features to the training and test data
-        train_shots = add_features(train_shots)
-        test_shots = add_features(test_shots)
+        X_train  = train_shots.drop(columns=["goal"])
+        y_train = train_shots["goal"]
+
+        X_test = test_shots.drop(columns=["goal"])
+        y_test = test_shots["goal"]
 
         float_cols = ["shot_x", "shot_y", "shot_distance", "shot_angle", "last_event_x", "last_event_y", "last_event_distance", "last_event_angle", "time_since_last_event", "opposing_skaters", "current_skaters", "time_since_even_strength", "rebound_angle"]
         categorical_cols = ["shot_type", "last_event", "is_rebound"]
-        feature_cols = float_cols + categorical_cols
-
-        X_train = train_shots[feature_cols].copy()
-        X_train[float_cols] = X_train[float_cols].astype(float)
-        y_train = train_shots["goal"]
-
-        X_test = test_shots[feature_cols].copy()
-        X_test[float_cols] = X_test[float_cols].astype(float)
-        y_test = test_shots["goal"]
 
         preprocessor = ColumnTransformer(
             transformers = [
@@ -160,11 +295,15 @@ def main(model_type):
 
         pipe = Pipeline(
             [
+                ('adjust_coordinates', CoordinateAdjustmentTransformer()),
+                ('features', ShotFeatureTransformer()),
+                ('selector', FeatureSelector(float_cols, categorical_cols)),
                 ('preprocess', preprocessor),
                 ('classifier', classifier),
             ]
         )
 
+        print("Cross validating model")
         scoring = ["neg_log_loss", "roc_auc"]
         scores = cross_validate(pipe, X_train, y_train, cv=5, scoring=scoring, return_train_score=True)
 
@@ -178,8 +317,10 @@ def main(model_type):
         live.log_metric("train_roc_auc", train_roc_auc)
         live.log_metric("validation_roc_auc", validation_roc_auc)
 
+        print("Fitting model on all training data")
         pipe.fit(X_train, y_train)
 
+        print("Evaluating model on test data")
         y_pred_proba = pipe.predict_proba(X_test)
         test_log_loss = log_loss(y_test, y_pred_proba)
         test_roc_auc = roc_auc_score(y_test, y_pred_proba[:,1])
@@ -249,7 +390,7 @@ def main(model_type):
         os.makedirs("results/evaluate_model", exist_ok=True)
         with open("results/evaluate_model/model.pkl", "wb") as f:
             pickle.dump(pipe, f)
-    
+
 
 if __name__ == "__main__":
     with open("params.yaml", "r") as f:
