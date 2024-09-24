@@ -24,7 +24,8 @@ from sklearn.inspection import permutation_importance
 from xgboost import XGBClassifier
 from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.distributions.empirical_distribution import ECDF, monotone_fn_inverter
-from tqdm import tqdm
+from numba import jit
+from scipy.stats import rankdata
 
 
 # expected goals plotting
@@ -105,13 +106,14 @@ def plot_xgoals(xgoals, title="Expected Goals"):
 
     return fig
 
+
 class CoordinateAdjustmentTransformer(BaseEstimator, TransformerMixin):
     """
     A scikit-learn transformer that adjusts the coordinates of shots and events
     based on known rink specific biases. Only venues with > 1000 shots are adjusted.
-    
-    Method from Appendix I: Shot Coordinate Adjustments, Total Hockey Rating 
-    (THoR): A comprehensive statistical rating of National Hockey League 
+
+    Method from Appendix I: Shot Coordinate Adjustments, Total Hockey Rating
+    (THoR): A comprehensive statistical rating of National Hockey League
     forwards and defensemen based upon all on-ice events
 
     x' = Fx^{-1}(Fr(x) - (Fra(x) - Fa(x)))
@@ -151,7 +153,8 @@ class CoordinateAdjustmentTransformer(BaseEstimator, TransformerMixin):
         self.y_away_cdf_by_venue = {}
         for venue in self.venues:
             venue_shots = shot_data[
-                (shot_data["venue_location"] == venue) & (~shot_data["shot_is_home_team"])
+                (shot_data["venue_location"] == venue)
+                & (~shot_data["shot_is_home_team"])
             ]
             self.x_away_cdf_by_venue[venue] = ECDF(venue_shots["shot_x"])
             self.y_away_cdf_by_venue[venue] = ECDF(venue_shots["shot_y"])
@@ -161,71 +164,107 @@ class CoordinateAdjustmentTransformer(BaseEstimator, TransformerMixin):
         self.x_away_cdf = ECDF(shot_data[~shot_data["shot_is_home_team"]]["shot_x"])
         self.y_away_cdf = ECDF(shot_data[~shot_data["shot_is_home_team"]]["shot_y"])
 
+        # Precompute league-wide CDFs
+        self.x_league = np.sort(shot_data["shot_x"])
+        self.y_league = np.sort(shot_data["shot_y"])
+        self.x_away_league = np.sort(
+            shot_data[~shot_data["shot_is_home_team"]]["shot_x"]
+        )
+        self.y_away_league = np.sort(
+            shot_data[~shot_data["shot_is_home_team"]]["shot_y"]
+        )
+
+        # Precompute venue-specific CDFs
+        self.x_venue = {
+            venue: np.sort(shot_data[shot_data["venue_location"] == venue]["shot_x"])
+            for venue in self.venues
+        }
+        self.y_venue = {
+            venue: np.sort(shot_data[shot_data["venue_location"] == venue]["shot_y"])
+            for venue in self.venues
+        }
+        self.x_away_venue = {
+            venue: np.sort(
+                shot_data[
+                    (shot_data["venue_location"] == venue)
+                    & (~shot_data["shot_is_home_team"])
+                ]["shot_x"]
+            )
+            for venue in self.venues
+        }
+        self.y_away_venue = {
+            venue: np.sort(
+                shot_data[
+                    (shot_data["venue_location"] == venue)
+                    & (~shot_data["shot_is_home_team"])
+                ]["shot_y"]
+            )
+            for venue in self.venues
+        }
+
         return self
 
+    @staticmethod
+    @jit(nopython=True)
+    def _cdf_adjust(values, venue_cdf, venue_away_cdf, league_away_cdf, league_values):
+        venue_ranks = np.searchsorted(venue_cdf, values)
+        venue_away_ranks = np.searchsorted(venue_away_cdf, values)
+        league_away_ranks = np.searchsorted(league_away_cdf, values)
+
+        adjusted_ranks = venue_ranks - (venue_away_ranks - league_away_ranks)
+        adjusted_ranks = np.clip(adjusted_ranks, 0, len(league_values) - 1)
+
+        return league_values[adjusted_ranks]
+
     def transform(self, shot_data):
+        shot_data = shot_data.copy()
+
         # Keep track of the original coordinates
-        shot_data["shot_x_original"] = shot_data["shot_x"]
-        shot_data["shot_y_original"] = shot_data["shot_y"]
-        shot_data["last_event_x_original"] = shot_data["last_event_x"]
-        shot_data["last_event_y_original"] = shot_data["last_event_y"]
+        for coord in ["shot_x", "shot_y", "last_event_x", "last_event_y"]:
+            shot_data[f"{coord}_original"] = shot_data[coord]
+            shot_data[coord] = shot_data[coord].astype(float)
 
-        shot_data[["shot_x", "shot_y", "last_event_x", "last_event_y"]] = shot_data[
-            ["shot_x", "shot_y", "last_event_x", "last_event_y"]
-        ].astype(float)
-
-        # Adjust the coordinates of the shots
-        print("Adjusting coordinates for venues:")
-        for venue in tqdm(self.venues):
+        for venue in self.venues:
             venue_mask = shot_data["venue_location"] == venue
-            x_cdf_by_venue = self.x_cdf_by_venue[venue]
-            x_away_cdf_by_venue = self.x_away_cdf_by_venue[venue]
-            y_cdf_by_venue = self.y_cdf_by_venue[venue]
-            y_away_cdf_by_venue = self.y_away_cdf_by_venue[venue]
 
-            def cdf_adjust(values, venue_cdf, venue_away_cdf, league_away_cdf, league_values):
-                adjusted = venue_cdf(values) - (venue_away_cdf(values) - league_away_cdf(values))
+            for coord, league, league_away, venue_cdf, venue_away_cdf in [
+                (
+                    "shot_x",
+                    self.x_league,
+                    self.x_away_league,
+                    self.x_venue[venue],
+                    self.x_away_venue[venue],
+                ),
+                (
+                    "shot_y",
+                    self.y_league,
+                    self.y_away_league,
+                    self.y_venue[venue],
+                    self.y_away_venue[venue],
+                ),
+                (
+                    "last_event_x",
+                    self.x_league,
+                    self.x_away_league,
+                    self.x_venue[venue],
+                    self.x_away_venue[venue],
+                ),
+                (
+                    "last_event_y",
+                    self.y_league,
+                    self.y_away_league,
+                    self.y_venue[venue],
+                    self.y_away_venue[venue],
+                ),
+            ]:
+                shot_data.loc[venue_mask, coord] = self._cdf_adjust(
+                    shot_data.loc[venue_mask, coord].values,
+                    venue_cdf,
+                    venue_away_cdf,
+                    league_away,
+                    league,
+                )
 
-                # Get the valid range for interpolation
-                min_valid = league_away_cdf(league_values).min()
-                max_valid = league_away_cdf(league_values).max()
-
-                # Clip the adjusted values to the valid range
-                adjusted_clipped = np.clip(adjusted, min_valid, max_valid)
-
-                return monotone_fn_inverter(league_away_cdf, league_values)(adjusted_clipped)
-
-            shot_data.loc[venue_mask, "shot_x"] = cdf_adjust(
-                shot_data.loc[venue_mask, "shot_x"],
-                x_cdf_by_venue,
-                x_away_cdf_by_venue,
-                self.x_away_cdf,
-                self.x
-            )
-
-            shot_data.loc[venue_mask, "shot_y"] = cdf_adjust(
-                shot_data.loc[venue_mask, "shot_y"],
-                y_cdf_by_venue,
-                y_away_cdf_by_venue,
-                self.y_away_cdf,
-                self.y
-            )
-
-            shot_data.loc[venue_mask, "last_event_x"] = cdf_adjust(
-                shot_data.loc[venue_mask, "last_event_x"],
-                x_cdf_by_venue,
-                x_away_cdf_by_venue,
-                self.x_away_cdf,
-                self.x
-            )
-
-            shot_data.loc[venue_mask, "last_event_y"] = cdf_adjust(
-                shot_data.loc[venue_mask, "last_event_y"],
-                y_cdf_by_venue,
-                y_away_cdf_by_venue,
-                self.y_away_cdf,
-                self.y
-            )
         return shot_data
 
 
@@ -267,6 +306,11 @@ class ShotFeatureTransformer(BaseEstimator, TransformerMixin):
 
 class FeatureSelector(BaseEstimator, TransformerMixin):
     def __init__(self, float_cols, categorical_cols):
+        # Check for duplicated column names
+        duplicated_cols = set(float_cols) & set(categorical_cols)
+        if duplicated_cols:
+            raise ValueError(f"Duplicated columns found in float_cols and categorical_cols: {duplicated_cols}")
+        
         self.feature_cols = float_cols + categorical_cols
         self.float_cols = float_cols
         self.categorical_cols = categorical_cols
@@ -275,6 +319,13 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("Input must be a pandas DataFrame")
+        
+        if not all(col in X.columns for col in self.feature_cols):
+            missing_cols = [col for col in self.feature_cols if col not in X.columns]
+            raise KeyError(f"Missing columns in the input DataFrame: {missing_cols}")
+        
         X_subset = X[self.feature_cols].copy()
         X_subset[self.float_cols] = X_subset[self.float_cols].astype(float)
         return X_subset

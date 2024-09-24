@@ -13,8 +13,8 @@ stages:
       size: 7835869
     - path: stages/evaluate_model.py
       hash: md5
-      md5: 788bb8be08a5debfa0b943cb9f8b3b79
-      size: 11373
+      md5: 438d5c21adcc9adea4c4bdc4cf92b94c
+      size: 18511
     params:
       params.yaml:
         evaluate_model:
@@ -22,6 +22,6 @@ stages:
     outs:
     - path: results/evaluate_model
       hash: md5
-      md5: c69de733500e6fb05591aafb99dca0ac.dir
-      size: 335400
+      md5: 7d0c32cf08193b5de76e0c2138fd1ffa.dir
+      size: 158998933
       nfiles: 14
