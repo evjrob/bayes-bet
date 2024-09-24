@@ -24,6 +24,7 @@ from sklearn.inspection import permutation_importance
 from xgboost import XGBClassifier
 from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.distributions.empirical_distribution import ECDF, monotone_fn_inverter
+from tqdm import tqdm
 
 
 # expected goals plotting
@@ -106,12 +107,12 @@ def plot_xgoals(xgoals, title="Expected Goals"):
 
 class CoordinateAdjustmentTransformer(BaseEstimator, TransformerMixin):
     """
+    A scikit-learn transformer that adjusts the coordinates of shots and events
+    based on known rink specific biases. Only venues with > 1000 shots are adjusted.
+    
     Method from Appendix I: Shot Coordinate Adjustments, Total Hockey Rating 
     (THoR): A comprehensive statistical rating of National Hockey League 
     forwards and defensemen based upon all on-ice events
-
-    Adjusts the coordinates of shots and events based on known rink specific 
-    biases. Only venues with > 1000 shots are adjusted.
 
     x' = Fx^{-1}(Fr(x) - (Fra(x) - Fa(x)))
     y' = Gy^{-1}(Gr(y) - (Gra(y) - Ga(y)))
@@ -169,43 +170,61 @@ class CoordinateAdjustmentTransformer(BaseEstimator, TransformerMixin):
         shot_data["last_event_x_original"] = shot_data["last_event_x"]
         shot_data["last_event_y_original"] = shot_data["last_event_y"]
 
+        shot_data[["shot_x", "shot_y", "last_event_x", "last_event_y"]] = shot_data[
+            ["shot_x", "shot_y", "last_event_x", "last_event_y"]
+        ].astype(float)
+
         # Adjust the coordinates of the shots
-        for venue in self.venues:
+        print("Adjusting coordinates for venues:")
+        for venue in tqdm(self.venues):
             venue_mask = shot_data["venue_location"] == venue
             x_cdf_by_venue = self.x_cdf_by_venue[venue]
             x_away_cdf_by_venue = self.x_away_cdf_by_venue[venue]
             y_cdf_by_venue = self.y_cdf_by_venue[venue]
             y_away_cdf_by_venue = self.y_away_cdf_by_venue[venue]
 
-            shot_data.loc[venue_mask, "shot_x"] = monotone_fn_inverter(self.x_cdf, self.x)(
-                x_cdf_by_venue(shot_data["shot_x"])
-                - (
-                    x_away_cdf_by_venue(shot_data["shot_x"])
-                    - self.x_away_cdf(shot_data["shot_x"])
-                )
-            )
-            shot_data.loc[venue_mask, "shot_y"] = monotone_fn_inverter(self.y_cdf, self.y)(
-                y_cdf_by_venue(shot_data["shot_y"])
-                - (
-                    y_away_cdf_by_venue(shot_data["shot_y"])
-                    - self.y_away_cdf(shot_data["shot_y"])
-                )
+            def cdf_adjust(values, venue_cdf, venue_away_cdf, league_away_cdf, league_values):
+                adjusted = venue_cdf(values) - (venue_away_cdf(values) - league_away_cdf(values))
+
+                # Get the valid range for interpolation
+                min_valid = league_away_cdf(league_values).min()
+                max_valid = league_away_cdf(league_values).max()
+
+                # Clip the adjusted values to the valid range
+                adjusted_clipped = np.clip(adjusted, min_valid, max_valid)
+
+                return monotone_fn_inverter(league_away_cdf, league_values)(adjusted_clipped)
+
+            shot_data.loc[venue_mask, "shot_x"] = cdf_adjust(
+                shot_data.loc[venue_mask, "shot_x"],
+                x_cdf_by_venue,
+                x_away_cdf_by_venue,
+                self.x_away_cdf,
+                self.x
             )
 
-            # Adjust the coordinates of the last events
-            shot_data.loc[venue_mask, "last_event_x"] = monotone_fn_inverter(self.x_cdf, self.x)(
-                x_cdf_by_venue(shot_data["last_event_x"])
-                - (
-                    x_away_cdf_by_venue(shot_data["last_event_x"])
-                    - self.x_away_cdf(shot_data["last_event_x"])
-                )
+            shot_data.loc[venue_mask, "shot_y"] = cdf_adjust(
+                shot_data.loc[venue_mask, "shot_y"],
+                y_cdf_by_venue,
+                y_away_cdf_by_venue,
+                self.y_away_cdf,
+                self.y
             )
-            shot_data.loc[venue_mask, "last_event_y"] = monotone_fn_inverter(self.y_cdf, self.y)(
-                y_cdf_by_venue(shot_data["last_event_y"])
-                - (
-                    y_away_cdf_by_venue(shot_data["last_event_y"])
-                    - self.y_away_cdf(shot_data["last_event_y"])
-                )
+
+            shot_data.loc[venue_mask, "last_event_x"] = cdf_adjust(
+                shot_data.loc[venue_mask, "last_event_x"],
+                x_cdf_by_venue,
+                x_away_cdf_by_venue,
+                self.x_away_cdf,
+                self.x
+            )
+
+            shot_data.loc[venue_mask, "last_event_y"] = cdf_adjust(
+                shot_data.loc[venue_mask, "last_event_y"],
+                y_cdf_by_venue,
+                y_away_cdf_by_venue,
+                self.y_away_cdf,
+                self.y
             )
         return shot_data
 
@@ -245,7 +264,7 @@ class ShotFeatureTransformer(BaseEstimator, TransformerMixin):
         ) * shot_data["is_rebound"]
 
         return shot_data
-    
+
 class FeatureSelector(BaseEstimator, TransformerMixin):
     def __init__(self, float_cols, categorical_cols):
         self.feature_cols = float_cols + categorical_cols
