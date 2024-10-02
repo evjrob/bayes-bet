@@ -230,6 +230,14 @@ def model_inference(
         fattening_factor=fattening_factor
     )
 
+    # Filter to only games that have teams the model knows about
+    games = games[
+        (
+            games["home_team"].isin(team_abbrevs.keys())
+            & games["away_team"].isin(team_abbrevs.keys())
+        )
+    ].reset_index(drop=True)
+
     # Get games from the most recent game date played
     updated_model_state = model.fit(games, cores=1)
 
