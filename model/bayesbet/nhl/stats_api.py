@@ -12,6 +12,7 @@ logger = get_logger(__name__)
 
 # The NHL Statistics API URL
 base_url = 'https://api-web.nhle.com'
+stats_url = 'https://api.nhle.com/stats/rest/en'
 
 
 # Retrieves the JSON game data from the NHL stats API for a 
@@ -21,6 +22,20 @@ def request_games_json(date):
     response = requests.get(base_url + path)
     
     return response.json()
+
+# Retrieves the play-by-play data from the NHL stats API for a given game id
+def request_play_by_play_json(game_id):
+    path = f'/v1/gamecenter/{game_id}/play-by-play'
+    response = requests.get(base_url + path)
+    
+    return response.json()
+
+# Retrieves the shift data from the NHL stats API for a given game id
+def request_shifts_json(game_id):
+    path = f"/shiftcharts?cayenneExp=gameId={game_id} and (duration != '00:00' and typeCode = 517)"
+    response = requests.get(stats_url + path)
+    
+    return response.json()    
 
 ## Check if any games have been played on the specified date
 def check_for_games(date=None):

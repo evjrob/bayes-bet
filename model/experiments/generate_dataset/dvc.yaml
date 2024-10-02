@@ -1,26 +1,29 @@
 stages:
   fetch_data:
-    cmd: python stages/fetch_data.py
-    deps:
-    - ../../bayesbet/nhl/stats_api.py
-    - stages/fetch_data.py
-    params:
-    - fetch_data.end_date
-    - fetch_data.start_date
-    outs:
-    - ../data/raw
+    foreach: ${seasons}
+    do:
+      cmd: python stages/fetch_data.py ${item.season} ${item.start_date} ${item.end_date}
+      deps:
+      - ../../bayesbet/nhl/stats_api.py
+      - stages/fetch_data.py
+      outs:
+      - ../data/raw/${item.season}
   preprocess_data:
-    cmd: python stages/preprocess_data.py
-    deps:
-    - ../data/raw
-    - ../../bayesbet/nhl/data_utils.py
-    - stages/preprocess_data.py
-    outs:
-    - ../data/preprocessed
+    foreach: ${seasons}
+    do:
+      cmd: python stages/preprocess_data.py ${item.season}
+      deps:
+      - ../data/raw/${item.season}
+      - ../../bayesbet/nhl/data_utils.py
+      - stages/preprocess_data.py
+      outs:
+      - ../data/preprocessed/${item.season}
   split_data:
     cmd: python stages/split_data.py
     deps:
     - ../data/preprocessed
     - stages/split_data.py
+    params:
+    - splits
     outs:
     - ../data/final

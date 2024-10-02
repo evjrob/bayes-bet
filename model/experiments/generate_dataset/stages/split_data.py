@@ -1,22 +1,41 @@
 import os
 import pandas as pd
+import yaml
 
 
-def main():
-    # Split data into training and test sets based on holding out the games from
-    # the most recent complete season onward.
-    games = pd.read_parquet("../data/preprocessed/games.parquet")
-    training_split_season = 20222023
-    training_games = games[games["season"] < training_split_season]
-    training_games = training_games.reset_index(drop=True)
-    testing_games = games[games["season"] >= training_split_season]
-    testing_games = testing_games.reset_index(drop=True)
+def main(train_seasons, test_seasons):
+    # Split data into training and test sets
+    train_games = pd.concat(
+        [pd.read_parquet(f"../data/preprocessed/{season}/games.parquet") for season in train_seasons],
+        ignore_index=True
+    )
+    test_games = pd.concat(
+        [pd.read_parquet(f"../data/preprocessed/{season}/games.parquet") for season in test_seasons],
+        ignore_index=True
+    )
+
+    # Split shots data into training and test sets
+    train_shots = pd.concat(
+        [pd.read_parquet(f"../data/preprocessed/{season}/shots.parquet") for season in train_seasons],
+        ignore_index=True
+    )
+    test_shots = pd.concat(
+        [pd.read_parquet(f"../data/preprocessed/{season}/shots.parquet") for season in test_seasons],
+        ignore_index=True
+    )
     
     os.makedirs("../data/final/train", exist_ok=True)
     os.makedirs("../data/final/test", exist_ok=True)
-    training_games.to_parquet("../data/final/train/games.parquet")
-    testing_games.to_parquet("../data/final/test/games.parquet")
+    train_games.to_parquet("../data/final/train/games.parquet")
+    test_games.to_parquet("../data/final/test/games.parquet")
+    train_shots.to_parquet("../data/final/train/shots.parquet")
+    test_shots.to_parquet("../data/final/test/shots.parquet")
     
 
 if __name__ == "__main__":
-    main()
+    with open("params.yaml", "r") as f:
+        params = yaml.safe_load(f)
+    train_seasons = params["splits"]["train"]
+    test_seasons = params["splits"]["test"]
+
+    main(train_seasons, test_seasons)

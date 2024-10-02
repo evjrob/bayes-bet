@@ -1,0 +1,2 @@
+evaluate_model:
+  model_type: MLPClassifier

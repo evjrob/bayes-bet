@@ -2,14 +2,18 @@ import gzip
 import json
 import os
 import pandas as pd
+import sys
 from tqdm import tqdm
 
-from bayesbet.nhl.data_utils import extract_game_data
+from bayesbet.nhl.data_utils import extract_game_data, extract_shot_data
 
 
-def main():
-    with gzip.open('../data/raw/games.json.gz', 'rb') as f:
+def main(season):
+    with gzip.open(f'../data/raw/{season}/games.json.gz', 'rb') as f:
         games_json = json.loads(f.read().decode('utf-8'))
+
+    with gzip.open(f'../data/raw/{season}/play_by_play.json.gz', 'rb') as f:
+        play_by_play_json = json.loads(f.read().decode('utf-8'))
 
     games_data_frames = []
     for game_json in tqdm(games_json):
@@ -20,10 +24,21 @@ def main():
     games = pd.concat(games_data_frames, ignore_index=True)
     games = games[~games["game_type"].isin(["Pr", "A", "Other"])]
     games = games.reset_index(drop=True)
+
+    shots_data_frames = []
+    for game_id in games["game_pk"]:
+        game_play_by_play_json = play_by_play_json[str(game_id)]
+        shot_data_frame = extract_shot_data(game_play_by_play_json)
+        shot_data_frame["game_id"] = game_id
+        shots_data_frames.append(shot_data_frame)
+
+    shots = pd.concat(shots_data_frames, ignore_index=True)
     
-    os.makedirs("../data/preprocessed", exist_ok=True)
-    games.to_parquet("../data/preprocessed/games.parquet")
+    os.makedirs(f"../data/preprocessed/{season}", exist_ok=True)
+    games.to_parquet(f"../data/preprocessed/{season}/games.parquet")
+    shots.to_parquet(f"../data/preprocessed/{season}/shots.parquet")
     
 
 if __name__ == "__main__":
-    main()
+    season = sys.argv[1]
+    main(season)
