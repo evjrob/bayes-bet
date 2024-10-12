@@ -46,6 +46,7 @@ jobs:
       - name: Terraform Apply
         id: apply
         env:
+          TF_VAR_alarm_email: ${{ secrets.ALARM_EMAIL }}
           TF_VAR_twitter_bearer_token: ${{ secrets.TWITTER_BEARER_TOKEN }}
           TF_VAR_twitter_consumer_key: ${{ secrets.TWITTER_CONSUMER_KEY }}
           TF_VAR_twitter_consumer_secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
