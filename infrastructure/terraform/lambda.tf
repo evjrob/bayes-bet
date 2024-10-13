@@ -49,3 +49,30 @@ resource "aws_lambda_function" "bayesbet_social_lambda" {
     null_resource.ecr_docker_image_social,
   ]
 }
+
+resource "aws_cloudwatch_metric_alarm" "social_lambda_error" {
+  alarm_name          = "${var.project}-social-lambda-error-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = "0"
+  alarm_description   = "This metric monitors errors in the social Lambda function"
+  alarm_actions       = [aws_sns_topic.social_lambda_alarm.arn]
+
+  dimensions = {
+    FunctionName = aws_lambda_function.bayesbet_social_lambda.function_name
+  }
+}
+
+resource "aws_sns_topic" "social_lambda_alarm" {
+  name = "${var.project}-social-lambda-alarm-${var.env}"
+}
+
+resource "aws_sns_topic_subscription" "social_lambda_alarm_email" {
+  topic_arn = aws_sns_topic.social_lambda_alarm.arn
+  protocol  = "email"
+  endpoint  = var.alarm_email
+}
