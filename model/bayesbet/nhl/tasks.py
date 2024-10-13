@@ -1,3 +1,5 @@
+import asyncio
+import aiohttp
 import simplejson as json
 import os
 import pandas as pd
@@ -16,8 +18,8 @@ from bayesbet.nhl.db import query_dynamodb, put_dynamodb_item, most_recent_dynam
 from bayesbet.nhl.evaluate import update_scores, prediction_performance
 from bayesbet.nhl.model import IterativeUpdateModel, ModelState
 from bayesbet.nhl.stats_api import (
-    request_games_json,
-    get_season_start_date,
+    request_games_json as async_request_games_json,
+    get_season_start_date as async_get_season_start_date,
 )
 
 
@@ -37,6 +39,24 @@ metadata = {
     "window_size": str(window_size),
     "delta_sigma": str(delta_sigma),
 }
+
+
+def request_games_json(date):
+    async def make_request(date):
+        connector = aiohttp.TCPConnector(limit=1)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            return await async_request_games_json(session, date)
+        
+    return asyncio.run(make_request(date))
+
+
+def get_season_start_date(season):
+    async def make_request(season):
+        connector = aiohttp.TCPConnector(limit=1)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            return await async_get_season_start_date(session, season)
+        
+    return asyncio.run(make_request(season))
 
 
 def fetch_nhl_data_by_date(date):

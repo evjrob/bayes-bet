@@ -26,7 +26,6 @@ game_state_mapping = {
 
 team_abbrevs = {
     'Anaheim Ducks':'ANA',
-    'Arizona Coyotes':'ARI',
     'Boston Bruins':'BOS',
     'Buffalo Sabres':'BUF',
     'Calgary Flames':'CGY',
