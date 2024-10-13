@@ -15,3 +15,30 @@ resource "aws_sfn_state_machine" "bayesbet_nhl_sfn" {
     }
   )
 }
+
+resource "aws_cloudwatch_metric_alarm" "bayesbet_nhl_sfn_execution_failed" {
+  alarm_name          = "${var.project}-nhl-sfn-execution-failed-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "ExecutionsFailed"
+  namespace           = "AWS/States"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = "0"
+  alarm_description   = "This metric monitors failed executions of the Step Function"
+  alarm_actions       = [aws_sns_topic.sfn_alarm.arn]
+
+  dimensions = {
+    StateMachineArn = aws_sfn_state_machine.bayesbet_nhl_sfn.arn
+  }
+}
+
+resource "aws_sns_topic" "sfn_alarm" {
+  name = "${var.project}-nhl-sfn-alarm-${var.env}"
+}
+
+resource "aws_sns_topic_subscription" "sfn_alarm_email" {
+  topic_arn = aws_sns_topic.sfn_alarm.arn
+  protocol  = "email"
+  endpoint  = var.alarm_email
+}

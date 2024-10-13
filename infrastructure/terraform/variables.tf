@@ -58,3 +58,8 @@ variable "sfn_max_concurrency" {
   default   = 1
   type      = number
 }
+
+variable "alarm_email" {
+  description = "Email address to receive Step Function failure notifications"
+  type        = string
+}
