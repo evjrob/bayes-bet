@@ -22,25 +22,35 @@ from sklearn.metrics import RocCurveDisplay
 from sklearn.calibration import calibration_curve
 from sklearn.inspection import permutation_importance
 from xgboost import XGBClassifier
-from sklearn.base import BaseEstimator, TransformerMixin
-from statsmodels.distributions.empirical_distribution import ECDF, monotone_fn_inverter
-from numba import jit
-from scipy.stats import rankdata
+
+from bayesbet.base.models import BayesianMLPClassifier
+from bayesbet.base.preprocessing import FeatureSelector
+from bayesbet.nhl.preprocessing import ShotFeatures
 
 
 # expected goals plotting
 def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
     def add_arc(center, theta1, theta2):
-        ax.add_artist(mpl.patches.Arc(center, board_radius * 2, board_radius * 2,
-                                      theta1=theta1, theta2=theta2, edgecolor="Black",
-                                      lw=4.5, zorder=0, alpha=alpha))
+        ax.add_artist(
+            mpl.patches.Arc(
+                center,
+                board_radius * 2,
+                board_radius * 2,
+                theta1=theta1,
+                theta2=theta2,
+                edgecolor="Black",
+                lw=4.5,
+                zorder=0,
+                alpha=alpha,
+            )
+        )
 
     # Corner Boards
     corners = [
         ((100 - board_radius, (85 / 2) - board_radius), 0, 89),
         ((-100 + board_radius, (85 / 2) - board_radius), 90, 180),
         ((-100 + board_radius, -(85 / 2) + board_radius), 180, 270),
-        ((100 - board_radius, -(85 / 2) + board_radius), 270, 360)
+        ((100 - board_radius, -(85 / 2) + board_radius), 270, 360),
     ]
     for center, theta1, theta2 in corners:
         add_arc(center, theta1, theta2)
@@ -50,28 +60,53 @@ def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
         ([-100 + board_radius, 100 - board_radius], [-42.5, -42.5]),
         ([-100 + board_radius, 100 - board_radius], [42.5, 42.5]),
         ([-100, -100], [-42.5 + board_radius, 42.5 - board_radius]),
-        ([100, 100], [-42.5 + board_radius, 42.5 - board_radius])
+        ([100, 100], [-42.5 + board_radius, 42.5 - board_radius]),
     ]
     for x, y in boards:
         ax.plot(x, y, linewidth=4.5, color="Black", zorder=0, alpha=alpha)
 
     # Goal Lines
     for x in [-89, 89]:
-        ax.plot([x, x], [-42.5 + 4.7, 42.5 - 4.7], linewidth=3, color="Red", zorder=0, alpha=alpha)
+        ax.plot(
+            [x, x],
+            [-42.5 + 4.7, 42.5 - 4.7],
+            linewidth=3,
+            color="Red",
+            zorder=0,
+            alpha=alpha,
+        )
 
     # Center Line and FaceOff Dot
     ax.plot([0, 0], [-42.5, 42.5], linewidth=3, color="Red", zorder=0, alpha=alpha)
     ax.plot(0, 0, markersize=6, color="Blue", marker="o", zorder=0, alpha=alpha)
 
     # Center Circle
-    ax.add_artist(mpl.patches.Circle((0, 0), radius=33/2, facecolor="none",
-                                     edgecolor="Blue", linewidth=3, zorder=0, alpha=alpha))
+    ax.add_artist(
+        mpl.patches.Circle(
+            (0, 0),
+            radius=33 / 2,
+            facecolor="none",
+            edgecolor="Blue",
+            linewidth=3,
+            zorder=0,
+            alpha=alpha,
+        )
+    )
 
     # Zone Faceoff Dots and Circles
     for x, y in [(69, 22), (69, -22), (-69, 22), (-69, -22)]:
         ax.plot(x, y, markersize=6, color="Red", marker="o", zorder=0, alpha=alpha)
-        ax.add_artist(mpl.patches.Circle((x, y), radius=15, facecolor="none",
-                                         edgecolor="Red", linewidth=3, zorder=0, alpha=alpha))
+        ax.add_artist(
+            mpl.patches.Circle(
+                (x, y),
+                radius=15,
+                facecolor="none",
+                edgecolor="Red",
+                linewidth=3,
+                zorder=0,
+                alpha=alpha,
+            )
+        )
 
     # Neutral Zone Faceoff Dots
     for x, y in [(22, 22), (22, -22), (-22, 22), (-22, -22)]:
@@ -83,11 +118,32 @@ def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
 
     # Goalie Crease and Goal
     for x in [-89, 89]:
-        ax.add_artist(mpl.patches.Arc((x, 0), 6, 6, theta1=90 if x > 0 else 270,
-                                      theta2=270 if x > 0 else 90, facecolor="Blue",
-                                      edgecolor="Red", lw=2, zorder=0, alpha=alpha))
-        ax.add_artist(mpl.patches.Rectangle((x if x > 0 else x - 2, -2), 2, 4,
-                                            lw=2, color="Red", fill=False, zorder=0, alpha=alpha))
+        ax.add_artist(
+            mpl.patches.Arc(
+                (x, 0),
+                6,
+                6,
+                theta1=90 if x > 0 else 270,
+                theta2=270 if x > 0 else 90,
+                facecolor="Blue",
+                edgecolor="Red",
+                lw=2,
+                zorder=0,
+                alpha=alpha,
+            )
+        )
+        ax.add_artist(
+            mpl.patches.Rectangle(
+                (x if x > 0 else x - 2, -2),
+                2,
+                4,
+                lw=2,
+                color="Red",
+                fill=False,
+                zorder=0,
+                alpha=alpha,
+            )
+        )
 
     # Set axis limits and remove spines
     ax.set_xlim((-0.5, 100.5) if plot_half else (-101, 101))
@@ -97,238 +153,16 @@ def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
 
 
 def plot_xgoals(xgoals, title="Expected Goals"):
-    fig, ax = plt.subplots(1, 1, figsize=(11, 12), facecolor='w', edgecolor='k')
-    xgoal_heatmap = ax.imshow(xgoals, alpha=0.5, cmap='jet', extent=[0, 100, -42.5, 42.5])
+    fig, ax = plt.subplots(1, 1, figsize=(11, 12), facecolor="w", edgecolor="k")
+    xgoal_heatmap = ax.imshow(
+        xgoals, alpha=0.5, cmap="jet", extent=[0, 100, -42.5, 42.5]
+    )
     plot_rink(ax, plot_half=True, board_radius=25, alpha=0.9)
-    plt.axis('off')
+    plt.axis("off")
     fig.colorbar(xgoal_heatmap, orientation="horizontal", pad=0.05)
     plt.title(title)
 
     return fig
-
-
-class CoordinateAdjustmentTransformer(BaseEstimator, TransformerMixin):
-    """
-    A scikit-learn transformer that adjusts the coordinates of shots and events
-    based on known rink specific biases. Only venues with > 1000 shots are adjusted.
-
-    Method from Appendix I: Shot Coordinate Adjustments, Total Hockey Rating
-    (THoR): A comprehensive statistical rating of National Hockey League
-    forwards and defensemen based upon all on-ice events
-
-    x' = Fx^{-1}(Fr(x) - (Fra(x) - Fa(x)))
-    y' = Gy^{-1}(Gr(y) - (Gra(y) - Ga(y)))
-
-    Where:
-    * Fx^{-1} is the inverse CDF of the x coordinates for all shots
-    * Fr(x) is the CDF of the x coordinates for all shots at rink r
-    * Fra(x) is the CDF of the x coordinates at rink r for all away team shots
-    * Fa(x) is the league wide CDF of x coordinates for all shots by away teams
-
-    The exact same logic applies to the y coordinates for the G CDFs
-    """
-
-    def fit(self, shot_data, y=None):
-        # Find all venues with > 1000 shots
-        venue_shot_counts = shot_data["venue_location"].value_counts()
-        self.venues = venue_shot_counts[venue_shot_counts > 1000].index.tolist()
-
-        # Find the empirical CDF of the x and y coordinates for all shots
-        self.x_cdf = ECDF(shot_data["shot_x"])
-        self.x = shot_data["shot_x"]
-        self.y_cdf = ECDF(shot_data["shot_y"])
-        self.y = shot_data["shot_y"]
-
-        # Find the empirical CDF of the x and y coordinates for all shots at each venue
-        self.x_cdf_by_venue = {}
-        self.y_cdf_by_venue = {}
-        for venue in self.venues:
-            venue_shots = shot_data[shot_data["venue_location"] == venue]
-            self.x_cdf_by_venue[venue] = ECDF(venue_shots["shot_x"])
-            self.y_cdf_by_venue[venue] = ECDF(venue_shots["shot_y"])
-
-        # Find the empirical CDF of the x and y coordinates for all shots by away teams
-        # at each venue
-        self.x_away_cdf_by_venue = {}
-        self.y_away_cdf_by_venue = {}
-        for venue in self.venues:
-            venue_shots = shot_data[
-                (shot_data["venue_location"] == venue)
-                & (~shot_data["shot_is_home_team"])
-            ]
-            self.x_away_cdf_by_venue[venue] = ECDF(venue_shots["shot_x"])
-            self.y_away_cdf_by_venue[venue] = ECDF(venue_shots["shot_y"])
-
-        # Find the league wide empirical CDF of the x and y coordinates for all shots by
-        # away teams
-        self.x_away_cdf = ECDF(shot_data[~shot_data["shot_is_home_team"]]["shot_x"])
-        self.y_away_cdf = ECDF(shot_data[~shot_data["shot_is_home_team"]]["shot_y"])
-
-        # Precompute league-wide CDFs
-        self.x_league = np.sort(shot_data["shot_x"])
-        self.y_league = np.sort(shot_data["shot_y"])
-        self.x_away_league = np.sort(
-            shot_data[~shot_data["shot_is_home_team"]]["shot_x"]
-        )
-        self.y_away_league = np.sort(
-            shot_data[~shot_data["shot_is_home_team"]]["shot_y"]
-        )
-
-        # Precompute venue-specific CDFs
-        self.x_venue = {
-            venue: np.sort(shot_data[shot_data["venue_location"] == venue]["shot_x"])
-            for venue in self.venues
-        }
-        self.y_venue = {
-            venue: np.sort(shot_data[shot_data["venue_location"] == venue]["shot_y"])
-            for venue in self.venues
-        }
-        self.x_away_venue = {
-            venue: np.sort(
-                shot_data[
-                    (shot_data["venue_location"] == venue)
-                    & (~shot_data["shot_is_home_team"])
-                ]["shot_x"]
-            )
-            for venue in self.venues
-        }
-        self.y_away_venue = {
-            venue: np.sort(
-                shot_data[
-                    (shot_data["venue_location"] == venue)
-                    & (~shot_data["shot_is_home_team"])
-                ]["shot_y"]
-            )
-            for venue in self.venues
-        }
-
-        return self
-
-    @staticmethod
-    @jit(nopython=True)
-    def _cdf_adjust(values, venue_cdf, venue_away_cdf, league_away_cdf, league_values):
-        venue_ranks = np.searchsorted(venue_cdf, values)
-        venue_away_ranks = np.searchsorted(venue_away_cdf, values)
-        league_away_ranks = np.searchsorted(league_away_cdf, values)
-
-        adjusted_ranks = venue_ranks - (venue_away_ranks - league_away_ranks)
-        adjusted_ranks = np.clip(adjusted_ranks, 0, len(league_values) - 1)
-
-        return league_values[adjusted_ranks]
-
-    def transform(self, shot_data):
-        shot_data = shot_data.copy()
-
-        # Keep track of the original coordinates
-        for coord in ["shot_x", "shot_y", "last_event_x", "last_event_y"]:
-            shot_data[f"{coord}_original"] = shot_data[coord]
-            shot_data[coord] = shot_data[coord].astype(float)
-
-        for venue in self.venues:
-            venue_mask = shot_data["venue_location"] == venue
-
-            for coord, league, league_away, venue_cdf, venue_away_cdf in [
-                (
-                    "shot_x",
-                    self.x_league,
-                    self.x_away_league,
-                    self.x_venue[venue],
-                    self.x_away_venue[venue],
-                ),
-                (
-                    "shot_y",
-                    self.y_league,
-                    self.y_away_league,
-                    self.y_venue[venue],
-                    self.y_away_venue[venue],
-                ),
-                (
-                    "last_event_x",
-                    self.x_league,
-                    self.x_away_league,
-                    self.x_venue[venue],
-                    self.x_away_venue[venue],
-                ),
-                (
-                    "last_event_y",
-                    self.y_league,
-                    self.y_away_league,
-                    self.y_venue[venue],
-                    self.y_away_venue[venue],
-                ),
-            ]:
-                shot_data.loc[venue_mask, coord] = self._cdf_adjust(
-                    shot_data.loc[venue_mask, coord].values,
-                    venue_cdf,
-                    venue_away_cdf,
-                    league_away,
-                    league,
-                )
-
-        return shot_data
-
-
-class ShotFeatureTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self):
-        pass
-
-    def fit(self, shot_data, y=None):
-        return self
-
-    def transform(self, shot_data):
-        shot_data = shot_data.copy()
-
-        # Add shot distance
-        shot_data["shot_distance"] = np.sqrt(
-            (shot_data["shot_x"] - shot_data["goal_x"]) ** 2
-            + (shot_data["shot_y"] - shot_data["goal_y"]) ** 2
-        )
-        shot_data["shot_angle"] = np.arctan2(
-            shot_data["shot_y"] - shot_data["goal_y"],
-            np.maximum(abs(shot_data["shot_x"] - shot_data["goal_x"]), 0.1),
-        )
-        shot_data["last_event_distance"] = np.sqrt(
-            (shot_data["last_event_x"] - shot_data["shot_x"]) ** 2
-            + (shot_data["last_event_y"] - shot_data["shot_y"]) ** 2
-        )
-        shot_data["last_event_angle"] = np.arctan2(
-            shot_data["last_event_y"] - shot_data["goal_y"],
-            np.maximum(abs(shot_data["last_event_x"] - shot_data["goal_x"]), 0.1),
-        )
-        shot_data["is_rebound"] = (shot_data["last_event"] == "shot-on-goal") & (
-            shot_data["time_since_last_event"] < 2
-        )
-        shot_data["rebound_angle"] = (
-            shot_data["shot_angle"] - shot_data["last_event_angle"]
-        ) * shot_data["is_rebound"]
-
-        return shot_data
-
-class FeatureSelector(BaseEstimator, TransformerMixin):
-    def __init__(self, float_cols, categorical_cols):
-        # Check for duplicated column names
-        duplicated_cols = set(float_cols) & set(categorical_cols)
-        if duplicated_cols:
-            raise ValueError(f"Duplicated columns found in float_cols and categorical_cols: {duplicated_cols}")
-        
-        self.feature_cols = float_cols + categorical_cols
-        self.float_cols = float_cols
-        self.categorical_cols = categorical_cols
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        if not isinstance(X, pd.DataFrame):
-            raise TypeError("Input must be a pandas DataFrame")
-        
-        if not all(col in X.columns for col in self.feature_cols):
-            missing_cols = [col for col in self.feature_cols if col not in X.columns]
-            raise KeyError(f"Missing columns in the input DataFrame: {missing_cols}")
-        
-        X_subset = X[self.feature_cols].copy()
-        X_subset[self.float_cols] = X_subset[self.float_cols].astype(float)
-        return X_subset
 
 
 def main(model_type):
@@ -336,46 +170,79 @@ def main(model_type):
         train_shots = pd.read_parquet("../data/final/train/shots.parquet")
         test_shots = pd.read_parquet("../data/final/test/shots.parquet")
 
-        X_train  = train_shots.drop(columns=["goal"])
+        X_train = train_shots.drop(columns=["goal"])
         y_train = train_shots["goal"]
 
         X_test = test_shots.drop(columns=["goal"])
         y_test = test_shots["goal"]
 
-        float_cols = ["shot_x", "shot_y", "shot_distance", "shot_angle", "last_event_x", "last_event_y", "last_event_distance", "last_event_angle", "time_since_last_event", "opposing_skaters", "current_skaters", "time_since_even_strength", "rebound_angle"]
+        float_cols = [
+            "shot_x",
+            "shot_y",
+            "shot_distance",
+            "shot_angle",
+            "last_event_x",
+            "last_event_y",
+            "last_event_distance",
+            "last_event_angle",
+            "time_since_last_event",
+            "opposing_skaters",
+            "current_skaters",
+            "time_since_even_strength",
+            "rebound_angle",
+        ]
         categorical_cols = ["shot_type", "last_event", "is_rebound"]
 
         preprocessor = ColumnTransformer(
-            transformers = [
-                ('scale', RobustScaler(), float_cols),
-                ('onehot', OneHotEncoder(drop="if_binary", handle_unknown="infrequent_if_exist"), categorical_cols)
+            transformers=[
+                ("scale", RobustScaler(), float_cols),
+                (
+                    "onehot",
+                    OneHotEncoder(
+                        drop="if_binary", handle_unknown="infrequent_if_exist"
+                    ),
+                    categorical_cols,
+                ),
             ]
         )
 
         if model_type == "MLPClassifier":
-            classifier = MLPClassifier(hidden_layer_sizes=(20, 20, 20, 20), max_iter=1000, alpha=1e-4)
+            classifier = MLPClassifier(
+                hidden_layer_sizes=(20, 20, 20, 20), max_iter=1000, alpha=1e-4
+            )
         elif model_type == "LogisticRegression":
             classifier = LogisticRegression(max_iter=1000)
         elif model_type == "GradientBoostingClassifier":
-            classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
+            classifier = GradientBoostingClassifier(
+                n_estimators=100, learning_rate=0.1, max_depth=3
+            )
         elif model_type == "XGBClassifier":
             classifier = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
+        elif model_type == "BayesianMLPClassifier":
+            classifier = BayesianMLPClassifier(
+                hidden_layer_sizes=(15, 15, 15),
+                num_warmup=5000,
+                num_samples=70000,
+                step_size=1e-2,
+                show_progress=True,
+            )
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
         pipe = Pipeline(
             [
-                ('adjust_coordinates', CoordinateAdjustmentTransformer()),
-                ('features', ShotFeatureTransformer()),
-                ('selector', FeatureSelector(float_cols, categorical_cols)),
-                ('preprocess', preprocessor),
-                ('classifier', classifier),
+                ("features", ShotFeatures()),
+                ("selector", FeatureSelector(float_cols, categorical_cols)),
+                ("preprocess", preprocessor),
+                ("classifier", classifier),
             ]
         )
 
         print("Cross validating model")
         scoring = ["neg_log_loss", "roc_auc"]
-        scores = cross_validate(pipe, X_train, y_train, cv=5, scoring=scoring, return_train_score=True)
+        scores = cross_validate(
+            pipe, X_train, y_train, cv=5, scoring=scoring, return_train_score=True
+        )
 
         train_log_loss = -np.mean(scores["train_neg_log_loss"])
         validation_log_loss = -np.mean(scores["test_neg_log_loss"])
@@ -392,20 +259,22 @@ def main(model_type):
 
         # New code to save CoordinateAdjustmentTransformer output
         print("Generating and saving CoordinateAdjustmentTransformer output")
-        coord_adjuster = pipe.named_steps['adjust_coordinates']
+        coord_adjuster = pipe.named_steps["adjust_coordinates"]
         adjusted_coordinate_data = coord_adjuster.transform(X_train)
-        adjusted_coordinate_data.to_parquet("results/evaluate_model/adjusted_coordinates.parquet")
+        adjusted_coordinate_data.to_parquet(
+            "results/evaluate_model/adjusted_coordinates.parquet"
+        )
 
         print("Evaluating model on test data")
         y_pred_proba = pipe.predict_proba(X_test)
         test_log_loss = log_loss(y_test, y_pred_proba)
-        test_roc_auc = roc_auc_score(y_test, y_pred_proba[:,1])
-    
+        test_roc_auc = roc_auc_score(y_test, y_pred_proba[:, 1])
+
         live.log_metric("test_log_loss", test_log_loss)
         live.log_metric("test_roc_auc", test_roc_auc)
 
         # ROC curve for trained model
-        y_pred = pipe.predict_proba(X_train)[:,1]
+        y_pred = pipe.predict_proba(X_train)[:, 1]
         fpr, tpr, _ = roc_curve(y_train, y_pred)
         roc_auc = auc(fpr, tpr)
         display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc)
@@ -414,7 +283,7 @@ def main(model_type):
         live.log_image("training_roc_curve.png", display.figure_)
 
         # ROC curve for test model
-        y_pred = pipe.predict_proba(X_test)[:,1]
+        y_pred = pipe.predict_proba(X_test)[:, 1]
         fpr, tpr, _ = roc_curve(y_test, y_pred)
         roc_auc = auc(fpr, tpr)
         display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc)
@@ -423,36 +292,48 @@ def main(model_type):
         live.log_image("test_roc_curve.png", display.figure_)
 
         # Calibration plot
-        prob_true, prob_pred = calibration_curve(y_test, y_pred_proba[:,1], n_bins=10)
+        prob_true, prob_pred = calibration_curve(y_test, y_pred_proba[:, 1], n_bins=10)
         plt.figure(figsize=(10, 6))
-        plt.plot(prob_pred, prob_true, marker='o')
-        plt.plot([0, 1], [0, 1], linestyle='--')
-        plt.xlabel('Predicted probability')
-        plt.ylabel('True probability')
-        plt.title('Calibration plot')
+        plt.plot(prob_pred, prob_true, marker="o")
+        plt.plot([0, 1], [0, 1], linestyle="--")
+        plt.xlabel("Predicted probability")
+        plt.ylabel("True probability")
+        plt.title("Calibration plot")
         live.log_image("calibration_plot.png", plt.gcf())
         plt.close()
 
         # Feature importance
-        perm_importance = permutation_importance(pipe, X_test, y_test, n_repeats=10, random_state=42)
-        feature_importance = pd.DataFrame({
-            'feature': X_test.columns,
-            'importance': perm_importance.importances_mean
-        }).sort_values('importance', ascending=False)
+        perm_importance = permutation_importance(
+            pipe, X_test, y_test, n_repeats=10, random_state=42
+        )
+        feature_importance = pd.DataFrame(
+            {"feature": X_test.columns, "importance": perm_importance.importances_mean}
+        ).sort_values("importance", ascending=False)
         plt.figure(figsize=(10, 6))
-        plt.barh(feature_importance['feature'][:10][::-1], feature_importance['importance'][:10][::-1])
+        plt.barh(
+            feature_importance["feature"][:10][::-1],
+            feature_importance["importance"][:10][::-1],
+        )
         plt.yticks(rotation=0)
-        plt.title('Top 10 Feature Importances')
-        plt.xlabel('Importance')
-        plt.ylabel('Feature')
+        plt.title("Top 10 Feature Importances")
+        plt.xlabel("Importance")
+        plt.ylabel("Feature")
         plt.tight_layout()
         live.log_image("feature_importance.png", plt.gcf())
         plt.close()
 
         # Compute and plot expected goals
         y_train_proba = pipe.predict_proba(X_train)
-        [x,y] = np.round(np.meshgrid(np.linspace(0,100,100),np.linspace(-42.5,42.5,85)))
-        xgoals = griddata((train_shots['shot_x'], train_shots['shot_y']), y_train_proba[:, 1], (x,y), method='cubic', fill_value=0)
+        [x, y] = np.round(
+            np.meshgrid(np.linspace(0, 100, 100), np.linspace(-42.5, 42.5, 85))
+        )
+        xgoals = griddata(
+            (train_shots["shot_x"], train_shots["shot_y"]),
+            y_train_proba[:, 1],
+            (x, y),
+            method="cubic",
+            fill_value=0,
+        )
         xgoals[xgoals < 0] = 0
 
         fig = plot_xgoals(xgoals)
