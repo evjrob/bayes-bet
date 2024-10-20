@@ -236,9 +236,9 @@ def extract_shot_data(play_by_play_json):
             shooting_player_id = -1
         last_event = previous_play["typeDescKey"]
         
-        if "details" in last_event and "xCoord" in last_event["details"] and "yCoord" in last_event["details"]:
-            last_event_x = last_event["details"]["xCoord"]
-            last_event_y = last_event["details"]["yCoord"]
+        if "details" in previous_play and "xCoord" in previous_play["details"] and "yCoord" in previous_play["details"]:
+            last_event_x = previous_play["details"]["xCoord"]
+            last_event_y = previous_play["details"]["yCoord"]
         else:
             last_event_x = 0
             last_event_y = 0
