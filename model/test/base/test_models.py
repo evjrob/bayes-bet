@@ -6,7 +6,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.exceptions import NotFittedError
-from bayesbet.models.bayesian_mlp import BayesianMLPClassifier
+from model.bayesbet.base.models import BayesianMLPClassifier
 
 # Suppress a very specific and inconsequential scikit-learn warning
 pytestmark = pytest.mark.filterwarnings(
