@@ -49,7 +49,7 @@ class ShotFeatures(BaseEstimator, TransformerMixin):
             shot_data["last_event_y"] - shot_data["goal_y"],
             np.maximum(abs(shot_data["last_event_x"] - shot_data["goal_x"]), 0.1),
         )
-        shot_data["is_rebound"] = (shot_data["last_event"] == "Shot") & (
+        shot_data["is_rebound"] = (shot_data["last_event"] == "shot-on-goal") & (
             shot_data["time_since_last_event"] < 2
         )
         shot_data["rebound_angle"] = (
