@@ -225,6 +225,7 @@ def extract_shot_data(play_by_play_json):
             print(f"current_play is missing cordinates! {current_play}")
             continue
         
+        zone = shot_detail["zoneCode"]
         shot_type = shot_detail["shotType"]
         shot_x = shot_detail["xCoord"]
         shot_y = shot_detail["yCoord"]
@@ -264,6 +265,7 @@ def extract_shot_data(play_by_play_json):
         row = {
             "shot_is_home_team": is_home_team,
             "home_team_defending_side": home_team_defending_side,
+            "zone": zone,
             "shot_type": shot_type,
             "shot_x": shot_x * coordinate_adjustment,
             "shot_y": shot_y * coordinate_adjustment,
