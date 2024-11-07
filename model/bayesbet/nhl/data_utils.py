@@ -167,6 +167,8 @@ def extract_shot_data(play_by_play_json):
     goal_x_distance = 89
     goal_y = 0
     last_even_strength_time_seconds = 0
+    away_score = 0
+    home_score = 0
     shot_data = []
 
     plays = play_by_play_json["plays"]
@@ -189,7 +191,13 @@ def extract_shot_data(play_by_play_json):
         home_skaters = situation_code[2]
         home_goalie = situation_code[3]
 
-        # constantly check when team strengths were last even
+        # Track scores leading up to the current play
+        if "details" in previous_play and "awayScore" in previous_play["details"]:
+            away_score = previous_play["details"]["awayScore"]
+        if "details" in previous_play and "homeScore" in previous_play["details"]:
+            home_score = previous_play["details"]["homeScore"]
+
+        # Check when team strengths were last even
         if home_skaters == away_skaters:
             current_play_period = current_play["periodDescriptor"]["number"]
             current_play_time = current_play["timeInPeriod"]
@@ -204,6 +212,9 @@ def extract_shot_data(play_by_play_json):
         shot_time_seconds = get_time_since_game_start(shot_period, shot_time)
         shot_detail = current_play["details"]
         is_home_team = shot_detail["eventOwnerTeamId"] == home_team_id
+
+        current_score = home_score if is_home_team else away_score
+        opposing_score = away_score if is_home_team else home_score
         
         home_team_defending_side = get_home_team_defending_side(shot_period)
         if home_team_defending_side == "left":
@@ -278,6 +289,8 @@ def extract_shot_data(play_by_play_json):
             "last_event_same_team": last_event_same_team,
             "opposing_skaters": opposing_skaters,
             "current_skaters": current_skaters,
+            "current_score": current_score,
+            "opposing_score": opposing_score,
             "time_since_even_strength": time_since_even_strength,
             "empty_net": empty_net,
             "goal": goal,
