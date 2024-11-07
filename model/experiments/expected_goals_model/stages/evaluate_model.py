@@ -188,6 +188,8 @@ def main(model_type):
             "time_since_last_event",
             "opposing_skaters",
             "current_skaters",
+            "opposing_score",
+            "current_score",
             "time_since_even_strength",
             "rebound_angle",
         ]
@@ -256,14 +258,6 @@ def main(model_type):
 
         print("Fitting model on all training data")
         pipe.fit(X_train, y_train)
-
-        # New code to save CoordinateAdjustmentTransformer output
-        print("Generating and saving CoordinateAdjustmentTransformer output")
-        coord_adjuster = pipe.named_steps["adjust_coordinates"]
-        adjusted_coordinate_data = coord_adjuster.transform(X_train)
-        adjusted_coordinate_data.to_parquet(
-            "results/evaluate_model/adjusted_coordinates.parquet"
-        )
 
         print("Evaluating model on test data")
         y_pred_proba = pipe.predict_proba(X_test)

@@ -1,2 +1,2 @@
 evaluate_model:
-  model_type: MLPClassifier
+  model_type: BayesianMLPClassifier

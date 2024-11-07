@@ -5,23 +5,23 @@ stages:
     deps:
     - path: ../data/final/test/shots.parquet
       hash: md5
-      md5: ceb608e4ee50a057f9b6fd21453e7705
-      size: 954454
+      md5: 24c191fe701357ba8854831a7e1e2669
+      size: 1275129
     - path: ../data/final/train/shots.parquet
       hash: md5
-      md5: 8d597782ac7ac32696b3617ae58dec9f
-      size: 7835869
+      md5: cd75b5531f91b0ce51c45864e82f6026
+      size: 10391611
     - path: stages/evaluate_model.py
       hash: md5
-      md5: 6fa32a5e3d69474cb915fecc43512e87
-      size: 19512
+      md5: ba0f90b9f465c9e4b906f068e020cb32
+      size: 11853
     params:
       params.yaml:
         evaluate_model:
-          model_type: MLPClassifier
+          model_type: BayesianMLPClassifier
     outs:
     - path: results/evaluate_model
       hash: md5
-      md5: f9db7411af9a27092f673b8a130e63d1.dir
-      size: 168650897
-      nfiles: 15
+      md5: aef476a72958d6cc0d948e4347db3f5e.dir
+      size: 295092
+      nfiles: 14
