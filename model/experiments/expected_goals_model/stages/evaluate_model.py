@@ -2,7 +2,6 @@ import os
 import pickle
 import yaml
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -26,143 +25,7 @@ from xgboost import XGBClassifier
 from bayesbet.base.models import BayesianMLPClassifier
 from bayesbet.base.preprocessing import FeatureSelector
 from bayesbet.nhl.preprocessing import ShotFeatures
-
-
-# expected goals plotting
-def plot_rink(ax, plot_half=False, board_radius=28, alpha=1):
-    def add_arc(center, theta1, theta2):
-        ax.add_artist(
-            mpl.patches.Arc(
-                center,
-                board_radius * 2,
-                board_radius * 2,
-                theta1=theta1,
-                theta2=theta2,
-                edgecolor="Black",
-                lw=4.5,
-                zorder=0,
-                alpha=alpha,
-            )
-        )
-
-    # Corner Boards
-    corners = [
-        ((100 - board_radius, (85 / 2) - board_radius), 0, 89),
-        ((-100 + board_radius, (85 / 2) - board_radius), 90, 180),
-        ((-100 + board_radius, -(85 / 2) + board_radius), 180, 270),
-        ((100 - board_radius, -(85 / 2) + board_radius), 270, 360),
-    ]
-    for center, theta1, theta2 in corners:
-        add_arc(center, theta1, theta2)
-
-    # Plot Boards
-    boards = [
-        ([-100 + board_radius, 100 - board_radius], [-42.5, -42.5]),
-        ([-100 + board_radius, 100 - board_radius], [42.5, 42.5]),
-        ([-100, -100], [-42.5 + board_radius, 42.5 - board_radius]),
-        ([100, 100], [-42.5 + board_radius, 42.5 - board_radius]),
-    ]
-    for x, y in boards:
-        ax.plot(x, y, linewidth=4.5, color="Black", zorder=0, alpha=alpha)
-
-    # Goal Lines
-    for x in [-89, 89]:
-        ax.plot(
-            [x, x],
-            [-42.5 + 4.7, 42.5 - 4.7],
-            linewidth=3,
-            color="Red",
-            zorder=0,
-            alpha=alpha,
-        )
-
-    # Center Line and FaceOff Dot
-    ax.plot([0, 0], [-42.5, 42.5], linewidth=3, color="Red", zorder=0, alpha=alpha)
-    ax.plot(0, 0, markersize=6, color="Blue", marker="o", zorder=0, alpha=alpha)
-
-    # Center Circle
-    ax.add_artist(
-        mpl.patches.Circle(
-            (0, 0),
-            radius=33 / 2,
-            facecolor="none",
-            edgecolor="Blue",
-            linewidth=3,
-            zorder=0,
-            alpha=alpha,
-        )
-    )
-
-    # Zone Faceoff Dots and Circles
-    for x, y in [(69, 22), (69, -22), (-69, 22), (-69, -22)]:
-        ax.plot(x, y, markersize=6, color="Red", marker="o", zorder=0, alpha=alpha)
-        ax.add_artist(
-            mpl.patches.Circle(
-                (x, y),
-                radius=15,
-                facecolor="none",
-                edgecolor="Red",
-                linewidth=3,
-                zorder=0,
-                alpha=alpha,
-            )
-        )
-
-    # Neutral Zone Faceoff Dots
-    for x, y in [(22, 22), (22, -22), (-22, 22), (-22, -22)]:
-        ax.plot(x, y, markersize=6, color="Red", marker="o", zorder=0, alpha=alpha)
-
-    # Blue Lines
-    for x in [-25, 25]:
-        ax.plot([x, x], [-42.5, 42.5], linewidth=2, color="Blue", zorder=0, alpha=alpha)
-
-    # Goalie Crease and Goal
-    for x in [-89, 89]:
-        ax.add_artist(
-            mpl.patches.Arc(
-                (x, 0),
-                6,
-                6,
-                theta1=90 if x > 0 else 270,
-                theta2=270 if x > 0 else 90,
-                facecolor="Blue",
-                edgecolor="Red",
-                lw=2,
-                zorder=0,
-                alpha=alpha,
-            )
-        )
-        ax.add_artist(
-            mpl.patches.Rectangle(
-                (x if x > 0 else x - 2, -2),
-                2,
-                4,
-                lw=2,
-                color="Red",
-                fill=False,
-                zorder=0,
-                alpha=alpha,
-            )
-        )
-
-    # Set axis limits and remove spines
-    ax.set_xlim((-0.5, 100.5) if plot_half else (-101, 101))
-    ax.set_ylim(-43, 43)
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-
-
-def plot_xgoals(xgoals, title="Expected Goals"):
-    fig, ax = plt.subplots(1, 1, figsize=(11, 12), facecolor="w", edgecolor="k")
-    xgoal_heatmap = ax.imshow(
-        xgoals, alpha=0.5, cmap="jet", extent=[0, 100, -42.5, 42.5]
-    )
-    plot_rink(ax, plot_half=True, board_radius=25, alpha=0.9)
-    plt.axis("off")
-    fig.colorbar(xgoal_heatmap, orientation="horizontal", pad=0.05)
-    plt.title(title)
-
-    return fig
+from bayesbet.nhl.visualize import plot_expected_goals
 
 
 def main(model_type):
@@ -321,20 +184,20 @@ def main(model_type):
         [x, y] = np.round(
             np.meshgrid(np.linspace(0, 100, 100), np.linspace(-42.5, 42.5, 85))
         )
-        xgoals = griddata(
+        expected_goals = griddata(
             (train_shots["shot_x"], train_shots["shot_y"]),
             y_train_proba[:, 1],
             (x, y),
             method="cubic",
             fill_value=0,
         )
-        xgoals[xgoals < 0] = 0
+        expected_goals[expected_goals < 0] = 0
 
-        fig = plot_xgoals(xgoals)
+        fig = plot_expected_goals(expected_goals)
         live.log_image("expected_goals.png", fig)
 
-        xgoals_smooth = gaussian_filter(xgoals, sigma=2)
-        fig = plot_xgoals(xgoals_smooth, title="Expected Goals (Smoothed)")
+        expected_goals_smooth = gaussian_filter(expected_goals, sigma=2)
+        fig = plot_expected_goals(expected_goals_smooth, title="Expected Goals (Smoothed)")
         live.log_image("expected_goals_smooth.png", fig)
 
         # Save the model
