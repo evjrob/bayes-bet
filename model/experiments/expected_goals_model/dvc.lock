@@ -13,15 +13,15 @@ stages:
       size: 10391611
     - path: stages/evaluate_model.py
       hash: md5
-      md5: ba0f90b9f465c9e4b906f068e020cb32
-      size: 11853
+      md5: 33b46d8b272cfb266dded25e60dba4ed
+      size: 7889
     params:
       params.yaml:
         evaluate_model:
-          model_type: BayesianMLPClassifier
+          model_type: MappedClassifier
     outs:
     - path: results/evaluate_model
       hash: md5
-      md5: aef476a72958d6cc0d948e4347db3f5e.dir
-      size: 295092
-      nfiles: 14
+      md5: ffa69c861729ffee3768d374326f7e74.dir
+      size: 359218
+      nfiles: 13

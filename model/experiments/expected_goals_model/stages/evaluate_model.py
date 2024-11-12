@@ -22,7 +22,7 @@ from sklearn.calibration import calibration_curve
 from sklearn.inspection import permutation_importance
 from xgboost import XGBClassifier
 
-from bayesbet.base.models import BayesianMLPClassifier
+from bayesbet.base.models import BayesianMLPClassifier, MappedClassifier
 from bayesbet.base.preprocessing import FeatureSelector
 from bayesbet.nhl.preprocessing import ShotFeatures
 from bayesbet.nhl.visualize import plot_expected_goals
@@ -56,7 +56,7 @@ def main(model_type):
             "time_since_even_strength",
             "rebound_angle",
         ]
-        categorical_cols = ["shot_type", "last_event", "is_rebound"]
+        categorical_cols = ["shot_type", "last_event", "is_rebound", "empty_net"]
 
         preprocessor = ColumnTransformer(
             transformers=[
@@ -91,6 +91,14 @@ def main(model_type):
                 step_size=1e-2,
                 show_progress=True,
             )
+        elif model_type == "MappedClassifier":
+            classifier = BayesianMLPClassifier(
+                hidden_layer_sizes=(15, 15, 15),
+                num_warmup=5000,
+                num_samples=70000,
+                step_size=1e-2,
+                show_progress=True,
+            )
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
@@ -102,6 +110,12 @@ def main(model_type):
                 ("classifier", classifier),
             ]
         )
+
+        if model_type == "MappedClassifier":
+            pipe = MappedClassifier(
+                partition_columns=["empty_net", "opposing_skaters", "current_skaters"],
+                base_estimator=pipe,
+            )
 
         print("Cross validating model")
         scoring = ["neg_log_loss", "roc_auc"]
@@ -180,25 +194,10 @@ def main(model_type):
         plt.close()
 
         # Compute and plot expected goals
-        y_train_proba = pipe.predict_proba(X_train)
-        [x, y] = np.round(
-            np.meshgrid(np.linspace(0, 100, 100), np.linspace(-42.5, 42.5, 85))
-        )
-        expected_goals = griddata(
-            (train_shots["shot_x"], train_shots["shot_y"]),
-            y_train_proba[:, 1],
-            (x, y),
-            method="cubic",
-            fill_value=0,
-        )
-        expected_goals[expected_goals < 0] = 0
-
+        expected_goals = train_shots.copy()
+        expected_goals["expected_goal"] = pipe.predict_proba(expected_goals)[:, 1]
         fig = plot_expected_goals(expected_goals)
         live.log_image("expected_goals.png", fig)
-
-        expected_goals_smooth = gaussian_filter(expected_goals, sigma=2)
-        fig = plot_expected_goals(expected_goals_smooth, title="Expected Goals (Smoothed)")
-        live.log_image("expected_goals_smooth.png", fig)
 
         # Save the model
         os.makedirs("results/evaluate_model", exist_ok=True)
