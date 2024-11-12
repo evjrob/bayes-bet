@@ -18,10 +18,10 @@ stages:
     params:
       params.yaml:
         evaluate_model:
-          model_type: MappedClassifier
+          model_type: BayesianMLPClassifier
     outs:
     - path: results/evaluate_model
       hash: md5
-      md5: ffa69c861729ffee3768d374326f7e74.dir
-      size: 359218
+      md5: 317ee38666827daad63b8e993cad0949.dir
+      size: 211532
       nfiles: 13
